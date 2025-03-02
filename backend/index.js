@@ -11,7 +11,6 @@ app.post("/api/search", (req, res) => {
   res.json({ message: "Search received", data: req.body });
 });
 
-// Start the server
 app.listen(8080, () => {
   console.log("Server running on http://localhost:8080");
 });

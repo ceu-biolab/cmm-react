@@ -14,15 +14,33 @@ const Header = () => {
           <button className="button">Search</button>
           <div className="dropdown-content">
             <ul>
-              <li><a href="/simple-search">Simple Search</a></li>
-              <li><a href="/batch-search">Batch Search</a></li>
-              <li><a href="#">Batch Advanced Search</a></li>
-              <li><a href="#">RT Pred Search</a></li>
-              <li><a href="#">Aspergillus Search</a></li>
-              <li><a href="#">IM-MS Search</a></li>
-              <li><a href="#">LC-IM-MS Advanced Search</a></li>
-              <li><a href="#">Browse Search</a></li>
-              <li><a href="#">MS/MS Search</a></li>
+              <li>
+                <a href="/simple-search">Simple Search</a>
+              </li>
+              <li>
+                <a href="/batch-search">Batch Search</a>
+              </li>
+              <li>
+                <a href="#">Batch Advanced Search</a>
+              </li>
+              <li>
+                <a href="#">RT Pred Search</a>
+              </li>
+              <li>
+                <a href="#">Aspergillus Search</a>
+              </li>
+              <li>
+                <a href="#">IM-MS Search</a>
+              </li>
+              <li>
+                <a href="#">LC-IM-MS Advanced Search</a>
+              </li>
+              <li>
+                <a href="#">Browse Search</a>
+              </li>
+              <li>
+                <a href="#">MS/MS Search</a>
+              </li>
             </ul>
           </div>
         </div>
@@ -31,14 +49,30 @@ const Header = () => {
           <button className="button">CE-MS Search</button>
           <div className="dropdown-content">
             <ul>
-              <li><a href="#">CE-MS EXP RMT Search</a></li>
-              <li><a href="#">CE-MS EFF MOB Search</a></li>
-              <li><a href="#">CE-MS MT 1 Marker</a></li>
-              <li><a href="#">CE-MS MT 2 Markers</a></li>
-              <li><a href="#">CE-MS RMT 1 Marker</a></li>
-              <li><a href="#">CE-MS RMT 2 Markers</a></li>
-              <li><a href="#">Targeted CE-MS EXP RMT Search</a></li>
-              <li><a href="#">Targeted CE-MS EFF MOB Search</a></li>
+              <li>
+                <a href="#">CE-MS EXP RMT Search</a>
+              </li>
+              <li>
+                <a href="#">CE-MS EFF MOB Search</a>
+              </li>
+              <li>
+                <a href="#">CE-MS MT 1 Marker</a>
+              </li>
+              <li>
+                <a href="#">CE-MS MT 2 Markers</a>
+              </li>
+              <li>
+                <a href="#">CE-MS RMT 1 Marker</a>
+              </li>
+              <li>
+                <a href="#">CE-MS RMT 2 Markers</a>
+              </li>
+              <li>
+                <a href="#">Targeted CE-MS EXP RMT Search</a>
+              </li>
+              <li>
+                <a href="#">Targeted CE-MS EFF MOB Search</a>
+              </li>
             </ul>
           </div>
         </div>
@@ -49,8 +83,12 @@ const Header = () => {
           <button className="button">Oxidation</button>
           <div className="dropdown-content">
             <ul>
-              <li><a href="#">Oxidation in Long FA Chain</a></li>
-              <li><a href="#">Oxidation in Short FA Chain</a></li>
+              <li>
+                <a href="#">Oxidation in Long FA Chain</a>
+              </li>
+              <li>
+                <a href="#">Oxidation in Short FA Chain</a>
+              </li>
             </ul>
           </div>
         </div>
