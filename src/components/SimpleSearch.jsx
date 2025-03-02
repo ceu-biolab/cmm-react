@@ -50,144 +50,226 @@ const SearchForm = () => {
   };
 
   return (
-    <div className="search-container">
-      <h2>Simple Search</h2>
-      <form onSubmit={handleSubmit}>
-        {/* Experimental Mass Input */}
-        <label>Experimental Mass:</label>
-        <input
-          type="text"
-          name="experimentalMass"
-          value={searchData.experimentalMass}
-          onChange={handleChange}
-          placeholder="Enter mass values"
-        />
+    <div className="outer-container">
+      <div className="search-container">
+        <form onSubmit={handleSubmit} className="search-form">
+          <div className="left-container">
+            <div className="top-row">
+              {/* Experimental Mass Input */}
+              <div className="top-column">
+                <label>Experimental Mass:</label>
+                <input
+                  type="text"
+                  name="experimentalMass"
+                  value={searchData.experimentalMass}
+                  onChange={handleChange}
+                  placeholder="Enter mass values"
+                />
+              </div>
 
-        {/* Tolerance Input */}
-        <label>Tolerance:</label>
-        <input
-          type="text"
-          name="tolerance"
-          value={searchData.tolerance}
-          onChange={handleChange}
-        />
+              {/* Tolerance Input */}
+              <div className="top-column">
+                <label>Tolerance:</label>
+                <input
+                  type="text"
+                  name="tolerance"
+                  value={searchData.tolerance}
+                  onChange={handleChange}
+                />
+                <div>
+                  <label>
+                    <input
+                      type="radio"
+                      name="toleranceType"
+                      value="ppm"
+                      checked={searchData.toleranceType === "ppm"}
+                      onChange={handleChange}
+                    />
+                    ppm
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="toleranceType"
+                      value="mDa"
+                      checked={searchData.toleranceType === "mDa"}
+                      onChange={handleChange}
+                    />
+                    mDa
+                  </label>
+                </div>
+              </div>
 
-        {/* Tolerance Type (ppm/mDa) */}
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="toleranceType"
-              value="ppm"
-              checked={searchData.toleranceType === "ppm"}
-              onChange={handleChange}
-            />
-            ppm
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="toleranceType"
-              value="mDa"
-              checked={searchData.toleranceType === "mDa"}
-              onChange={handleChange}
-            />
-            mDa
-          </label>
-        </div>
+              <div className="bottom-column">
+                <label>Metabolites:</label>
+                <div>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="metabolites"
+                      value="all-except-peptides"
+                      checked={searchData.metabolites === "all-except-peptides"}
+                      onChange={handleChange}
+                    />
+                    All except peptides
+                  </label>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="metabolites"
+                      value="only-lipids"
+                      checked={searchData.metabolites === "only-lipids"}
+                      onChange={handleChange}
+                    />
+                    Only lipids
+                  </label>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="metabolites"
+                      value="all-including-peptides"
+                      checked={
+                        searchData.metabolites === "all-including-peptides"
+                      }
+                      onChange={handleChange}
+                    />
+                    All including peptides
+                  </label>
+                </div>
+              </div>
+            </div>
 
-        {/* Metabolites Selection */}
-        <label>Metabolites:</label>
-        <select
-          name="metabolites"
-          value={searchData.metabolites}
-          onChange={handleChange}
-        >
-          <option value="all-except-peptides">All except peptides</option>
-          <option value="only-lipids">Only lipids</option>
-          <option value="all-including-peptides">All including peptides</option>
-        </select>
+            {/* Metabolites Selection */}
+            <div className="bottom-row">
+              {/* Mass Mode */}
+              <div className="bottom-column">
+                <label>Mass Mode:</label>
+                <div>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="massMode"
+                      value="mode1"
+                      checked={searchData.massMode === "mode1"}
+                      onChange={handleChange}
+                    />
+                    Neutral Masses
+                  </label>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="massMode"
+                      value="mode2"
+                      checked={searchData.massMode === "mode2"}
+                      onChange={handleChange}
+                    />
+                    m/z Masses
+                  </label>
+                </div>
+              </div>
 
-        {/* Mass Mode */}
-        <label>Mass Mode:</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="massMode"
-              value="mode1"
-              checked={searchData.massMode === "mode1"}
-              onChange={handleChange}
-            />
-            Neutral Masses
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="massMode"
-              value="mode2"
-              checked={searchData.massMode === "mode2"}
-              onChange={handleChange}
-            />
-            m/z Masses
-          </label>
-        </div>
+              {/* Ionization Mode */}
+              <div className="bottom-column">
+                <label>Ionization Mode:</label>
+                <div>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="ionizationMode"
+                      value="ionization1"
+                      checked={searchData.ionizationMode === "ionization1"}
+                      onChange={handleChange}
+                    />
+                    Neutral
+                  </label>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="ionizationMode"
+                      value="ionization2"
+                      checked={searchData.ionizationMode === "ionization2"}
+                      onChange={handleChange}
+                    />
+                    Positive Mode
+                  </label>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="ionizationMode"
+                      value="ionization3"
+                      checked={searchData.ionizationMode === "ionization3"}
+                      onChange={handleChange}
+                    />
+                    Negative Mode
+                  </label>
+                </div>
+              </div>
 
-        {/* Ionization Mode */}
-        <label>Ionization Mode:</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="ionizationMode"
-              value="ionization1"
-              checked={searchData.ionizationMode === "ionization1"}
-              onChange={handleChange}
-            />
-            Neutral
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="ionizationMode"
-              value="ionization2"
-              checked={searchData.ionizationMode === "ionization2"}
-              onChange={handleChange}
-            />
-            Positive
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="ionizationMode"
-              value="ionization3"
-              checked={searchData.ionizationMode === "ionization3"}
-              onChange={handleChange}
-            />
-            Negative
-          </label>
-        </div>
+              {/* Adducts */}
+              <div className="bottom-column">
+                <label>Adducts</label>
+                <div>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="adducts"
+                      value="adduct1"
+                      checked={searchData.adducts === "adduct1"}
+                      onChange={handleChange}
+                    />
+                    All
+                  </label>
+                  <label class="box">
+                    <input
+                      type="radio"
+                      name="adducts"
+                      value="adduct2"
+                      checked={searchData.adducts === "adduct2"}
+                      onChange={handleChange}
+                    />
+                    M
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* Databases (Checkboxes) */}
-        <label>Databases:</label>
-        <div>
-          {["HMDB", "LipidMaps", "Metlin", "Kegg"].map((db) => (
-            <label key={db}>
-              <input
-                type="checkbox"
-                name="databases"
-                value={db}
-                checked={searchData.databases.includes(db)}
-                onChange={handleChange}
-              />
-              {db}
-            </label>
-          ))}
-        </div>
+          <div className="right-container">
+            {/* Databases (Checkboxes) */}
+            <label>Databases:</label>
+            <div>
+              {[
+                "All except MINE",
+                "All (Including In Silico Compounds)",
+                "HMDB",
+                "LipidMaps",
+                "Metlin",
+                "Kegg",
+                "In-house",
+                "Aspergillus",
+                "FAHFA Lipids",
+                "MINE (Only In Silico Compounds)",
+              ].map((db) => (
+                <label key={db}>
+                  <input
+                    type="checkbox"
+                    name="databases"
+                    value={db}
+                    checked={searchData.databases.includes(db)}
+                    onChange={handleChange}
+                  />
+                  {db}
+                </label>
+              ))}
+            </div>
+          </div>
 
-        {/* Submit Button */}
-        <button type="submit">Submit</button>
-      </form>
+          {/* Submit Button */}
+          <div className="submit-button">
+            <button type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

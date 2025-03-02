@@ -1,13 +1,16 @@
 import React from "react";
-import SearchForm from "./components/SimpleSearch";
+import Header from "./components/Header";
+import SimpleSearch from "./components/SimpleSearch";
 
-function App() {
+const App = () => {
   return (
-    <div>
-      <h1>Search Page</h1>
-      <SearchForm />
-    </div>
+    <>
+      <Header />
+      <div style={{ marginTop: "5rem" }}>
+        <SimpleSearch />
+      </div>
+    </>
   );
-}
+};
 
 export default App;
