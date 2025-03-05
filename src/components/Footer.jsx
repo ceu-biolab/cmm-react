@@ -10,7 +10,6 @@ const Footer = () => {
           <h4>Laboratorio de Bioingeniería</h4>
           <br />
           <img
-            class="footer-img"
             src="src/assets/images/CEMBIO-Logo.png"
             alt="CEMBIO Logo"
             className="footer-img"

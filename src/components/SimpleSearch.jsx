@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import axios from "axios";
+import axios from "axios";
 
 const SimpleSearch = () => {
   const [searchData, setSearchData] = useState({
@@ -41,132 +41,124 @@ const SimpleSearch = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // *** When the backend is ready, uncomment this axios request ***
-    /*
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/search", // Replace with actual backend URL
+        `${import.meta.env.VITE_API_URL}/search`,
         searchData,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
       console.log("API Response:", response.data);
-      setResults(response.data); // Store API response in state
+      setResults(response.data); // Update with actual results
     } catch (error) {
       console.error("Error submitting search:", error);
-      alert("There was an error submitting your search.");
+      alert("There was an error submitting your search. Using dummy data.");
+      const dummyData = [
+        {
+          id: 164773,
+          name: "PE-NMe(18:1(9Z)/18:1(9Z))[U]",
+          formula: "C42H80NO8P",
+          molecularWeight: 757.56216,
+          errorPPM: 6,
+          ionizationScore: "N/A",
+          Cas: "",
+          KEGG: "",
+          CHEBI: "",
+          HMDB: "",
+          LipidMaps: "",
+          Metlin: "40729",
+          PubChem: "",
+          KNApSAcK: "",
+          NPAtlas: "",
+        },
+        {
+          id: 164774,
+          name: "PE-NMe(18:1(9E)/18:1(9E))[U]",
+          formula: "C42H80NO8P",
+          molecularWeight: 757.56216,
+          errorPPM: 6,
+          ionizationScore: "N/A",
+          Cas: "",
+          KEGG: "",
+          CHEBI: "",
+          HMDB: "",
+          LipidMaps: "",
+          Metlin: "40746",
+          PubChem: "",
+          KNApSAcK: "",
+          NPAtlas: "",
+        },
+        {
+          id: 3840,
+          name: "PE(22:1(11Z)/15:1(9Z))",
+          formula: "C42H80NO8P",
+          molecularWeight: 757.56216,
+          errorPPM: 6,
+          ionizationScore: 2.0,
+          Cas: "",
+          KEGG: "",
+          CHEBI: "",
+          HMDB: "",
+          LipidMaps: "LMGP02011045",
+          Metlin: "77280",
+          PubChem: "",
+          KNApSAcK: "",
+          NPAtlas: "",
+        },
+        {
+          id: 3600,
+          name: "PE(19:1(9Z)/18:1(9Z))",
+          formula: "C42H80NO8P",
+          molecularWeight: 757.56216,
+          errorPPM: 6,
+          ionizationScore: 2.0,
+          Cas: "",
+          KEGG: "",
+          CHEBI: "",
+          HMDB: "",
+          LipidMaps: "LMGP02010805",
+          Metlin: "77040",
+          PubChem: "",
+          KNApSAcK: "",
+          NPAtlas: "",
+        },
+        {
+          id: 3348,
+          name: "PE(17:0/20:2(11Z,14Z))",
+          formula: "C42H80NO8P",
+          molecularWeight: 757.56216,
+          errorPPM: 6,
+          ionizationScore: 2.0,
+          Cas: "",
+          KEGG: "",
+          CHEBI: "",
+          HMDB: "",
+          LipidMaps: "LMGP02010553",
+          Metlin: "76788",
+          PubChem: "",
+          KNApSAcK: "",
+          NPAtlas: "",
+        },
+        {
+          id: 1824,
+          name: "PC(15:1(9Z)/19:1(9Z))",
+          formula: "C42H80NO8P",
+          molecularWeight: 757.56216,
+          errorPPM: 6,
+          ionizationScore: 2.0,
+          Cas: "",
+          KEGG: "",
+          CHEBI: "179033",
+          HMDB: "",
+          LipidMaps: "LMGP01011449",
+          Metlin: "75729",
+          PubChem: "",
+          KNApSAcK: "",
+          NPAtlas: "",
+        },
+      ];
+      // Set dummy data only on failure
+      setResults(dummyData);
     }
-    */
-
-    // *** Dummy data for now (remove when backend is working) ***
-    const dummyData = [
-      {
-        id: 164773,
-        name: "PE-NMe(18:1(9Z)/18:1(9Z))[U]",
-        formula: "C42H80NO8P",
-        molecularWeight: 757.56216,
-        errorPPM: 6,
-        ionizationScore: "N/A",
-        Cas: "",
-        KEGG: "",
-        CHEBI: "",
-        HMDB: "",
-        LipidMaps: "",
-        Metlin: "40729",
-        PubChem: "",
-        KNApSAcK: "",
-        NPAtlas: "",
-      },
-      {
-        id: 164774,
-        name: "PE-NMe(18:1(9E)/18:1(9E))[U]",
-        formula: "C42H80NO8P",
-        molecularWeight: 757.56216,
-        errorPPM: 6,
-        ionizationScore: "N/A",
-        Cas: "",
-        KEGG: "",
-        CHEBI: "",
-        HMDB: "",
-        LipidMaps: "",
-        Metlin: "40746",
-        PubChem: "",
-        KNApSAcK: "",
-        NPAtlas: "",
-      },
-      {
-        id: 3840,
-        name: "PE(22:1(11Z)/15:1(9Z))",
-        formula: "C42H80NO8P",
-        molecularWeight: 757.56216,
-        errorPPM: 6,
-        ionizationScore: 2.0,
-        Cas: "",
-        KEGG: "",
-        CHEBI: "",
-        HMDB: "",
-        LipidMaps: "LMGP02011045",
-        Metlin: "77280",
-        PubChem: "",
-        KNApSAcK: "",
-        NPAtlas: "",
-      },
-      {
-        id: 3600,
-        name: "PE(19:1(9Z)/18:1(9Z))",
-        formula: "C42H80NO8P",
-        molecularWeight: 757.56216,
-        errorPPM: 6,
-        ionizationScore: 2.0,
-        Cas: "",
-        KEGG: "",
-        CHEBI: "",
-        HMDB: "",
-        LipidMaps: "LMGP02010805",
-        Metlin: "77040",
-        PubChem: "",
-        KNApSAcK: "",
-        NPAtlas: "",
-      },
-      {
-        id: 3348,
-        name: "PE(17:0/20:2(11Z,14Z))",
-        formula: "C42H80NO8P",
-        molecularWeight: 757.56216,
-        errorPPM: 6,
-        ionizationScore: 2.0,
-        Cas: "",
-        KEGG: "",
-        CHEBI: "",
-        HMDB: "",
-        LipidMaps: "LMGP02010553",
-        Metlin: "76788",
-        PubChem: "",
-        KNApSAcK: "",
-        NPAtlas: "",
-      },
-      {
-        id: 1824,
-        name: "PC(15:1(9Z)/19:1(9Z))",
-        formula: "C42H80NO8P",
-        molecularWeight: 757.56216,
-        errorPPM: 6,
-        ionizationScore: 2.0,
-        Cas: "",
-        KEGG: "",
-        CHEBI: "179033",
-        HMDB: "",
-        LipidMaps: "LMGP01011449",
-        Metlin: "75729",
-        PubChem: "",
-        KNApSAcK: "",
-        NPAtlas: "",
-      },
-    ];
-
-    setResults(dummyData);
-    alert("Search submitted successfully!");
   };
 
   // Load Demo Data function
@@ -192,7 +184,7 @@ const SimpleSearch = () => {
       metabolites: "all-except-peptides",
       massMode: "mode1",
       ionizationMode: "ionization1",
-      adducts: "adduct1",
+      adducts: "[]",
       databases: [],
     });
   };
