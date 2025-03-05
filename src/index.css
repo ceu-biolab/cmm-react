@@ -523,6 +523,8 @@ tbody tr:hover {
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 2%;
+  margin-left: 5%;
 }
 
 .footer-column-1 h3 {
