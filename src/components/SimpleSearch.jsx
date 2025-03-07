@@ -2,6 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 
 const SimpleSearch = () => {
+  axios.defaults.httpsAgent = undefined;
+
   const [searchData, setSearchData] = useState({
     experimentalMass: "",
     tolerance: "10",
@@ -43,15 +45,13 @@ const SimpleSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/search`,
+        `${import.meta.env.VITE_API_URL}`,
         searchData,
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("API Response:", response.data);
-      setResults(response.data); // Update with actual results
-    } catch (error) {
-      console.error("Error submitting search:", error);
-      alert("There was an error submitting your search. Using dummy data.");
+      //setResults(response.data);
+      alert("Request accepted.");
       const dummyData = [
         {
           id: 164773,
@@ -156,8 +156,10 @@ const SimpleSearch = () => {
           NPAtlas: "",
         },
       ];
-      // Set dummy data only on failure
       setResults(dummyData);
+    } catch (error) {
+      console.error("Error submitting search:", error);
+      alert("There was an error submitting your search");
     }
   };
 
@@ -184,7 +186,7 @@ const SimpleSearch = () => {
       metabolites: "all-except-peptides",
       massMode: "mode1",
       ionizationMode: "ionization1",
-      adducts: "[]",
+      adducts: [],
       databases: [],
     });
   };

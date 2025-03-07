@@ -1,12 +1,14 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import logo from "../assets/images/CMM-Logo-Teal.png"; // Corrected image import
 
 const Header = () => {
   return (
     <header className="header">
       {/* Logo */}
-      <a href="/main-web" className="logo">
-        <img src="src/assets/images/CMM-Logo-Teal.png" alt="CMM Logo" />
-      </a>
+      <Link to="/main-web" className="logo">
+        <img src={logo} alt="CMM Logo" />
+      </Link>
 
       {/* Navigation Buttons */}
       <nav className="button-container">
@@ -15,31 +17,31 @@ const Header = () => {
           <div className="dropdown-content">
             <ul>
               <li>
-                <a href="/simple-search">Simple Search</a>
+                <Link to="/simple-search">Simple Search</Link>
               </li>
               <li>
-                <a href="/batch-search">Batch Search</a>
+                <Link to="/batch-search">Batch Search</Link>
               </li>
               <li>
-                <a href="#">Batch Advanced Search</a>
+                <Link to="#">Batch Advanced Search</Link>
               </li>
               <li>
-                <a href="#">RT Pred Search</a>
+                <Link to="#">RT Pred Search</Link>
               </li>
               <li>
-                <a href="#">Aspergillus Search</a>
+                <Link to="#">Aspergillus Search</Link>
               </li>
               <li>
-                <a href="#">IM-MS Search</a>
+                <Link to="#">IM-MS Search</Link>
               </li>
               <li>
-                <a href="#">LC-IM-MS Advanced Search</a>
+                <Link to="#">LC-IM-MS Advanced Search</Link>
               </li>
               <li>
-                <a href="#">Browse Search</a>
+                <Link to="#">Browse Search</Link>
               </li>
               <li>
-                <a href="#">MS/MS Search</a>
+                <Link to="#">MS/MS Search</Link>
               </li>
             </ul>
           </div>
@@ -50,28 +52,28 @@ const Header = () => {
           <div className="dropdown-content">
             <ul>
               <li>
-                <a href="#">CE-MS EXP RMT Search</a>
+                <Link to="#">CE-MS EXP RMT Search</Link>
               </li>
               <li>
-                <a href="#">CE-MS EFF MOB Search</a>
+                <Link to="#">CE-MS EFF MOB Search</Link>
               </li>
               <li>
-                <a href="#">CE-MS MT 1 Marker</a>
+                <Link to="#">CE-MS MT 1 Marker</Link>
               </li>
               <li>
-                <a href="#">CE-MS MT 2 Markers</a>
+                <Link to="#">CE-MS MT 2 Markers</Link>
               </li>
               <li>
-                <a href="#">CE-MS RMT 1 Marker</a>
+                <Link to="#">CE-MS RMT 1 Marker</Link>
               </li>
               <li>
-                <a href="#">CE-MS RMT 2 Markers</a>
+                <Link to="#">CE-MS RMT 2 Markers</Link>
               </li>
               <li>
-                <a href="#">Targeted CE-MS EXP RMT Search</a>
+                <Link to="#">Targeted CE-MS EXP RMT Search</Link>
               </li>
               <li>
-                <a href="#">Targeted CE-MS EFF MOB Search</a>
+                <Link to="#">Targeted CE-MS EFF MOB Search</Link>
               </li>
             </ul>
           </div>
@@ -84,10 +86,10 @@ const Header = () => {
           <div className="dropdown-content">
             <ul>
               <li>
-                <a href="#">Oxidation in Long FA Chain</a>
+                <Link to="#">Oxidation in Long FA Chain</Link>
               </li>
               <li>
-                <a href="#">Oxidation in Short FA Chain</a>
+                <Link to="#">Oxidation in Short FA Chain</Link>
               </li>
             </ul>
           </div>
