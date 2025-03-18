@@ -1,12 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import logo from "../assets/images/CMM-Logo-Teal.png"; // Corrected image import
+import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/images/CMM-Logo-Teal.png";
 
 const Header = () => {
+  const navigate = useNavigate();
+
+  const goToMainWeb = () => {
+    navigate("/");
+  };
+
   return (
     <header className="header">
-      {/* Logo */}
-      <Link to="/main-web" className="logo">
+      {/* Logo with Link to home (MainWeb) */}
+      <Link to="/" className="logo" onClick={goToMainWeb}>
         <img src={logo} alt="CMM Logo" />
       </Link>
 
@@ -23,25 +29,27 @@ const Header = () => {
                 <Link to="/batch-search">Batch Search</Link>
               </li>
               <li>
-                <Link to="#">Batch Advanced Search</Link>
+                <Link to="/batch-advanced-search">Batch Advanced Search</Link>
               </li>
               <li>
-                <Link to="#">RT Pred Search</Link>
+                <Link to="/rt-pred-search">RT Pred Search</Link>
               </li>
               <li>
-                <Link to="#">Aspergillus Search</Link>
+                <Link to="/aspergillus-search">Aspergillus Search</Link>
               </li>
               <li>
-                <Link to="#">IM-MS Search</Link>
+                <Link to="/im-ms-search">IM-MS Search</Link>
               </li>
               <li>
-                <Link to="#">LC-IM-MS Advanced Search</Link>
+                <Link to="/lc-im-ms-advanced-search">
+                  LC-IM-MS Advanced Search
+                </Link>
               </li>
               <li>
-                <Link to="#">Browse Search</Link>
+                <Link to="/browse-search">Browse Search</Link>
               </li>
               <li>
-                <Link to="#">MS/MS Search</Link>
+                <Link to="/ms-ms-search">MS/MS Search</Link>
               </li>
             </ul>
           </div>
@@ -52,28 +60,32 @@ const Header = () => {
           <div className="dropdown-content">
             <ul>
               <li>
-                <Link to="#">CE-MS EXP RMT Search</Link>
+                <Link to="/ce-ms-exp-rmt-search">CE-MS EXP RMT Search</Link>
               </li>
               <li>
-                <Link to="#">CE-MS EFF MOB Search</Link>
+                <Link to="/ce-ms-eff-mob-search">CE-MS EFF MOB Search</Link>
               </li>
               <li>
-                <Link to="#">CE-MS MT 1 Marker</Link>
+                <Link to="/ce-ms-mt-1-marker">CE-MS MT 1 Marker</Link>
               </li>
               <li>
-                <Link to="#">CE-MS MT 2 Markers</Link>
+                <Link to="/ce-ms-mt-2-markers">CE-MS MT 2 Markers</Link>
               </li>
               <li>
-                <Link to="#">CE-MS RMT 1 Marker</Link>
+                <Link to="/ce-ms-rmt-1-marker">CE-MS RMT 1 Marker</Link>
               </li>
               <li>
-                <Link to="#">CE-MS RMT 2 Markers</Link>
+                <Link to="/ce-ms-rmt-2-markers">CE-MS RMT 2 Markers</Link>
               </li>
               <li>
-                <Link to="#">Targeted CE-MS EXP RMT Search</Link>
+                <Link to="/targeted-ce-ms-exp-rmt-search">
+                  Targeted CE-MS EXP RMT Search
+                </Link>
               </li>
               <li>
-                <Link to="#">Targeted CE-MS EFF MOB Search</Link>
+                <Link to="/targeted-ce-ms-eff-mob-search">
+                  Targeted CE-MS EFF MOB Search
+                </Link>
               </li>
             </ul>
           </div>
@@ -86,16 +98,21 @@ const Header = () => {
           <div className="dropdown-content">
             <ul>
               <li>
-                <Link to="#">Oxidation in Long FA Chain</Link>
+                <Link to="/oxidation-long-fa-chain">
+                  Oxidation in Long FA Chain
+                </Link>
               </li>
               <li>
-                <Link to="#">Oxidation in Short FA Chain</Link>
+                <Link to="/oxidation-short-fa-chain">
+                  Oxidation in Short FA Chain
+                </Link>
               </li>
             </ul>
           </div>
         </div>
 
         <button className="button">Spectral Quality</button>
+
         <button className="button">Manual</button>
       </nav>
 

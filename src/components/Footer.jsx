@@ -93,9 +93,6 @@ const Footer = () => {
             <h3>KEGG</h3>
           </a>
           <a href="https://www.example.com">
-            <h3>Metlin</h3>
-          </a>
-          <a href="https://www.example.com">
             <h3>Lipid Maps</h3>
           </a>
           <a href="https://www.example.com">
