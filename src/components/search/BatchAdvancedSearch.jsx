@@ -10,7 +10,6 @@ const BatchAdvancedSearch = () => {
     toleranceType: "ppm",
     chemicalAlphabet: "All",
     metabolites: "all-except-peptides",
-    massMode: "mode1",
     ionizationMode: "ionization1",
     adducts: [],
     databases: [],
@@ -235,10 +234,9 @@ const BatchAdvancedSearch = () => {
       tolerance: "10",
       toleranceType: "ppm",
       metabolites: "all-except-peptides",
-      massMode: "mode2",
       ionizationMode: "ionization1",
       adducts: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
-      databases: ["All except MINE"],
+      databases: ["All (Including In Silico Compounds)"],
     });
   };
 
@@ -249,7 +247,6 @@ const BatchAdvancedSearch = () => {
       tolerance: "10",
       toleranceType: "ppm",
       metabolites: "all-except-peptides",
-      massMode: "mode1",
       ionizationMode: "ionization1",
       adducts: [],
       databases: [],
@@ -257,7 +254,7 @@ const BatchAdvancedSearch = () => {
   };
 
   return (
-    <div className="outer-container">
+    <div className="page outer-container">
       <div className="search-container">
         <form onSubmit={handleSubmit} className="search-form">
           <label className="mandatory-fields">* Mandatory Fields</label>
@@ -266,7 +263,9 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Experimental Masses Input */}
                 <div className="inner-column">
-                  <label>Experimental Masses <span className="required">*</span></label>
+                  <label className="inner-column-label">
+                    Experimental Masses <span className="required">*</span>
+                  </label>
                   <textarea
                     name="experimentalMasses"
                     value={searchData.experimentalMasses}
@@ -299,7 +298,9 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Experimental Masses Input */}
                 <div className="inner-column">
-                  <label>All Experimental Masses</label>
+                  <label className="inner-column-label">
+                    All Experimental Masses
+                  </label>
                   <textarea
                     name="experimentalMasses"
                     value={searchData.experimentalMasses}
@@ -332,7 +333,9 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Chemical Alphabet */}
                 <div className="inner-column">
-                  <label>Chemical Alphabet <span className="required">*</span></label>
+                  <label className="inner-column-label">
+                    Chemical Alphabet <span className="required">*</span>
+                  </label>
                   <div>
                     {["All", "CHNOPS", "CHNOPS+CL"].map((option) => (
                       <label key={option} className="box">
@@ -361,7 +364,9 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Tolerance Input */}
                 <div className="inner-column">
-                  <label>Tolerance <span className="required">*</span></label>
+                  <label className="inner-column-label">
+                    Tolerance <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     name="tolerance"
@@ -398,7 +403,7 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Experimental Masses Input */}
                 <div className="inner-column">
-                  <label>Retention Times</label>
+                  <label className="inner-column-label">Retention Times</label>
                   <textarea
                     name="experimentalMasses"
                     value={searchData.experimentalMasses}
@@ -431,7 +436,9 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Experimental Masses Input */}
                 <div className="inner-column">
-                  <label>All Retention Times</label>
+                  <label className="inner-column-label">
+                    All Retention Times
+                  </label>
                   <textarea
                     name="experimentalMasses"
                     value={searchData.experimentalMasses}
@@ -464,7 +471,9 @@ const BatchAdvancedSearch = () => {
               <div className="row">
                 {/* Metabolites Selection */}
                 <div className="inner-column">
-                  <label>Metabolites <span className="required">*</span></label>
+                  <label className="inner-column-label">
+                    Metabolites <span className="required">*</span>
+                  </label>
                   <div>
                     {[
                       "all-except-peptides",
@@ -480,107 +489,23 @@ const BatchAdvancedSearch = () => {
                           checked={searchData.metabolites === option}
                           onChange={handleChange}
                         />
-                        {option.replace(/-/g, " ")}
+                        {option === "all-except-peptides"
+                          ? "All except peptides"
+                          : option === "only-lipids"
+                          ? "Only lipids"
+                          : "All including peptides"}{" "}
                       </label>
                     ))}
                   </div>
-                </div>
-              </div>
-
-              <div className="row">
-                {/* Mass Mode */}
-                <div className="inner-column">
-                  <label>Mass Mode <span className="required">*</span></label>
-                  <div>
-                    {["mode1", "mode2"].map((mode) => (
-                      <label key={mode} className="box">
-                        <input
-                          className="radio"
-                          type="radio"
-                          name="massMode"
-                          value={mode}
-                          checked={searchData.massMode === mode}
-                          onChange={handleChange}
-                        />
-                        {mode === "mode1" ? "Neutral Masses" : "m/z Masses"}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="column">
-              <div className="row">
-                {/* Experimental Masses Input */}
-                <div className="inner-column">
-                  <label>Composite Spectra</label>
-                  <textarea
-                    name="experimentalMasses"
-                    value={searchData.experimentalMasses}
-                    onChange={handleChange}
-                    rows="6"
-                    cols="35"
-                  />
-                  {/* File Upload Button with SVG Icon */}
-                  <label htmlFor="file-upload" className="custom-file-upload">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      class="bi bi-file-earmark-arrow-up-fill"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
-                    </svg>
-                  </label>
-                  <input
-                    type="file"
-                    id="file-upload"
-                    accept=".txt,.csv"
-                    onChange={handleFileUpload}
-                  />
-                </div>
-              </div>
-
-              <div className="row">
-                {/* Experimental Masses Input */}
-                <div className="inner-column">
-                  <label>All Composite Spectra</label>
-                  <textarea
-                    name="experimentalMasses"
-                    value={searchData.experimentalMasses}
-                    onChange={handleChange}
-                    rows="6"
-                    cols="35"
-                  />
-                  {/* File Upload Button with SVG Icon */}
-                  <label htmlFor="file-upload" className="custom-file-upload">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      class="bi bi-file-earmark-arrow-up-fill"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
-                    </svg>
-                  </label>
-                  <input
-                    type="file"
-                    id="file-upload"
-                    accept=".txt,.csv"
-                    onChange={handleFileUpload}
-                  />
                 </div>
               </div>
 
               <div className="row">
                 {/* Ionization Mode */}
                 <div className="inner-column">
-                  <label>Ionization Mode <span className="required">*</span></label>
+                  <label className="inner-column-label">
+                    Ionization Mode <span className="required">*</span>
+                  </label>
                   <div>
                     {["ionization1", "ionization2", "ionization3"].map(
                       (mode) => (
@@ -604,12 +529,86 @@ const BatchAdvancedSearch = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="column">
+              <div className="row">
+                {/* Experimental Masses Input */}
+                <div className="inner-column">
+                  <label className="inner-column-label">
+                    Composite Spectra
+                  </label>
+                  <textarea
+                    name="experimentalMasses"
+                    value={searchData.experimentalMasses}
+                    onChange={handleChange}
+                    rows="6"
+                    cols="35"
+                  />
+                  {/* File Upload Button with SVG Icon */}
+                  <label htmlFor="file-upload" className="custom-file-upload">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      class="bi bi-file-earmark-arrow-up-fill"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
+                    </svg>
+                  </label>
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".txt,.csv"
+                    onChange={handleFileUpload}
+                  />
+                </div>
+              </div>
+
+              <div className="row">
+                {/* Experimental Masses Input */}
+                <div className="inner-column">
+                  <label className="inner-column-label">
+                    All Composite Spectra
+                  </label>
+                  <textarea
+                    name="experimentalMasses"
+                    value={searchData.experimentalMasses}
+                    onChange={handleChange}
+                    rows="6"
+                    cols="35"
+                  />
+                  {/* File Upload Button with SVG Icon */}
+                  <label htmlFor="file-upload" className="custom-file-upload">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      class="bi bi-file-earmark-arrow-up-fill"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
+                    </svg>
+                  </label>
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".txt,.csv"
+                    onChange={handleFileUpload}
+                  />
+                </div>
+              </div>
 
               <div className="row">
                 {/* Modifiers */}
                 <div className="inner-column">
-                  <label>Modifiers <span className="required">*</span></label>
-                  <div className="scrollable-checkboxes">
+                  <label className="inner-column-label">
+                    Modifiers <span className="required">*</span>
+                  </label>
+                  <div>
                     {[
                       "None",
                       "NH3",
@@ -637,10 +636,11 @@ const BatchAdvancedSearch = () => {
 
             <div className="column">
               {/* Databases (Checkboxes) */}
-              <label>Databases <span className="required">*</span></label>
+              <label>
+                Databases <span className="required">*</span>
+              </label>
               <div className="checkboxes">
                 {[
-                  "All except MINE",
                   "All (Including In Silico Compounds)",
                   "HMDB",
                   "LipidMaps",
@@ -648,7 +648,6 @@ const BatchAdvancedSearch = () => {
                   "In-house",
                   "Aspergillus",
                   "FAHFA Lipids",
-                  "MINE (Only In Silico Compounds)",
                 ].map((db) => (
                   <label key={db}>
                     <input
@@ -665,7 +664,9 @@ const BatchAdvancedSearch = () => {
               </div>
 
               {/* Adducts (Checkboxes) */}
-              <label className="adducts-label">Adducts <span className="required">*</span></label>
+              <label className="inner-column-label adducts-label">
+                Adducts <span className="required">*</span>
+              </label>
               <div className="scrollable-checkboxes scrollable-checkboxes-adv-search">
                 {[
                   "All",
@@ -731,19 +732,19 @@ const BatchAdvancedSearch = () => {
 
           <div className="align-buttons-container">
             {/* Submit Button */}
-            <div className="submit-button center-button">
+            <div className="form-buttons-container center-button">
               <button type="submit">Submit</button>
             </div>
 
             {/* Load Demo Data and Clear Input */}
             <div className="other-buttons">
-              <div className="submit-button">
+              <div className="form-buttons-container">
                 <button type="button" onClick={loadDemoData}>
                   Load Demo Data
                 </button>
               </div>
 
-              <div className="submit-button">
+              <div className="form-buttons-container">
                 <button type="button" onClick={clearInput}>
                   Clear Input
                 </button>

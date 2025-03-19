@@ -2,10 +2,12 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import SimpleSearch from "./components/SimpleSearch";
-import BatchSearch from "./components/BatchSearch";
-import BatchAdvancedSearch from "./components/BatchAdvancedSearch";
+import SimpleSearch from "./components/search/SimpleSearch";
+import BatchSearch from "./components/search/BatchSearch";
+import BatchAdvancedSearch from "./components/search/BatchAdvancedSearch";
 import MainWeb from "./pages/MainWeb";
+import AspergillusSearch from "./components/search/AspergillusSearch";
+import ImMsSearch from "./components/search/ImMsSearch";
 
 const App = () => {
   return (
@@ -20,6 +22,8 @@ const App = () => {
             path="/batch-advanced-search"
             element={<BatchAdvancedSearch />}
           />
+          <Route path="/aspergillus-search" element={<AspergillusSearch />} />
+          <Route path="/im-ms-search" element={<ImMsSearch />} />
         </Routes>
       </div>
       <Footer />

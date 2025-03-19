@@ -1,11 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 
-const SimpleSearch = () => {
+const BatchSearch = () => {
   axios.defaults.httpsAgent = undefined;
 
   const [searchData, setSearchData] = useState({
-    experimentalMass: "",
+    experimentalMasses: [],
     tolerance: "10",
     toleranceType: "ppm",
     metabolites: "all-except-peptides",
@@ -39,18 +39,42 @@ const SimpleSearch = () => {
     }
   };
 
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        console.log("File content:", text);
+      };
+      reader.readAsText(file);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Prepare the experimentalMasses as an array before sending
+      const massArray = searchData.experimentalMasses
+        .split(",")
+        .map((mass) => parseFloat(mass.trim()))
+        .filter((mass) => !isNaN(mass));
+
+      // Update searchData with parsed masses
+      const updatedSearchData = {
+        ...searchData,
+        experimentalMasses: massArray,
+      };
+
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}`,
-        searchData,
+        updatedSearchData,
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("API Response:", response.data);
-      //setResults(response.data);
+      // setResults(response.data);
       alert("Request accepted.");
       const dummyData = [
         {
@@ -160,21 +184,67 @@ const SimpleSearch = () => {
   // Load Demo Data function
   const loadDemoData = () => {
     setSearchData({
-      experimentalMass: "757.5667",
+      experimentalMasses: [
+        "400.3432",
+        "422.32336",
+        "316.24945",
+        "338.2299",
+        "281.24765",
+        "288.2174",
+        "496.3427",
+        "518.3226",
+        "548.37054",
+        "572.3718",
+        "570.3551",
+        "568.3401",
+        "590.3210",
+        "482.324",
+        "478.29312",
+        "500.27457",
+        "502.29303",
+        "526.2927",
+        "548.27484",
+        "512.33417",
+        "534.31616",
+        "540.3651",
+        "357.29926",
+        "130.15865",
+        "282.2793",
+        "283.2637",
+        "265.25244",
+        "257.24796",
+        "256.26474",
+        "649.5228",
+        "647.5117",
+        "673.52704",
+        "695.50885",
+        "426.35757",
+        "268.10373",
+        "184.09554",
+        "175.11816",
+        "585.27026",
+        "195.08762",
+        "162.11313",
+        "363.21667",
+        "114.06652",
+        "156.07611",
+        "166.08543",
+        "431.3844",
+      ],
       tolerance: "10",
       toleranceType: "ppm",
       metabolites: "all-except-peptides",
       massMode: "mode2",
       ionizationMode: "ionization1",
       adducts: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
-      databases: ["All except MINE"],
+      databases: ["All (Including In Silico Compounds)"],
     });
   };
 
   // Clear Input function
   const clearInput = () => {
     setSearchData({
-      experimentalMass: "",
+      experimentalMasses: [""],
       tolerance: "10",
       toleranceType: "ppm",
       metabolites: "all-except-peptides",
@@ -186,26 +256,48 @@ const SimpleSearch = () => {
   };
 
   return (
-    <div className="outer-container">
+    <div className="page outer-container">
       <div className="search-container">
         <form onSubmit={handleSubmit} className="search-form">
           <div className="row">
             <div className="column">
-              {/* Experimental Mass Input */}
+              {/* Experimental Masses Input */}
               <div className="inner-column">
-                <label>Experimental Mass:</label>
-                <input
-                  type="text"
-                  name="experimentalMass"
-                  value={searchData.experimentalMass}
+                <label className="inner-column-label">
+                  Experimental Masses
+                </label>
+                <textarea
+                  name="experimentalMasses"
+                  value={searchData.experimentalMasses}
                   onChange={handleChange}
-                  placeholder="Enter mass value"
+                  placeholder="Enter mass values (comma separated)"
+                  rows="6"
+                  cols="35"
+                />
+                {/* File Upload Button with SVG Icon */}
+                <label htmlFor="file-upload" className="custom-file-upload">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-file-earmark-arrow-up-fill"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
+                  </svg>
+                </label>
+                <input
+                  type="file"
+                  id="file-upload"
+                  accept=".txt,.csv"
+                  onChange={handleFileUpload}
                 />
               </div>
 
               {/* Tolerance Input */}
               <div className="inner-column">
-                <label>Tolerance:</label>
+                <label className="inner-column-label">Tolerance</label>
                 <input
                   type="text"
                   name="tolerance"
@@ -240,7 +332,7 @@ const SimpleSearch = () => {
             <div className="column">
               {/* Metabolites Selection */}
               <div className="inner-column">
-                <label>Metabolites:</label>
+                <label className="inner-column-label">Metabolites</label>
                 <div>
                   {[
                     "all-except-peptides",
@@ -256,37 +348,19 @@ const SimpleSearch = () => {
                         checked={searchData.metabolites === option}
                         onChange={handleChange}
                       />
-                      {option.replace(/-/g, " ")}
+                      {option === "all-except-peptides"
+                        ? "All except peptides"
+                        : option === "only-lipids"
+                        ? "Only lipids"
+                        : "All including peptides"}{" "}
                     </label>
                   ))}
                 </div>
               </div>
 
-              {/* Mass Mode */}
               <div className="inner-column">
-                <label>Mass Mode:</label>
-                <div>
-                  {["mode1", "mode2"].map((mode) => (
-                    <label key={mode} className="box">
-                      <input
-                        className="radio"
-                        type="radio"
-                        name="massMode"
-                        value={mode}
-                        checked={searchData.massMode === mode}
-                        onChange={handleChange}
-                      />
-                      {mode === "mode1" ? "Neutral Masses" : "m/z Masses"}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="column">
-              {/* Ionization Mode */}
-              <div className="inner-column">
-                <label>Ionization Mode:</label>
+                {/* Ionization Mode */}
+                <label className="inner-column-label">Ionization Mode</label>
                 <div>
                   {["ionization1", "ionization2", "ionization3"].map((mode) => (
                     <label key={mode} className="box">
@@ -306,8 +380,13 @@ const SimpleSearch = () => {
                     </label>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="column">
+              <div className="inner-column">
                 {/* Adducts (Checkboxes) */}
-                <label>Adducts</label>
+                <label className="inner-column-label">Adducts</label>
                 <div className="scrollable-checkboxes">
                   {[
                     "All",
@@ -376,7 +455,6 @@ const SimpleSearch = () => {
               <label>Databases</label>
               <div className="checkboxes">
                 {[
-                  "All except MINE",
                   "All (Including In Silico Compounds)",
                   "HMDB",
                   "LipidMaps",
@@ -384,7 +462,6 @@ const SimpleSearch = () => {
                   "In-house",
                   "Aspergillus",
                   "FAHFA Lipids",
-                  "MINE (Only In Silico Compounds)",
                 ].map((db) => (
                   <label key={db}>
                     <input
@@ -404,19 +481,19 @@ const SimpleSearch = () => {
 
           <div className="align-buttons-container">
             {/* Submit Button */}
-            <div className="submit-button center-button">
+            <div className="form-buttons-container center-button">
               <button type="submit">Submit</button>
             </div>
 
             {/* Load Demo Data and Clear Input */}
             <div className="other-buttons">
-              <div className="submit-button">
+              <div className="form-buttons-container">
                 <button type="button" onClick={loadDemoData}>
                   Load Demo Data
                 </button>
               </div>
 
-              <div className="submit-button">
+              <div className="form-buttons-container">
                 <button type="button" onClick={clearInput}>
                   Clear Input
                 </button>
@@ -547,4 +624,4 @@ const SimpleSearch = () => {
   );
 };
 
-export default SimpleSearch;
+export default BatchSearch;
