@@ -742,7 +742,7 @@ const AspergillusSearch = () => {
           <div className="align-buttons-container">
             {/* Submit Button */}
             <div className="form-buttons-container center-button">
-              <button type="submit">Submit</button>
+              <button type="submit" id="submitAspergillus">Submit</button>
             </div>
 
             {/* Load Demo Data and Clear Input */}

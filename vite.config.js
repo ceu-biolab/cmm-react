@@ -10,6 +10,10 @@ export default defineConfig({
       cert: fs.readFileSync('./localhost+2.pem'),
     },
     host: 'localhost',
-    port: 5178, // Change if needed
+    port: 5178,
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
   },
 });
