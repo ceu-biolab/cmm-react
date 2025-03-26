@@ -110,7 +110,7 @@ const SimpleSearch = () => {
 
   return (
     <div className="page outer-container row">
-      <div class="search-title">
+      <div className="search-title">
         <h3>Simple Search</h3>
       </div>
 

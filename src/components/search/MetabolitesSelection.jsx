@@ -1,4 +1,4 @@
-const MetabolitesSelection = () => (
+const MetabolitesSelection = ({ onChange }) => (
   <div className="metabolites-div">
     <label className="inner-column-label">Metabolites</label>
     <div>
@@ -11,6 +11,7 @@ const MetabolitesSelection = () => (
               name="metabolites"
               value={option}
               defaultChecked={option === "all-except-peptides"}
+              onChange={onChange}
             />
             {option === "all-except-peptides"
               ? "All except peptides"

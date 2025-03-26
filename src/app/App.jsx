@@ -11,7 +11,7 @@ const App = () => {
       <Header />
       <div style={{ marginTop: "5rem" }}>
         <Routes>
-          <Route path="/" element={<MainWeb />} />
+          {/*<Route path="/" element={<MainWeb />} />*/}
           <Route path="/simple-search" element={<SimpleSearch />} />
         </Routes>
       </div>
