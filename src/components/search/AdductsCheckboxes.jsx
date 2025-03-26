@@ -1,17 +1,10 @@
-const AdductsCheckboxes = () => {
-  // Static selection for checked adducts
-  const selectedAdducts = [
-    "M+H",
-    "M+2H",
-    "M+Na", // Add any adducts you want to show as selected
-  ];
-
+const AdductsCheckboxes = ({ onChange }) => {
   return (
     <div className="adducts-div">
       <label className="inner-column-label">Adducts</label>
       <div className="scrollable-checkboxes">
         {[
-          "All",
+          "Select All",
           "M+H",
           "M+2H",
           "M+Na",
@@ -62,8 +55,7 @@ const AdductsCheckboxes = () => {
               type="checkbox"
               name="adducts"
               value={adduct}
-              checked={selectedAdducts.includes(adduct)} // Static check
-              disabled // Disabled to make it read-only for now
+              onChange={onChange}
             />
             {adduct}
           </label>
