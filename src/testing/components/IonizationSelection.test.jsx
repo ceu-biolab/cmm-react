@@ -8,8 +8,14 @@ describe("IonizationSelection", () => {
   it("renders the radio buttons and label", () => {
     render(<IonizationSelection />);
     const label = screen.getByText(/Ionization Mode/i);
-
+    const radio1 = screen.getByRole("radio", { name: "Neutral" });
+    const radio2 = screen.getByRole("radio", { name: "Positive Mode" });
+    const radio3 = screen.getByRole("radio", { name: "Negative Mode" });
+    
     expect(label).toBeInTheDocument();
+    expect(radio1).toBeInTheDocument();
+    expect(radio2).toBeInTheDocument();
+    expect(radio3).toBeInTheDocument();
   });
 
   it("has 'Neutral' selected by default", () => {

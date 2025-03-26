@@ -8,15 +8,25 @@ describe("MetabolitesSelection", () => {
   it("renders the radio buttons and label", () => {
     render(<MetabolitesSelection />);
     const label = screen.getByText(/Metabolites/i);
+    const radio1 = screen.getByRole("radio", { name: "All except peptides" });
+    const radio2 = screen.getByRole("radio", { name: "Only lipids" });
+    const radio3 = screen.getByRole("radio", {
+      name: "All including peptides",
+    });
 
     expect(label).toBeInTheDocument();
+    expect(radio1).toBeInTheDocument();
+    expect(radio2).toBeInTheDocument();
+    expect(radio3).toBeInTheDocument();
   });
 
   it("has 'Neutral' selected by default", () => {
     render(<MetabolitesSelection />);
     const radio1 = screen.getByRole("radio", { name: "All except peptides" });
     const radio2 = screen.getByRole("radio", { name: "Only lipids" });
-    const radio3 = screen.getByRole("radio", { name: "All including peptides" });
+    const radio3 = screen.getByRole("radio", {
+      name: "All including peptides",
+    });
 
     expect(radio1).toBeChecked();
     expect(radio2).not.toBeChecked();
@@ -27,7 +37,9 @@ describe("MetabolitesSelection", () => {
     render(<MetabolitesSelection />);
     const radio1 = screen.getByRole("radio", { name: "All except peptides" });
     const radio2 = screen.getByRole("radio", { name: "Only lipids" });
-    const radio3 = screen.getByRole("radio", { name: "All including peptides" });
+    const radio3 = screen.getByRole("radio", {
+      name: "All including peptides",
+    });
 
     await userEvent.click(radio2);
 
@@ -40,7 +52,9 @@ describe("MetabolitesSelection", () => {
     render(<MetabolitesSelection />);
     const radio1 = screen.getByRole("radio", { name: "All except peptides" });
     const radio2 = screen.getByRole("radio", { name: "Only lipids" });
-    const radio3 = screen.getByRole("radio", { name: "All including peptides" });
+    const radio3 = screen.getByRole("radio", {
+      name: "All including peptides",
+    });
 
     await userEvent.click(radio3);
     expect(radio3).toBeChecked();
@@ -58,7 +72,9 @@ describe("MetabolitesSelection", () => {
     render(<MetabolitesSelection onChange={handleChange} />);
     const radio1 = screen.getByRole("radio", { name: "All except peptides" });
     const radio2 = screen.getByRole("radio", { name: "Only lipids" });
-    const radio3 = screen.getByRole("radio", { name: "All including peptides" });
+    const radio3 = screen.getByRole("radio", {
+      name: "All including peptides",
+    });
 
     await userEvent.click(radio2);
 
