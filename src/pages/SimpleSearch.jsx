@@ -28,6 +28,8 @@ const SimpleSearch = () => {
   }
   // const [results, setResults] = useState([]);
   const [selectedAdducts, setSelectedAdducts] = useState([]);
+  
+  const [selectedDatabases, setSelectedDatabases] = useState([]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -36,13 +38,17 @@ const SimpleSearch = () => {
       setSearchData((prev) => ({
         ...prev,
         [name]: checked
-          ? [...prev[name], value]
+        ? [...(prev[name] || []), value]
           : prev[name].filter((item) => item !== value),
       }));
 
       if (name === "adducts") {
         setSelectedAdducts((prev) =>
           checked ? [...prev, value] : prev.filter((adduct) => adduct !== value)
+        );
+      } else if (name === "databases") {
+        setSelectedDatabases((prev) =>
+          checked ? [...prev, value] : prev.filter((db) => db !== value)
         );
       }
     } else {
@@ -125,8 +131,8 @@ const SimpleSearch = () => {
           />
 
           <DatabasesCheckboxes
-            searchData={searchData}
-            handleChange={handleChange}
+            selectedDatabases={selectedDatabases}
+            onChange={handleChange}
           />
 
           <ToleranceSelection

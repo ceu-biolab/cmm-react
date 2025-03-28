@@ -7,12 +7,12 @@ import "@testing-library/jest-dom";
 describe("AdductsCheckboxes", () => {
   it("renders the checkboxes and label", () => {
     const selectedAdducts = [];
-    const handleAdductsChange = vi.fn();
+    const handleChange = vi.fn();
 
     render(
       <AdductsCheckboxes
         selectedAdducts={selectedAdducts}
-        onChange={handleAdductsChange}
+        onChange={handleChange}
       />
     );
 
@@ -25,12 +25,12 @@ describe("AdductsCheckboxes", () => {
 
   it("checkboxes are unchecked by default", () => {
     const selectedAdducts = [];
-    const handleAdductsChange = vi.fn();
+    const handleChange = vi.fn();
 
     render(
       <AdductsCheckboxes
         selectedAdducts={selectedAdducts}
-        onChange={handleAdductsChange}
+        onChange={handleChange}
       />
     );
 
@@ -41,12 +41,12 @@ describe("AdductsCheckboxes", () => {
 
   it("allows user to select and deselect multiple checkboxes", async () => {
     const selectedAdducts = [];
-    const handleAdductsChange = vi.fn();
+    const handleChange = vi.fn();
 
     render(
       <AdductsCheckboxes
         selectedAdducts={selectedAdducts}
-        onChange={handleAdductsChange}
+        onChange={handleChange}
       />
     );
 
@@ -68,22 +68,22 @@ describe("AdductsCheckboxes", () => {
   });
 
   it("calls onChange when a checkbox is selected and deselected", async () => {
-    const handleAdductsChange = vi.fn();
+    const handleChange = vi.fn();
     const selectedAdducts = [];
 
     render(
       <AdductsCheckboxes
         selectedAdducts={selectedAdducts}
-        onChange={handleAdductsChange}
+        onChange={handleChange}
       />
     );
 
     const checkbox = screen.getByRole("checkbox", { name: "M+H" });
 
     await userEvent.click(checkbox);
-    expect(handleAdductsChange).toHaveBeenCalledTimes(1);
+    expect(handleChange).toHaveBeenCalledTimes(1);
 
     await userEvent.click(checkbox);
-    expect(handleAdductsChange).toHaveBeenCalledTimes(2);
+    expect(handleChange).toHaveBeenCalledTimes(2);
   });
 });

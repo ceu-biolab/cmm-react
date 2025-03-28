@@ -1,11 +1,4 @@
-const DatabasesSelection = () => {
-  // Static selection for checked databases
-  const selectedDatabases = [
-    "HMDB",
-    "LipidMaps",
-    "Kegg", // Add any databases you want to show as selected
-  ];
-
+const DatabasesSelection = ({ selectedDatabases, onChange }) => {
   return (
     <div className="databases-div">
       <label>Databases</label>
@@ -25,8 +18,8 @@ const DatabasesSelection = () => {
               type="checkbox"
               name="databases"
               value={db}
-              checked={selectedDatabases.includes(db)} // Static check
-              disabled // Disabled to make it read-only for now
+              defaultChecked={selectedDatabases.includes(db)}
+              onChange={onChange}
             />
             {db}
           </label>
