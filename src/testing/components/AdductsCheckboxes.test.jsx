@@ -6,7 +6,16 @@ import "@testing-library/jest-dom";
 
 describe("AdductsCheckboxes", () => {
   it("renders the checkboxes and label", () => {
-    render(<AdductsCheckboxes />);
+    const selectedAdducts = [];
+    const handleAdductsChange = vi.fn();
+
+    render(
+      <AdductsCheckboxes
+        selectedAdducts={selectedAdducts}
+        onChange={handleAdductsChange}
+      />
+    );
+
     const label = screen.getByText(/Adducts/i);
     const checkboxes = screen.getAllByRole("checkbox");
 
@@ -15,14 +24,31 @@ describe("AdductsCheckboxes", () => {
   });
 
   it("checkboxes are unchecked by default", () => {
-    render(<AdductsCheckboxes />);
+    const selectedAdducts = [];
+    const handleAdductsChange = vi.fn();
+
+    render(
+      <AdductsCheckboxes
+        selectedAdducts={selectedAdducts}
+        onChange={handleAdductsChange}
+      />
+    );
+
     const checkboxes = screen.getAllByRole("checkbox");
-  
-    checkboxes.forEach(cb => expect(cb).not.toBeChecked());
+
+    checkboxes.forEach((cb) => expect(cb).not.toBeChecked());
   });
 
   it("allows user to select and deselect multiple checkboxes", async () => {
-    render(<AdductsCheckboxes />);
+    const selectedAdducts = [];
+    const handleAdductsChange = vi.fn();
+
+    render(
+      <AdductsCheckboxes
+        selectedAdducts={selectedAdducts}
+        onChange={handleAdductsChange}
+      />
+    );
 
     const checkboxMH = screen.getByRole("checkbox", { name: "M+H" });
     const checkboxNa = screen.getByRole("checkbox", { name: "M+Na" });
@@ -42,16 +68,22 @@ describe("AdductsCheckboxes", () => {
   });
 
   it("calls onChange when a checkbox is selected and deselected", async () => {
-    const handleChange = vi.fn();
-    render(<AdductsCheckboxes onChange={handleChange} />);
-  
+    const handleAdductsChange = vi.fn();
+    const selectedAdducts = [];
+
+    render(
+      <AdductsCheckboxes
+        selectedAdducts={selectedAdducts}
+        onChange={handleAdductsChange}
+      />
+    );
+
     const checkbox = screen.getByRole("checkbox", { name: "M+H" });
-    await userEvent.click(checkbox);
-  
-    expect(handleChange).toHaveBeenCalledTimes(1);
 
     await userEvent.click(checkbox);
-  
-    expect(handleChange).toHaveBeenCalledTimes(2);
+    expect(handleAdductsChange).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(checkbox);
+    expect(handleAdductsChange).toHaveBeenCalledTimes(2);
   });
 });

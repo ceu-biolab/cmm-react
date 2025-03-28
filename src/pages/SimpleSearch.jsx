@@ -26,40 +26,33 @@ const SimpleSearch = () => {
   {
     /* Store search results */
   }
-  const [results, setResults] = useState([]);
+  // const [results, setResults] = useState([]);
+  const [selectedAdducts, setSelectedAdducts] = useState([]);
 
-  {
-    /* Handle changes with checkboxes function */
-  }
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-  
+
     if (type === "checkbox") {
+      setSearchData((prev) => ({
+        ...prev,
+        [name]: checked
+          ? [...prev[name], value]
+          : prev[name].filter((item) => item !== value),
+      }));
+
       if (name === "adducts") {
-        setSearchData((prev) => ({
-          ...prev,
-          adducts: checked
-            ? [...prev.adducts, value]
-            : prev.adducts.filter((adduct) => adduct !== value),
-        }));
-      } else if (name === "databases") {
-        // Handle databases
-        setSearchData((prev) => ({
-          ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
-        }));
+        setSelectedAdducts((prev) =>
+          checked ? [...prev, value] : prev.filter((adduct) => adduct !== value)
+        );
       }
     } else {
-      // Handle text, radio, and other input types
-      setSearchData((prev) => ({ ...prev, [name]: value }));
+      setSearchData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
-  {
-    /* Handle form submission function */
-  }
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -127,8 +120,8 @@ const SimpleSearch = () => {
           />
 
           <AdductsCheckboxes
-            searchData={searchData}
-            handleChange={handleChange}
+            selectedAdducts={selectedAdducts}
+            onChange={handleChange}
           />
 
           <DatabasesCheckboxes
