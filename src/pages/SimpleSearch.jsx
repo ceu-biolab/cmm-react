@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import ExperimentalMassInput from "../components/search/ExperimentalMassInput.jsx";
 import MetabolitesSelection from "../components/search/MetabolitesSelection";
@@ -10,9 +10,6 @@ import IonizationSelection from "../components/search/IonizationSelection";
 const SimpleSearch = () => {
   axios.defaults.httpsAgent = undefined;
 
-  {
-    /* Default input state */
-  }
   const [searchData, setSearchData] = useState({
     experimentalMass: "",
     tolerance: "10",
@@ -23,39 +20,64 @@ const SimpleSearch = () => {
     databases: [],
   });
 
+  const [_, forceUpdate] = useState(false);
+
+  const loadDemoData = () => {
+    console.log("Loading demo data...");
+    setSearchData({
+      experimentalMass: "757.5667",
+      tolerance: "10",
+      toleranceType: "ppm",
+      metabolites: "only-lipids",
+      ionizationMode: "ionization2",
+      adducts: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
+      databases: ["All (Including In Silico Compounds)"],
+    });
+    forceUpdate((prev) => !prev);
+    console.log("Forcing update");
+  };
+
+  const clearInput = () => {
+    console.log("Clearing input...");
+    setSearchData({
+      experimentalMass: "",
+      tolerance: "10",
+      toleranceType: "ppm",
+      metabolites: "all-except-peptides",
+      ionizationMode: "ionization1",
+      adducts: [],
+      databases: [],
+    });
+  };
+
   {
     /* Store search results */
   }
   // const [results, setResults] = useState([]);
-  const [selectedAdducts, setSelectedAdducts] = useState([]);
-  
-  const [selectedDatabases, setSelectedDatabases] = useState([]);
+
+  useEffect(() => {
+    console.log("Updated searchData:", searchData);
+  }, [searchData]); // ✅ Runs every time searchData changes
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (type === "checkbox") {
+    if (type === "checkbox" && name === "adducts") {
       setSearchData((prev) => ({
         ...prev,
-        [name]: checked
-        ? [...(prev[name] || []), value]
-          : prev[name].filter((item) => item !== value),
+        adducts: checked
+          ? [...prev.adducts, value]
+          : prev.adducts.filter((adduct) => adduct !== value),
       }));
-
-      if (name === "adducts") {
-        setSelectedAdducts((prev) =>
-          checked ? [...prev, value] : prev.filter((adduct) => adduct !== value)
-        );
-      } else if (name === "databases") {
-        setSelectedDatabases((prev) =>
-          checked ? [...prev, value] : prev.filter((db) => db !== value)
-        );
-      }
+    } else if (type === "checkbox") {
+      setSearchData((prev) => ({
+        ...prev,
+        databases: checked
+          ? [...prev.databases, value]
+          : prev.databases.filter((db) => db !== value),
+      }));
     } else {
-      setSearchData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setSearchData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -77,36 +99,6 @@ const SimpleSearch = () => {
     }
   };
 
-  {
-    /* Load demo data function */
-  }
-  const loadDemoData = () => {
-    setSearchData({
-      experimentalMass: "757.5667",
-      tolerance: "10",
-      toleranceType: "ppm",
-      metabolites: "all-except-peptides",
-      ionizationMode: "ionization1",
-      adducts: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
-      databases: ["All (Including In Silico Compounds)"],
-    });
-  };
-
-  {
-    /* Clear input function */
-  }
-  const clearInput = () => {
-    setSearchData({
-      experimentalMass: "",
-      tolerance: "10",
-      toleranceType: "ppm",
-      metabolites: "all-except-peptides",
-      ionizationMode: "ionization1",
-      adducts: [],
-      databases: [],
-    });
-  };
-
   return (
     <div className="page outer-container row">
       <div className="search-title">
@@ -116,33 +108,30 @@ const SimpleSearch = () => {
       <form onSubmit={handleSubmit} className="search-form">
         <div className="search-form grid-container">
           <ExperimentalMassInput
-            searchData={searchData}
-            handleChange={handleChange}
+            experimentalMass={searchData.experimentalMass}
+            onChange={handleChange}
           />
 
           <MetabolitesSelection
             searchData={searchData}
-            handleChange={handleChange}
+            onChange={handleChange}
           />
 
           <AdductsCheckboxes
-            selectedAdducts={selectedAdducts}
+            selectedAdducts={searchData.adducts}
             onChange={handleChange}
           />
 
           <DatabasesCheckboxes
-            selectedDatabases={selectedDatabases}
+            selectedDatabases={searchData.databases}
             onChange={handleChange}
           />
 
-          <ToleranceSelection
-            searchData={searchData}
-            handleChange={handleChange}
-          />
+          <ToleranceSelection searchData={searchData} onChange={handleChange} />
 
           <IonizationSelection
-            searchData={searchData}
-            handleChange={handleChange}
+            ionizationMode={searchData.ionizationMode}
+            onChange={handleChange}
           />
         </div>
 

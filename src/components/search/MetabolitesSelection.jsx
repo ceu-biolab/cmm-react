@@ -1,4 +1,4 @@
-const MetabolitesSelection = ({ onChange }) => (
+const MetabolitesSelection = ({ searchData, onChange }) => (
   <div className="metabolites-div">
     <label className="inner-column-label">Metabolites</label>
     <div>
@@ -10,7 +10,7 @@ const MetabolitesSelection = ({ onChange }) => (
               type="radio"
               name="metabolites"
               value={option}
-              defaultChecked={option === "all-except-peptides"}
+              checked={searchData.metabolites === option}
               onChange={onChange}
             />
             {option === "all-except-peptides"
