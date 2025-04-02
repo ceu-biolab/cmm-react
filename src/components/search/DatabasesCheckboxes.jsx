@@ -18,7 +18,7 @@ const DatabasesSelection = ({ selectedDatabases, onChange }) => {
               type="checkbox"
               name="databases"
               value={db}
-              defaultChecked={selectedDatabases.includes(db)}
+              checked={selectedDatabases.includes(db)}
               onChange={onChange}
             />
             {db}

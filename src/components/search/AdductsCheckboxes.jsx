@@ -59,7 +59,7 @@ const AdductsCheckboxes = ({ selectedAdducts, onChange }) => {
               type="checkbox"
               name="adducts"
               value={adduct}
-              defaultChecked={selectedAdducts.includes(adduct)}
+              checked={selectedAdducts.includes(adduct)}
               onChange={onChange}
             />
             {adduct}

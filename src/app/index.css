@@ -339,31 +339,6 @@ h2 {
   align-items: center;
 }
 
-.column textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: 10px;
-  font-size: 16px;
-  border: 2px solid #c3e0e5;
-  border-radius: 5px;
-  outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  resize: vertical;
-  color: #316872;
-  background-color: #e2f0f3;
-}
-
-.column textarea:focus {
-  border-color: #a2d2d6;
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
-  background-color: #fff;
-}
-
-.column textarea::placeholder {
-  color: #87a9ae;
-  font-style: italic;
-}
-
 .inner-column input[type="file"] {
   display: none;
 }
@@ -391,6 +366,30 @@ h2 {
   width: 24px;
   height: 24px;
   color: #43909d;
+}
+
+.experimentalMasses {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #89afb5;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  resize: none;
+  color: #316872;
+  background-color: #f1f7f9;
+}
+
+.experimentalMasses:focus {
+  border-color: #a2d2d6;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  background-color: #fff;
+}
+
+.experimentalMasses::placeholder {
+  color: #87a9ae;
+  font-style: italic;
 }
 
 .column {

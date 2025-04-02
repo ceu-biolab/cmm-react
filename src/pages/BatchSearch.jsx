@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import ExperimentalMassInput from "../components/search/ExperimentalMassInput.jsx";
+import ExperimentalMassTextBox from "../components/search/ExperimentalMassTextBox.jsx";
 import MetabolitesSelection from "../components/search/MetabolitesSelection";
 import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
 import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
 import ToleranceSelection from "../components/search/ToleranceSelection";
 import IonizationSelection from "../components/search/IonizationSelection";
 
-const SimpleSearch = () => {
+const BatchSearch = () => {
   const [searchData, setSearchData] = useState({
-    experimentalMass: "",
+    experimentalMasses: [],
     tolerance: "10",
     toleranceType: "ppm",
     metabolites: "all-except-peptides",
@@ -23,7 +23,22 @@ const SimpleSearch = () => {
   const loadDemoData = () => {
     console.log("Loading demo data...");
     setSearchData({
-      experimentalMass: "757.5667",
+      experimentalMasses: [
+        "400.3432",
+        "422.32336",
+        "316.24945",
+        "338.2299",
+        "281.24765",
+        "288.2174",
+        "496.3427",
+        "518.3226",
+        "548.37054",
+        "572.3718",
+        "570.3551",
+        "568.3401",
+        "590.3210",
+        "482.324",
+      ],
       tolerance: "10",
       toleranceType: "ppm",
       metabolites: "only-lipids",
@@ -36,7 +51,7 @@ const SimpleSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setSearchData({
-      experimentalMass: "",
+      experimentalMasses: [],
       tolerance: "10",
       toleranceType: "ppm",
       metabolites: "all-except-peptides",
@@ -103,8 +118,8 @@ const SimpleSearch = () => {
 
       <form onSubmit={handleSubmit} className="search-form">
         <div className="search-form grid-container">
-          <ExperimentalMassInput
-            experimentalMass={searchData.experimentalMass}
+          <ExperimentalMassTextBox
+            experimentalMasses={searchData.experimentalMasses}
             onChange={handleChange}
           />
 
@@ -155,4 +170,4 @@ const SimpleSearch = () => {
   );
 };
 
-export default SimpleSearch;
+export default BatchSearch;

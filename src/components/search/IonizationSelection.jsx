@@ -1,5 +1,3 @@
-import React from "react";
-
 const IonizationSelection = ({ ionizationMode, onChange }) => (
   <div className="ionization-div">
     <label className="inner-column-label">Ionization Mode</label>

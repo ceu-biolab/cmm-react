@@ -12,8 +12,10 @@ export default defineConfig({
     host: 'localhost',
     port: 5178,
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
+  resolve: {
+    alias: {
+      '@components': '/src/components',
+      '@pages': '/src/pages',
+    },
   },
 });

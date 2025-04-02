@@ -1,5 +1,3 @@
-import React from "react";
-
 const ExperimentalMassInput = ({ experimentalMass, onChange }) => {
   return (
     <div className="experimental-mass-div">
