@@ -1,7 +1,7 @@
 import React from "react";
 
 const AdductsCheckboxes = ({ selectedAdducts, onChange }) => {
-  const adducts = [
+  const adductsString = [
     "Select All",
     "M+H",
     "M+2H",
@@ -52,12 +52,12 @@ const AdductsCheckboxes = ({ selectedAdducts, onChange }) => {
     <div className="adducts-div">
       <label className="inner-column-label">Adducts</label>
       <div className="scrollable-checkboxes">
-        {adducts.map((adduct) => (
+        {adductsString.map((adduct) => (
           <label key={adduct}>
             <input
               className="checkbox"
               type="checkbox"
-              name="adducts"
+              name="adductsString"
               value={adduct}
               checked={selectedAdducts.includes(adduct)}
               onChange={onChange}

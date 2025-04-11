@@ -2,7 +2,7 @@ const IonizationSelection = ({ ionizationMode, onChange }) => (
   <div className="ionization-div">
     <label className="inner-column-label">Ionization Mode</label>
     <div>
-      {["ionization1", "ionization2", "ionization3"].map((option) => (
+      {["Neutral", "Positive Mode", "Negative Mode"].map((option) => (
         <label key={option} className="box">
           <input
             className="radio"
@@ -12,11 +12,7 @@ const IonizationSelection = ({ ionizationMode, onChange }) => (
             checked={ionizationMode === option}
             onChange={onChange}
           />
-          {option === "ionization1"
-            ? "Neutral"
-            : option === "ionization2"
-            ? "Positive Mode"
-            : "Negative Mode"}
+          {option}
         </label>
       ))}
     </div>

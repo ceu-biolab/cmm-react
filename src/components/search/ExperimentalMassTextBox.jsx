@@ -1,4 +1,4 @@
-const ExperimentalMassTextBox = ({ experimentalMasses, onChange }) => {
+const ExperimentalMassTextBox = ({ experimental_masses, onChange }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -15,9 +15,9 @@ const ExperimentalMassTextBox = ({ experimentalMasses, onChange }) => {
     <div className="inner-column">
       <label className="inner-column-label">Experimental Masses</label>
       <textarea
-        name="experimentalMasses"
-        className="experimentalMasses"
-        value={experimentalMasses}
+        name="experimental_masses"
+        className="experimental_masses"
+        value={experimental_masses}
         onChange={onChange}
         placeholder="Enter mass values (comma separated)"
         rows="6"

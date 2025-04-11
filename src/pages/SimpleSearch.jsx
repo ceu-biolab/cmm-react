@@ -6,63 +6,68 @@ import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
 import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
 import ToleranceSelection from "../components/search/ToleranceSelection";
 import IonizationSelection from "../components/search/IonizationSelection";
+import ResultsTable from "../components/search/ResultsTable.jsx";
+import CompoundViewer from "../components/search/CompoundViewer.jsx";
+import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
 
 const SimpleSearch = () => {
-  const [searchData, setSearchData] = useState({
-    experimentalMass: "",
-    tolerance: "10",
-    toleranceType: "ppm",
-    metabolites: "all-except-peptides",
-    ionizationMode: "ionization1",
-    adducts: [],
+  const [formState, setFormState] = useState({
+    mz: "",
+    tolerance: "",
+    toleranceMode: "ppm",
+    ionizationMode: "Positive Mode",
+    metaboliteType: "All except peptides",
+    adductsString: [],
     databases: [],
   });
 
-  const [results, setResults] = useState([]); // State to store API response
+  const [results, setResults] = useState([]);
+
+  const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
-    setSearchData({
-      experimentalMass: "757.5667",
+    setFormState({
+      mz: "757.5667",
       tolerance: "10",
-      toleranceType: "ppm",
-      metabolites: "only-lipids",
-      ionizationMode: "ionization2",
-      adducts: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
-      databases: ["All (Including In Silico Compounds)"],
+      toleranceMode: "ppm",
+      metaboliteType: "ONLYLIPIDS",
+      ionizationMode: "Positive Mode",
+      adductsString: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
+      databases: ["HMDB"],
     });
   };
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setSearchData({
-      experimentalMass: "",
+    setFormState({
+      mz: "",
       tolerance: "10",
-      toleranceType: "ppm",
-      metabolites: "all-except-peptides",
-      ionizationMode: "ionization1",
-      adducts: [],
+      toleranceMode: "ppm",
+      metaboliteType: "All except peptides",
+      ionizationMode: "Positive Mode",
+      adductsString: [],
       databases: [],
     });
   };
 
   useEffect(() => {
-    console.log("Updated searchData:", searchData);
-  }, [searchData]);
+    console.log("Updated searchData:", formState);
+  }, [formState]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adducts") {
-        setSearchData((prev) => ({
+      if (name === "adductsString") {
+        setFormState((prev) => ({
           ...prev,
-          adducts: checked
-            ? [...prev.adducts, value]
-            : prev.adducts.filter((adduct) => adduct !== value),
+          adductsString: checked
+            ? [...prev.adductsString, value]
+            : prev.adductsString.filter((adduct) => adduct !== value),
         }));
       } else if (name === "databases") {
-        setSearchData((prev) => ({
+        setFormState((prev) => ({
           ...prev,
           databases: checked
             ? [...prev.databases, value]
@@ -71,24 +76,51 @@ const SimpleSearch = () => {
       }
     } else {
       // For other inputs, like text or select
-      setSearchData((prev) => ({ ...prev, [name]: value || null }));
+      setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Search Data before submit:", searchData);
+    const formattedData = {
+      mz: parseFloat(formState.mz),
+      tolerance: parseFloat(formState.tolerance),
+      toleranceMode: formState.toleranceMode,
+      ionizationMode: formState.ionizationMode,
+      metaboliteType: formState.metaboliteType,
+      adductsString: formState.adductsString,
+      databases: formState.databases,
+    };
+
+    console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}`,
-        searchData,
+        `${import.meta.env.VITE_API_URL}compounds/simple-search`,
+        formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log("API Response:", response.data);
-      setResults(response.data);
+
+      const rawResults = response.data;
+
+      const groupedByAdduct = {};
+
+      rawResults.forEach((result) => {
+        result.potentialAnnotations?.forEach((annotation) => {
+          const { adduct, cmm_compounds } = annotation;
+          if (!groupedByAdduct[adduct]) {
+            groupedByAdduct[adduct] = [];
+          }
+          groupedByAdduct[adduct].push(...cmm_compounds);
+        });
+      });
+
+      console.log("Raw results:", rawResults);
+
+      setResults(groupedByAdduct);
       alert("Request accepted.");
+      setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert("There was an error submitting your search");
@@ -100,42 +132,39 @@ const SimpleSearch = () => {
       <div className="search-title">
         <h3>Simple Search</h3>
       </div>
-
-      <form onSubmit={handleSubmit} className="search-form">
-        <div className="search-form grid-container">
-          <ExperimentalMassInput
-            experimentalMass={searchData.experimentalMass}
-            onChange={handleChange}
-          />
+      <form onSubmit={handleSubmit}>
+        <div className="grid-container">
+          <ExperimentalMassInput mz={formState.mz} onChange={handleChange} />
 
           <MetabolitesSelection
-            searchData={searchData}
+            searchData={formState}
             onChange={handleChange}
           />
 
           <AdductsCheckboxes
-            selectedAdducts={searchData.adducts}
+            selectedAdducts={formState.adductsString}
             onChange={handleChange}
           />
 
           <DatabasesCheckboxes
-            selectedDatabases={searchData.databases}
+            selectedDatabases={formState.databases}
             onChange={handleChange}
           />
 
-          <ToleranceSelection searchData={searchData} onChange={handleChange} />
+          <ToleranceSelection searchData={formState} onChange={handleChange} />
 
           <IonizationSelection
-            ionizationMode={searchData.ionizationMode}
+            ionizationMode={formState.ionizationMode}
             onChange={handleChange}
           />
         </div>
 
         <div className="form-buttons-container center-button">
-          <button type="submit">Submit</button>
+          <button type="submit" onClick={handleSubmit}>
+            Submit
+          </button>
         </div>
       </form>
-
       <div className="align-buttons-container">
         <div className="other-buttons">
           <div className="form-buttons-container">
@@ -150,6 +179,17 @@ const SimpleSearch = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="results-div">
+        {showResults &&
+          Object.entries(results).map(([adduct, compounds]) => (
+            <ResultsDropdownGroup
+              key={adduct}
+              adduct={adduct}
+              compounds={compounds}
+            />
+          ))}
       </div>
     </div>
   );

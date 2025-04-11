@@ -113,7 +113,7 @@ const BatchSearch = () => {
   return (
     <div className="page outer-container row">
       <div className="search-title">
-        <h3>Simple Search</h3>
+        <h3>Batch Search</h3>
       </div>
 
       <form onSubmit={handleSubmit} className="search-form">

@@ -2,22 +2,18 @@ const MetabolitesSelection = ({ searchData, onChange }) => (
   <div className="metabolites-div">
     <label className="inner-column-label">Metabolites</label>
     <div>
-      {["all-except-peptides", "only-lipids", "all-including-peptides"].map(
+      {["All except peptides", "ONLYLIPIDS", "All including peptides"].map(
         (option) => (
           <label key={option} className="box">
             <input
               className="radio"
               type="radio"
-              name="metabolites"
+              name="metaboliteType"
               value={option}
-              checked={searchData.metabolites === option}
+              checked={searchData.metaboliteType === option}
               onChange={onChange}
             />
-            {option === "all-except-peptides"
-              ? "All except peptides"
-              : option === "only-lipids"
-              ? "Only lipids"
-              : "All including peptides"}
+            {option}
           </label>
         )
       )}

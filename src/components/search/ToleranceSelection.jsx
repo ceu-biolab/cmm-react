@@ -12,9 +12,9 @@ const ToleranceSelection = ({ searchData, onChange }) => {
         <input
           className="radio"
           type="radio"
-          name="toleranceType"
+          name="toleranceMode"
           value="ppm"
-          checked={searchData.toleranceType === "ppm"}
+          checked={searchData.toleranceMode === "ppm"}
           onChange={onChange}
         />
         ppm
@@ -23,9 +23,9 @@ const ToleranceSelection = ({ searchData, onChange }) => {
         <input
           className="radio"
           type="radio"
-          name="toleranceType"
+          name="toleranceMode"
           value="mDa"
-          checked={searchData.toleranceType === "mDa"}
+          checked={searchData.toleranceMode === "mDa"}
           onChange={onChange}
         />
         mDa
