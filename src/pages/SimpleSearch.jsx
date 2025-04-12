@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import ExperimentalMassInput from "../components/search/ExperimentalMassInput.jsx";
-import MetabolitesSelection from "../components/search/MetabolitesSelection";
+import TextInput from "../components/search/TextInput";
 import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
 import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
-import ToleranceSelection from "../components/search/ToleranceSelection";
-import IonizationSelection from "../components/search/IonizationSelection";
-import ResultsTable from "../components/search/ResultsTable.jsx";
-import CompoundViewer from "../components/search/CompoundViewer.jsx";
+import GroupRadio from "../components/search/GroupRadio";
 import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
+import searchIcon from "../assets/svgs/search-svg.svg";
+import ToleranceRadio from "../components/search/ToleranceRadio";
 
 const SimpleSearch = () => {
   const [formState, setFormState] = useState({
@@ -22,7 +20,6 @@ const SimpleSearch = () => {
   });
 
   const [results, setResults] = useState([]);
-
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
@@ -42,10 +39,10 @@ const SimpleSearch = () => {
     console.log("Clearing input...");
     setFormState({
       mz: "",
-      tolerance: "10",
+      tolerance: "",
       toleranceMode: "ppm",
       metaboliteType: "All except peptides",
-      ionizationMode: "Positive Mode",
+      ionizationMode: "Neutral",
       adductsString: [],
       databases: [],
     });
@@ -75,7 +72,6 @@ const SimpleSearch = () => {
         }));
       }
     } else {
-      // For other inputs, like text or select
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
   };
@@ -119,7 +115,6 @@ const SimpleSearch = () => {
       console.log("Raw results:", rawResults);
 
       setResults(groupedByAdduct);
-      alert("Request accepted.");
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -127,69 +122,110 @@ const SimpleSearch = () => {
     }
   };
 
+  const totalCompounds = Object.values(results).reduce(
+    (sum, compounds) => sum + compounds.length,
+    0
+  );
+
   return (
-    <div className="page outer-container row">
-      <div className="search-title">
-        <h3>Simple Search</h3>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <div className="grid-container">
-          <ExperimentalMassInput mz={formState.mz} onChange={handleChange} />
+    <div className="page">
+      <header className="title-header">
+        <img src={searchIcon} alt="Search Icon" className="icon" />
+        <span className="title-text">Simple Search</span>
+      </header>
 
-          <MetabolitesSelection
-            searchData={formState}
-            onChange={handleChange}
-          />
-
-          <AdductsCheckboxes
-            selectedAdducts={formState.adductsString}
-            onChange={handleChange}
-          />
-
-          <DatabasesCheckboxes
-            selectedDatabases={formState.databases}
-            onChange={handleChange}
-          />
-
-          <ToleranceSelection searchData={formState} onChange={handleChange} />
-
-          <IonizationSelection
-            ionizationMode={formState.ionizationMode}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="form-buttons-container center-button">
-          <button type="submit" onClick={handleSubmit}>
-            Submit
-          </button>
-        </div>
-      </form>
-      <div className="align-buttons-container">
-        <div className="other-buttons">
-          <div className="form-buttons-container">
-            <button type="button" onClick={loadDemoData}>
-              Load Demo Data
-            </button>
-          </div>
-
-          <div className="form-buttons-container">
-            <button type="button" onClick={clearInput}>
-              Clear Input
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="results-div">
-        {showResults &&
-          Object.entries(results).map(([adduct, compounds]) => (
-            <ResultsDropdownGroup
-              key={adduct}
-              adduct={adduct}
-              compounds={compounds}
+      <div className="page outer-container row">
+        <form onSubmit={handleSubmit}>
+          <div className="grid-container">
+            <TextInput
+              label="Experimental Mass"
+              name="mz"
+              value={formState.mz}
+              onChange={handleChange}
+              placeholder="Enter mass value"
+              className="experimental-mass-div"
             />
-          ))}
+
+            <GroupRadio
+              label="Metabolites"
+              name="metaboliteType"
+              value={formState.metaboliteType}
+              options={[
+                "All except peptides",
+                "ONLYLIPIDS",
+                "All including peptides",
+              ]}
+              onChange={handleChange}
+              className="metabolites-div"
+            />
+
+            <GroupRadio
+              label="Ionization Mode"
+              name="ionizationMode"
+              value={formState.ionizationMode}
+              options={["Neutral", "Positive Mode", "Negative Mode"]}
+              onChange={handleChange}
+              className="ionization-div"
+            />
+
+            <AdductsCheckboxes
+              selectedAdducts={formState.adductsString}
+              onChange={handleChange}
+            />
+
+            <DatabasesCheckboxes
+              selectedDatabases={formState.databases}
+              onChange={handleChange}
+            />
+
+            <ToleranceRadio
+              label="Tolerance"
+              toleranceValue={formState.tolerance}
+              toleranceMode={formState.toleranceMode}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-buttons-container center-button">
+            <button type="submit" onClick={handleSubmit}>
+              Submit
+            </button>
+          </div>
+        </form>
+
+        <div className="align-buttons-container">
+          <div className="other-buttons">
+            <div className="form-buttons-container">
+              <button type="button" onClick={loadDemoData}>
+                Load Demo Data
+              </button>
+            </div>
+            <div className="form-buttons-container">
+              <button type="button" onClick={clearInput}>
+                Clear Input
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {showResults && (
+          <div className="results-div">
+            <div className="search-compounds-found-div">
+              <div className="results-count">{totalCompounds}</div>
+              <div className="results-count-text">
+                Compound{totalCompounds !== 1 ? "s" : ""} found
+              </div>
+            </div>
+
+            {Object.entries(results).map(([adduct, compounds]) => (
+              <ResultsDropdownGroup
+                key={adduct}
+                adduct={adduct}
+                compounds={compounds}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -94,7 +94,7 @@ const ResultsTable = ({ results }) => {
                     onMouseEnter={() => {
                       if (isIdColumn) {
                         setHoveredId(item.compoundId);
-                        setHoveredCompound(item);  // Pass the whole compound object
+                        setHoveredCompound(item);
                       }
                     }}
                     onMouseLeave={() => {
@@ -104,7 +104,16 @@ const ResultsTable = ({ results }) => {
                       }
                     }}
                   >
-                    {isLinkable && value !== "—" ? (
+                    {isIdColumn ? (
+                      <a
+                        href={`/compound/${item.compoundId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="id-link"
+                      >
+                        {item.compoundId}
+                      </a>
+                    ) : isLinkable && value !== "—" ? (
                       <a
                         href={`https://dummy-link.com/${urlSafeHeader}/${value}`}
                         target="_blank"

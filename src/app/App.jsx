@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import MainWeb from "../pages/MainWeb";
 import SimpleSearch from "../pages/SimpleSearch";
 import BatchSearch from "../pages/BatchSearch";
+import BrowseSearch from "../pages/BrowseSearch";
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
           {/*<Route path="/" element={<MainWeb />} />*/}
           <Route path="/simple-search" element={<SimpleSearch />} />
           <Route path="/batch-search" element={<BatchSearch />} />
+          <Route path="/browse-search" element={<BrowseSearch />} />
         </Routes>
       </div>
       <Footer />

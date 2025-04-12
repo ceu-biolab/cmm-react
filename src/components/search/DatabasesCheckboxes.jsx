@@ -1,16 +1,23 @@
-const DatabasesSelection = ({ selectedDatabases, onChange }) => {
+const DatabasesSelection = ({
+  selectedDatabases,
+  onChange,
+  className = "",
+}) => {
   return (
-    <div className="databases-div">
-      <label>Databases</label>
+    <div className={`databases-div ${className}`}>
+      <label className="inner-column-label">Databases</label>
       <div className="checkboxes">
         {[
-          "All (Including In Silico Compounds)",
+          "ALL",
           "HMDB",
-          "LipidMaps",
-          "Kegg",
-          "In-house",
-          "Aspergillus",
-          "FAHFA Lipids",
+          "LIPIDMAPS",
+          "CHEBI",
+          "KEGG",
+          "INHOUSE",
+          "ASPERGILLUS",
+          "FAHFA",
+          "NPATLAS",
+          "PUBCHEM",
         ].map((db) => (
           <label key={db}>
             <input

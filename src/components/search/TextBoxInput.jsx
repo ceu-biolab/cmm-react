@@ -1,11 +1,29 @@
-const ExperimentalMassTextBox = ({ experimental_masses, onChange }) => {
+import React from "react";
+
+const TextBoxInput = ({
+  value,
+  onChange,
+  name = "mz",
+  label = "Experimental Masses",
+}) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target.result;
-        console.log("File content:", text);
+        const masses = text
+          .split(/[\s,]+/)
+          .map((s) => s.trim())
+          .filter((s) => s && !isNaN(s))
+          .map(parseFloat);
+
+        onChange({
+          target: {
+            name: name,
+            value: masses.join(", "),
+          },
+        });
       };
       reader.readAsText(file);
     }
@@ -13,24 +31,23 @@ const ExperimentalMassTextBox = ({ experimental_masses, onChange }) => {
 
   return (
     <div className="inner-column">
-      <label className="inner-column-label">Experimental Masses</label>
+      <label className="inner-column-label">{label}</label>
       <textarea
-        name="experimental_masses"
-        className="experimental_masses"
-        value={experimental_masses}
+        name={name}
+        className="experimental-masses"
+        value={value}
         onChange={onChange}
         placeholder="Enter mass values (comma separated)"
         rows="6"
         cols="34"
       />
-      {/* File Upload Button with SVG Icon */}
-      <label htmlFor="file-upload" className="custom-file-upload">
+      <label htmlFor={`file-upload-${name}`} className="custom-file-upload">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
           fill="currentColor"
-          class="bi bi-file-earmark-arrow-up-fill"
+          className="bi bi-file-earmark-arrow-up-fill"
           viewBox="0 0 16 16"
         >
           <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
@@ -38,12 +55,13 @@ const ExperimentalMassTextBox = ({ experimental_masses, onChange }) => {
       </label>
       <input
         type="file"
-        id="file-upload"
+        id={`file-upload-${name}`}
         accept=".txt,.csv"
         onChange={handleFileUpload}
+        style={{ display: "none" }}
       />
     </div>
   );
 };
 
-export default ExperimentalMassTextBox;
+export default TextBoxInput;
