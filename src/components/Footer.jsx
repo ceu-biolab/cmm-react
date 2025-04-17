@@ -1,3 +1,5 @@
+import cembioLogo from "../assets/images/CEMBIO-Logo.png";
+
 const Footer = () => {
   return (
     <footer className="footer">
@@ -9,11 +11,7 @@ const Footer = () => {
           <h3>Escuela Politécnica Superior</h3>
           <h4>Laboratorio de Bioingeniería</h4>
           <br />
-          <img
-            src="src/assets/images/CEMBIO-Logo.png"
-            alt="CEMBIO Logo"
-            className="footer-img"
-          />
+          <img src={cembioLogo} alt="CEMBIO Logo" className="footer-img" />
         </div>
 
         {/* Column 2: Contact Info */}

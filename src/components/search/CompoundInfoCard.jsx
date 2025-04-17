@@ -1,30 +1,59 @@
 import React from "react";
-import CompoundViewer from "./CompoundViewer";
+import MoleculeViewer from "./CompoundViewer";
+import searchIcon from "../../assets/svgs/search-svg.svg";
+import clickIcon from "../../assets/svgs/click-drag.svg";
+import databaseIcon from "../../assets/svgs/database.svg";
 
 const CompoundInfoCard = ({ compound }) => {
   if (!compound) return null;
 
   return (
-    <div className="compound-info-card">
-      <div className="left-column">
-        <div className="outer-molecule-container">
-          <CompoundViewer />
+    <div className="page">
+      <div className="compound-info-grid-container page">
+        <div className="compound-info-col-2">
+          <div className="compounds-page-search-icon">
+            <img
+              src={searchIcon}
+              alt="Search Icon"
+              className="compounds-search-icon"
+            />
+          </div>
+          <strong>{compound.compoundName}</strong>{" "}
+          <ul>
+            <li>Formula: {compound.formula}</li>
+            <li>Mass: {parseFloat(compound.mass).toFixed(4)}</li>
+            <li>Charge Type: {compound.chargeType}</li>
+            <li>Charge Number: {compound.chargeNumber}</li>
+          </ul>
+        </div>
+        <div className="compound-info-col-3">
+          <div className="compounds-page-search-icon">
+            <img
+              src={databaseIcon}
+              alt="Search Icon"
+              className="compounds-search-icon"
+            />
+          </div>
+          <strong>Database IDs</strong>
+          <ul>
+            <li>CAS: {compound.casID ? compound.casID : "N/A"}</li>
+            <li>KEGG: {compound.keggID || "N/A"}</li>
+            <li>CHEBI: {compound.chebiID || "N/A"}</li>
+            <li>HMDB: {compound.hmdbID || "N/A"}</li>
+            <li>Lipid Maps: {compound.lmID || "N/A"}</li>
+            <li>PubChem: {compound.pcID || "N/A"}</li>
+            <li>Knapsack: {compound.knapsackID || "N/A"}</li>
+            <li>NP Atlas: {compound.npatlasID || "N/A"}</li>
+          </ul>
+        </div>
+        <div className="compound-info-col-1">
+          <MoleculeViewer className="custom-molecule-viewer" />
+          <div className="click-and-drag">
+            <img src={clickIcon} alt="Search Icon" className="click-icon" />
+            Click and drag to move
+          </div>
         </div>
       </div>
-      <div className="right-column">
-        <h3>{compound.compoundName}</h3>
-        <h4>Formula: {compound.formula}</h4>
-        <h4>Mass: {parseFloat(compound.mass).toFixed(4)}</h4>{" "}
-        <h4>Charge Type: {compound.chargeType}</h4>
-        <h4>Charge Number: {compound.chargeNumber}</h4>
-      </div>
-      {/*<div>
-        <strong>Database IDs:</strong>
-        <ul>
-          {compound.lipidMapsID && <li>LipidMaps: {compound.lipidMapsID}</li>}
-          {compound.hmdbID && <li>HMDB: {compound.hmdbID}</li>}
-        </ul>
-      </div>*/}
     </div>
   );
 };

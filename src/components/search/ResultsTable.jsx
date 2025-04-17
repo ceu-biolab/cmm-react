@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import CompoundInfoCard from "./CompoundInfoCard";
 
 const ResultsTable = ({ results }) => {
@@ -20,7 +21,6 @@ const ResultsTable = ({ results }) => {
     return <p>No results available</p>;
   }
 
-  // Table headers
   const displayHeaders = [
     "ID",
     "Name",
@@ -38,7 +38,6 @@ const ResultsTable = ({ results }) => {
     "Pathways",
   ];
 
-  // Keys in data
   const dataKeys = [
     "compoundId",
     "compoundName",
@@ -105,14 +104,15 @@ const ResultsTable = ({ results }) => {
                     }}
                   >
                     {isIdColumn ? (
-                      <a
-                        href={`/compound/${item.compoundId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        to={{
+                          pathname: `/compound/${item.compoundId}`,
+                        }}
+                        state={{ compound: item }}
                         className="id-link"
                       >
                         {item.compoundId}
-                      </a>
+                      </Link>
                     ) : isLinkable && value !== "—" ? (
                       <a
                         href={`https://dummy-link.com/${urlSafeHeader}/${value}`}
@@ -132,12 +132,12 @@ const ResultsTable = ({ results }) => {
         </tbody>
       </table>
 
-      {/* Display Compound Info Card when hovering over ID */}
+      {/* Display Compound Info Card when hovering over ID
       {hoveredCompound && (
         <div className="floating-square">
           <CompoundInfoCard compound={hoveredCompound} />
         </div>
-      )}
+      )}*/}
     </div>
   );
 };

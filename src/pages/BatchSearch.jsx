@@ -57,7 +57,7 @@ const BatchSearch = () => {
     console.log("Clearing input...");
     setFormState({
       mz: [],
-      tolerance: "",
+      tolerance: "10",
       toleranceMode: "ppm",
       metaboliteType: "All except peptides",
       ionizationMode: "Neutral",
@@ -159,6 +159,7 @@ const BatchSearch = () => {
               name="mz"
               value={formState.mz}
               onChange={handleChange}
+              className="masses-text-box-batch"
             />
 
             <GroupRadio

@@ -39,7 +39,7 @@ const SimpleSearch = () => {
     console.log("Clearing input...");
     setFormState({
       mz: "",
-      tolerance: "",
+      tolerance: "10",
       toleranceMode: "ppm",
       metaboliteType: "All except peptides",
       ionizationMode: "Neutral",

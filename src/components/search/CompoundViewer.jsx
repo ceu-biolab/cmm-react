@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const MoleculeViewer = () => {
+const MoleculeViewer = ({ className = "" }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -56,12 +56,13 @@ END
         sphere: { radius: 0.3, color: "#5F9EA0" },
       }
     );
+    viewer.setBackgroundColor('white');
     viewer.zoomTo();
     viewer.render();
-    viewer.resize();
+    viewer.zoom(0.8, 500);
   }, []);
 
-  return <div className="viewer-wrapper" ref={containerRef} />;
+  return <div className={`viewer-wrapper ${className}`} ref={containerRef} />;
 };
 
 export default MoleculeViewer;

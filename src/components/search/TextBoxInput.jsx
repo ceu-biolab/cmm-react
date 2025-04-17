@@ -1,10 +1,9 @@
-import React from "react";
-
 const TextBoxInput = ({
   value,
   onChange,
   name = "mz",
   label = "Experimental Masses",
+  className: customClassName = "",
 }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -20,7 +19,7 @@ const TextBoxInput = ({
 
         onChange({
           target: {
-            name: name,
+            name,
             value: masses.join(", "),
           },
         });
@@ -30,7 +29,7 @@ const TextBoxInput = ({
   };
 
   return (
-    <div className="inner-column">
+    <div className={`inner-column ${customClassName}`}>
       <label className="inner-column-label">{label}</label>
       <textarea
         name={name}

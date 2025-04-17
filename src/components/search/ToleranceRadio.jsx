@@ -5,10 +5,11 @@ const ToleranceRadio = ({
   onChange,
   inputName = "tolerance",
   modeName = "toleranceMode",
-  unitOptions = ["ppm", "mDa"], // Default units
+  unitOptions = ["ppm", "mDa"],
+  className = "",
 }) => {
   return (
-    <div className="tolerance-div">
+    <div className={`tolerance-div ${className}`}>
       <label className="inner-column-label">{label}</label>
       <input
         type="text"

@@ -4,6 +4,7 @@ import TextInput from "../components/search/TextInput.jsx";
 import TextBoxInput from "../components/search/TextBoxInput.jsx";
 import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
 import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
+import GroupRadio from "../components/search/GroupRadio.jsx";
 import searchIcon from "../assets/svgs/search-svg.svg";
 
 const MsMsSearch = () => {
@@ -121,21 +122,22 @@ const MsMsSearch = () => {
 
       <div className="page outer-container row">
         <form onSubmit={handleSubmit}>
-          <div className="grid-container">
+          <div className="grid-container-msms">
             <TextInput
               label="Precursor Ion Mass"
               name="mz"
               value={formState.mz}
               onChange={handleChange}
               placeholder="Enter m/z value"
-              className="experimental-mass-div"
+              className="input-msms"
             />
 
             <TextBoxInput
               label="MS/MS Peak List"
-              name="msmsPeakList"
-              value={formState.msmsPeakList}
+              name="msmsPeaks"
+              value={formState.msmsPeaks}
               onChange={handleChange}
+              className="box-input-msms"
             />
 
             <ToleranceRadio
@@ -146,6 +148,7 @@ const MsMsSearch = () => {
               toleranceMode={formState.precursorToleranceMode}
               unitOptions={["ppm", "Da"]}
               onChange={handleChange}
+              className="ion-tolerance-msms"
             />
 
             <ToleranceRadio
@@ -156,6 +159,34 @@ const MsMsSearch = () => {
               toleranceMode={formState.mzToleranceMode}
               unitOptions={["ppm", "Da"]}
               onChange={handleChange}
+              className="mz-tolerance-msms"
+            />
+
+            <GroupRadio
+              label="Ionization Mode"
+              name="ionizationMode"
+              value={formState.ionizationMode}
+              options={["Positive", "Negative"]}
+              onChange={handleChange}
+              className="ionization-div-msms"
+            />
+
+            <GroupRadio
+              label="Ionization Voltage"
+              name="ionizationVoltage"
+              value={formState.ionizationVoltage}
+              options={["Low (10V)", "Medium (20V)", "High (40V)", "All"]}
+              onChange={handleChange}
+              className="ionization-volt-div-msms"
+            />
+
+            <GroupRadio
+              label="Type of Spectra"
+              name="spectraType"
+              value={formState.spectraType}
+              options={["Experimental", "Predicted"]}
+              onChange={handleChange}
+              className="spectra-div-msms"
             />
           </div>
 
@@ -183,20 +214,7 @@ const MsMsSearch = () => {
 
         {showResults && (
           <div className="results-div">
-            <div className="search-compounds-found-div">
-              <div className="results-count">{totalCompounds}</div>
-              <div className="results-count-text">
-                Compound{totalCompounds !== 1 ? "s" : ""} found
-              </div>
-            </div>
-
-            {Object.entries(results).map(([adduct, compounds]) => (
-              <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
-              />
-            ))}
+            <ResultsDropdownGroup compounds={results} />
           </div>
         )}
       </div>
