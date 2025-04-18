@@ -56,7 +56,6 @@ END
         sphere: { radius: 0.3, color: "#5F9EA0" },
       }
     );
-    viewer.setBackgroundColor('white');
     viewer.zoomTo();
     viewer.render();
     viewer.zoom(0.8, 500);

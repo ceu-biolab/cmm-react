@@ -1,6 +1,11 @@
 import React from "react";
 
-const AdductsCheckboxes = ({ selectedAdducts, onChange }) => {
+const AdductsCheckboxes = ({
+  selectedAdducts,
+  onChange,
+  className = "",
+  label = "Adducts",
+}) => {
   const adductsString = [
     "Select All",
     "M+H",
@@ -49,8 +54,8 @@ const AdductsCheckboxes = ({ selectedAdducts, onChange }) => {
   ];
 
   return (
-    <div className="adducts-div">
-      <label className="inner-column-label">Adducts</label>
+    <div className={`adducts-div ${className}`}>
+      {label && <label className="inner-column-label">{label}</label>}{" "}
       <div className="scrollable-checkboxes">
         {adductsString.map((adduct) => (
           <label key={adduct}>

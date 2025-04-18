@@ -8,14 +8,13 @@ import TextBoxInput from "../components/search/TextBoxInput.jsx";
 import GroupRadio from "../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
 
-const BatchAdvancedSearch = () => {
+const RtPredSearch = () => {
   const [formState, setFormState] = useState({
+    cmmIDs: [],
+    rtKnown: [],
     mz: [],
-    allMz: [],
     rt: [],
-    allRt: [],
     compSpectra: [],
-    allCompSpectra: [],
     tolerance: "",
     toleranceMode: "ppm",
     chemAlphabet: "CHNOPS",
@@ -34,6 +33,8 @@ const BatchAdvancedSearch = () => {
   const loadDemoData = () => {
     console.log("Loading demo data...");
     setFormState({
+      cmmIDs: ["Working..."],
+      rtKnown: ["Working..."],
       mz: [
         "400.3432",
         "422.32336",
@@ -52,11 +53,8 @@ const BatchAdvancedSearch = () => {
         "478.29312",
         "500.27457",
       ],
-      allMz: ["Working..."],
       rt: ["Working..."],
-      allRt: ["Working..."],
       compSpectra: ["Working..."],
-      allCompSpectra: ["Working..."],
       tolerance: "10",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
@@ -72,12 +70,11 @@ const BatchAdvancedSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
+      cmmIDs: [],
+      rtKnown: [],
       mz: [],
-      allMz: [],
       rt: [],
-      allRt: [],
       compSpectra: [],
-      allCompSpectra: [],
       tolerance: "",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
@@ -125,14 +122,11 @@ const BatchAdvancedSearch = () => {
     e.preventDefault();
 
     const formattedData = {
+      cmmIDs: formState.mz.map((mass) => parseFloat(mass)),
+      rtKnown: formState.mz.map((mass) => parseFloat(mass)),
       mz: formState.mz.map((mass) => parseFloat(mass)),
-      allMz: formState.allMz.map((mass) => parseFloat(mass)),
       rt: formState.rt.map((time) => parseFloat(time)),
-      allRt: formState.allRt.map((time) => parseFloat(time)),
       compSpectra: formState.compSpectra.map((spectra) => parseFloat(spectra)),
-      allCompSpectra: formState.allCompSpectra.map((spectra) =>
-        parseFloat(spectra)
-      ),
       tolerance: parseFloat(formState.tolerance),
       toleranceMode: formState.toleranceMode,
       chemAlphabet: formState.chemAlphabet,
@@ -148,7 +142,7 @@ const BatchAdvancedSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}compounds/batch-advanced-search`,
+        `${import.meta.env.VITE_API_URL}compounds/rt-pred-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -182,25 +176,33 @@ const BatchAdvancedSearch = () => {
     <div className="page">
       <header className="title-header">
         <img src={searchIcon} alt="Search Icon" className="icon" />
-        <span className="title-text">Batch Advanced Search</span>
+        <span className="title-text">RT Pred Search</span>
       </header>
       <div className="page outer-container row">
         <form onSubmit={handleSubmit}>
-          <div className="grid-container-batch-adv">
+          <div className="grid-container-rt-pred">
+            <TextBoxInput
+              label="CMM IDs of Reference Standards (*)"
+              name="cmmIDs"
+              value={formState.cmmIDs}
+              onChange={handleChange}
+              className="cmmIDs-text-rt-pred"
+            />
+
+            <TextBoxInput
+              label="Retention Times of Known Compounds in Analysis"
+              name="rtKnown"
+              value={formState.rtKnown}
+              onChange={handleChange}
+              className="rts-known-text-rt-pred"
+            />
+
             <TextBoxInput
               label="Experimental Masses (*)"
               name="mz"
               value={formState.mz}
               onChange={handleChange}
-              className="masses-text-adv"
-            />
-
-            <TextBoxInput
-              label="All Experimental Masses"
-              name="allMz"
-              value={formState.allMz}
-              onChange={handleChange}
-              className="all-masses-text-adv"
+              className="masses-text-rt-pred"
             />
 
             <TextBoxInput
@@ -208,15 +210,7 @@ const BatchAdvancedSearch = () => {
               name="rt"
               value={formState.rt}
               onChange={handleChange}
-              className="rt-text-adv"
-            />
-
-            <TextBoxInput
-              label="All Retention Times"
-              name="allRt"
-              value={formState.allRt}
-              onChange={handleChange}
-              className="all-rt-text-adv"
+              className="rt-text-rt-pred"
             />
 
             <TextBoxInput
@@ -224,15 +218,7 @@ const BatchAdvancedSearch = () => {
               name="compSpectra"
               value={formState.compSpectra}
               onChange={handleChange}
-              className="spec-text-adv"
-            />
-
-            <TextBoxInput
-              label="All Composite Spectra"
-              name="allCompSpectra"
-              value={formState.allCompSpectra}
-              onChange={handleChange}
-              className="all-spec-text-adv"
+              className="spec-text-rt-pred"
             />
 
             <ToleranceRadio
@@ -240,7 +226,16 @@ const BatchAdvancedSearch = () => {
               toleranceValue={formState.tolerance}
               toleranceMode={formState.toleranceMode}
               onChange={handleChange}
-              className="tolerance-adv"
+              className="tolerance-rt-pred"
+            />
+
+            <GroupRadio
+              label="Confidence Interval (*)"
+              name="confidenceInterval"
+              value={formState.confidenceInterval}
+              options={["68", "95", "99"]}
+              onChange={handleChange}
+              className="conf-int-rt-pred"
             />
 
             <GroupRadio
@@ -249,7 +244,7 @@ const BatchAdvancedSearch = () => {
               value={formState.chemAlphabet}
               options={["All", "CHNOPS", "CHNOPS + Cl"]}
               onChange={handleChange}
-              className="chem-alph-adv"
+              className="chem-alph-rt-pred"
             />
 
             <GroupRadio
@@ -265,14 +260,14 @@ const BatchAdvancedSearch = () => {
                 "CH3COONH3",
               ]}
               onChange={handleChange}
-              className="modifiers-adv"
+              className="modifiers-rt-pred"
             />
 
             <DatabasesCheckboxes
               label="Databases (*)"
               selectedDatabases={formState.databases}
               onChange={handleChange}
-              className="databases-adv"
+              className="databases-rt-pred"
             />
 
             <GroupRadio
@@ -285,14 +280,14 @@ const BatchAdvancedSearch = () => {
                 "All including peptides",
               ]}
               onChange={handleChange}
-              className="metabolites-adv"
+              className="metabolites-rt-pred"
             />
 
             <AdductsCheckboxes
               label="Adducts (*)"
               selectedAdducts={formState.adductsString}
               onChange={handleChange}
-              className="adducts-adv"
+              className="adducts-rt-pred"
             />
 
             <GroupRadio
@@ -301,7 +296,7 @@ const BatchAdvancedSearch = () => {
               value={formState.ionizationMode}
               options={["Neutral", "Positive Mode", "Negative Mode"]}
               onChange={handleChange}
-              className="ionization-adv"
+              className="ionization-rt-pred"
             />
           </div>
 
@@ -342,4 +337,4 @@ const BatchAdvancedSearch = () => {
   );
 };
 
-export default BatchAdvancedSearch;
+export default RtPredSearch;

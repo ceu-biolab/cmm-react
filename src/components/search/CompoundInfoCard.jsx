@@ -34,7 +34,7 @@ const CompoundInfoCard = ({ compound }) => {
               className="compounds-search-icon"
             />
           </div>
-          <strong>Database IDs</strong>
+          <strong>Database References</strong>
           <ul>
             <li>CAS: {compound.casID ? compound.casID : "N/A"}</li>
             <li>KEGG: {compound.keggID || "N/A"}</li>

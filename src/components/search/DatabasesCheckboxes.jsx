@@ -2,10 +2,11 @@ const DatabasesSelection = ({
   selectedDatabases,
   onChange,
   className = "",
+  label = "Databases",
 }) => {
   return (
     <div className={`databases-div ${className}`}>
-      <label className="inner-column-label">Databases</label>
+      <label className="inner-column-label">{label}</label>
       <div className="checkboxes">
         {[
           "ALL",

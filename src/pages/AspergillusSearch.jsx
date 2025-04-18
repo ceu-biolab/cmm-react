@@ -8,7 +8,7 @@ import TextBoxInput from "../components/search/TextBoxInput.jsx";
 import GroupRadio from "../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
 
-const BatchAdvancedSearch = () => {
+const AspergillusSearch = () => {
   const [formState, setFormState] = useState({
     mz: [],
     allMz: [],
@@ -148,7 +148,7 @@ const BatchAdvancedSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}compounds/batch-advanced-search`,
+        `${import.meta.env.VITE_API_URL}compounds/aspergillus-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -182,7 +182,7 @@ const BatchAdvancedSearch = () => {
     <div className="page">
       <header className="title-header">
         <img src={searchIcon} alt="Search Icon" className="icon" />
-        <span className="title-text">Batch Advanced Search</span>
+        <span className="title-text">Aspergillus Search</span>
       </header>
       <div className="page outer-container row">
         <form onSubmit={handleSubmit}>
@@ -342,4 +342,4 @@ const BatchAdvancedSearch = () => {
   );
 };
 
-export default BatchAdvancedSearch;
+export default AspergillusSearch;
