@@ -5,12 +5,16 @@ const CompoundPage = () => {
   const location = useLocation();
   const compound = location.state?.compound;
 
+  console.log(compound);
+
   return (
     <div style={{ padding: "2rem" }}>
-      {compound && (
+      {compound ? (
         <section>
           <CompoundInfoCard compound={compound} />
         </section>
+      ) : (
+        <p>Loading compound data...</p>
       )}
     </div>
   );

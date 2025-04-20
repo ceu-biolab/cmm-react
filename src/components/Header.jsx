@@ -91,7 +91,9 @@ const Header = () => {
           </div>
         </div>
 
-        <button className="button">Pathway Displayer</button>
+        <Link to="/pathway-displayer" className="button">
+          Pathway Displayer
+        </Link>
 
         <div className="dropdown">
           <button className="button">Oxidation</button>
@@ -111,9 +113,13 @@ const Header = () => {
           </div>
         </div>
 
-        <button className="button">Spectral Quality</button>
+        <Link to="/spectral-quality" className="button">
+          Spectral Quality
+        </Link>
 
-        <button className="button">Manual</button>
+        <Link to="/manual" className="button">
+          Manual
+        </Link>
       </nav>
 
       <button className="button contact-button">Contact Us</button>

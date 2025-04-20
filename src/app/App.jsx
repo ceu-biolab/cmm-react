@@ -13,6 +13,9 @@ import ImMsSearch from "../pages/ImMsSearch";
 import BrowseSearch from "../pages/BrowseSearch";
 import MsMsSearch from "../pages/MsMsSearch";
 import CompoundPage from "../pages/CompoundPage";
+import PathwayDisplayer from "../pages/PathwayDisplayer";
+import SpectralQuality from "../pages/SpectralQuality";
+import Manual from "../pages/Manual";
 
 const App = () => {
   return (
@@ -34,6 +37,9 @@ const App = () => {
           <Route path="/browse-search" element={<BrowseSearch />} />
           <Route path="/ms-ms-search" element={<MsMsSearch />} />
           <Route path="/compound/:id" element={<CompoundPage />} />
+          <Route path="/pathway-displayer" element={<PathwayDisplayer />} />
+          <Route path="/spectral-quality" element={<SpectralQuality />} />
+          <Route path="/manual" element={<Manual />} />
         </Routes>
       </div>
       <Footer />

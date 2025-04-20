@@ -131,13 +131,6 @@ const ResultsTable = ({ results }) => {
           ))}
         </tbody>
       </table>
-
-      {/* Display Compound Info Card when hovering over ID
-      {hoveredCompound && (
-        <div className="floating-square">
-          <CompoundInfoCard compound={hoveredCompound} />
-        </div>
-      )}*/}
     </div>
   );
 };
