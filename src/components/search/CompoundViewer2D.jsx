@@ -21,20 +21,19 @@ const CompoundViewer2D = ({ smiles }) => {
       fontSizeLarge: 12,
       fontSizeSmall: 10,
       themes: {
-        dark: {
-          C: "#ffffff",
-          O: "#ff0000",
-          N: "#439cef",
-          F: "#27ae60",
-          CL: "#16a085",
-          BR: "#d35400",
-          I: "#8e44ad",
-          P: "#ffde21",
-          S: "#f1c40f",
-          B: "#e67e22",
-          SI: "#e67e22",
-          H: "#48cae4",
-          BACKGROUND: "#1e1e1e",
+        light: {
+          C: "#003754", // Carbon - dark blue
+          O: "#c0392b", // Oxygen - red
+          N: "#2980b9", // Nitrogen - lightblue
+          F: "#1e8449", // Fluorine - dark green
+          CL: "#117864", // Chlorine - teal
+          BR: "#af601a", // Bromine - yellow
+          I: "#6c3483", // Iodine - purple
+          P: "#b7950b", // Phosphorus - yellow
+          S: "#b9770e", // Sulfur - yellow
+          B: "#a04000", // Boron - brown
+          SI: "#a04000", // Silicon - brown
+          H: "#4fb9af", // Hydrogen - muted blue
         },
       },
     };
@@ -46,9 +45,9 @@ const CompoundViewer2D = ({ smiles }) => {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    canvas.style.backgroundColor = "#123941";
+    canvas.style.backgroundColor = "#f1f7f9";
 
-    sd.draw(smiles, "#canvasRef", "dark");
+    sd.draw(smiles, "#canvasRef", "light");
   }, [smiles]);
 
   return (

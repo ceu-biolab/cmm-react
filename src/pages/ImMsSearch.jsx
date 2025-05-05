@@ -19,7 +19,7 @@ const ImMsSearch = () => {
     deuteriumCheck: "",
     modifiers: "None",
     ionizationMode: "Positive Mode",
-    metaboliteType: "All except peptides",
+    metaboliteType: "All",
     adductsString: [],
     databases: [],
   });
@@ -74,7 +74,7 @@ const ImMsSearch = () => {
       deuteriumCheck: "",
       modifiers: "None",
       ionizationMode: "Positive Mode",
-      metaboliteType: "All except peptides",
+      metaboliteType: "All",
       adductsString: [],
       databases: [],
     });
@@ -169,10 +169,17 @@ const ImMsSearch = () => {
         <span className="title-text">IM-MS Search</span>
       </header>
       <div className="page outer-container row">
+        <label class="required-label">
+          Required <span class="red-asterisk">*</span>
+        </label>
         <form onSubmit={handleSubmit}>
           <div className="grid-container-im-ms">
             <TextBoxInput
-              label="Experimental Masses (*)"
+              label={
+                <>
+                  Experimental Masses <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="mz"
               value={formState.mz}
               onChange={handleChange}
@@ -188,7 +195,11 @@ const ImMsSearch = () => {
             />
 
             <ToleranceRadio
-              label="Tolerance (*)"
+              label={
+                <>
+                  Tolerance <span style={{ color: "red" }}>*</span>
+                </>
+              }
               toleranceValue={formState.tolerance}
               toleranceMode={formState.toleranceMode}
               onChange={handleChange}
@@ -205,7 +216,11 @@ const ImMsSearch = () => {
             />
 
             <GroupRadio
-              label="Chemical Alphabet (*)"
+              label={
+                <>
+                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="chemAlphabet"
               value={formState.chemAlphabet}
               options={["All", "CHNOPS", "CHNOPS + Cl"]}
@@ -214,7 +229,11 @@ const ImMsSearch = () => {
             />
 
             <GroupRadio
-              label="Modifiers (*)"
+              label={
+                <>
+                  Modifiers <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="modifiers"
               value={formState.modifiers}
               options={[
@@ -230,34 +249,46 @@ const ImMsSearch = () => {
             />
 
             <DatabasesCheckboxes
-              label="Databases (*)"
+              label={
+                <>
+                  Databases <span style={{ color: "red" }}>*</span>
+                </>
+              }
               selectedDatabases={formState.databases}
               onChange={handleChange}
               className="databases-im-ms"
             />
 
             <GroupRadio
-              label="Metabolites (*)"
+              label={
+                <>
+                  Metabolites <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="metaboliteType"
               value={formState.metaboliteType}
-              options={[
-                "All except peptides",
-                "ONLYLIPIDS",
-                "All including peptides",
-              ]}
+              options={["All", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-im-ms"
             />
 
             <AdductsCheckboxes
-              label="Adducts (*)"
+              label={
+                <>
+                  Adducts <span style={{ color: "red" }}>*</span>
+                </>
+              }
               selectedAdducts={formState.adductsString}
               onChange={handleChange}
               className="adducts-im-ms"
             />
 
             <GroupRadio
-              label="Ionization Mode (*)"
+              label={
+                <>
+                  Ionization Mode <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="ionizationMode"
               value={formState.ionizationMode}
               options={["Neutral", "Positive Mode", "Negative Mode"]}

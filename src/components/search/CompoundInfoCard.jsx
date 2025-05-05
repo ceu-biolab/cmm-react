@@ -4,15 +4,43 @@ import clickIcon from "../../assets/svgs/click-drag.svg";
 import databaseIcon from "../../assets/svgs/database.svg";
 import CompoundViewer3D from "./CompoundViewer3D";
 import CompoundViewer2D from "./CompoundViewer2D";
+import { useLocation } from "react-router-dom";
 
-const CompoundInfoCard = ({ compound }) => {
-  if (!compound) return null;
-  console.log(compound);
+const CompoundInfoCard = () => {
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
 
-  const { mol2 } = compound;
-  const { sdf } = compound;
-  const { smiles } = compound;
-  console.log(smiles);
+  const getParam = (paramName, defaultValue = "N/A") => {
+    return queryParams.get(paramName) || defaultValue;
+  };
+
+  const compound_name = queryParams.get("compound_name");
+  console.log("Compound Name:", compound_name);
+
+  const compoundFormula = getParam("formula");
+  const mass = parseFloat(getParam("mass", "0"));
+  const chargeType = getParam("chargeType");
+  const chargeNumber = getParam("chargeNumber");
+  const numCarbons = getParam("numCarbons");
+  const doubleBonds = getParam("doubleBonds");
+  const numChains = getParam("numChains");
+
+  const inchi = getParam("inchi");
+  const inchiKey = getParam("inchiKey");
+  const smiles = getParam("smiles");
+
+  const casID = getParam("casID");
+  const keggID = getParam("keggID");
+  const chebiID = getParam("chebiID");
+  const hmdbID = getParam("hmdbID");
+  const lmID = getParam("lmID");
+  const pcID = getParam("pcID");
+  const knapsackID = getParam("knapsackID");
+
+  const mol2 = getParam("mol2");
+  const sdf = getParam("sdf");
+
+  console.log("Smiles: " + smiles);
 
   return (
     <div className="page">
@@ -25,29 +53,29 @@ const CompoundInfoCard = ({ compound }) => {
               className="compounds-search-icon"
             />
           </div>
-          <div className="compound-name-info-card">{compound.compoundName}</div>
+          <div className="compound-name-info-card">{compound_name}</div>
           <ul>
             <li>
               <strong>Formula: </strong>
-              {compound.formula}
+              {compoundFormula}
             </li>
             <li>
-              <strong>Mass: </strong> {parseFloat(compound.mass).toFixed(4)}
+              <strong>Mass: </strong> {mass ? mass.toFixed(4) : "N/A"}
             </li>
             <li>
-              <strong>Charge Type: </strong> {compound.chargeType}
+              <strong>Charge Type: </strong> {chargeType}
             </li>
             <li>
-              <strong>Charge Number: </strong> {compound.chargeNumber}
+              <strong>Charge Number: </strong> {chargeNumber}
             </li>
             <li>
-              <strong>Number of Carbons: </strong> {compound.numCarbons}
+              <strong>Number of Carbons: </strong> {numCarbons}
             </li>
             <li>
-              <strong>Double Bonds: </strong> {compound.doubleBonds}
+              <strong>Double Bonds: </strong> {doubleBonds}
             </li>
             <li>
-              <strong>Number of Chains: </strong> {compound.numChains}
+              <strong>Number of Chains: </strong> {numChains}
             </li>
           </ul>
           <div className="identifiers-box">
@@ -55,15 +83,15 @@ const CompoundInfoCard = ({ compound }) => {
             <ul>
               <li>
                 <i>InChI</i>
-                <div>{compound.inchi || "N/A"}</div>
+                <div>{inchi}</div>
               </li>
               <li>
                 <i>InChIKey</i>
-                <div>{compound.inchiKey || "N/A"}</div>
+                <div>{inchiKey}</div>
               </li>
               <li>
                 <i>SMILES</i>
-                <div>{compound.smiles || "N/A"}</div>
+                <div>{smiles}</div>
               </li>
             </ul>
           </div>
@@ -72,7 +100,7 @@ const CompoundInfoCard = ({ compound }) => {
           <div className="compounds-page-search-icon">
             <img
               src={databaseIcon}
-              alt="Search Icon"
+              alt="Database Icon"
               className="compounds-search-icon"
             />
           </div>
@@ -81,41 +109,47 @@ const CompoundInfoCard = ({ compound }) => {
             {[
               {
                 label: "CAS",
-                value: compound.casID,
-                url: `https://commonchemistry.cas.org/detail?cas_rn=${compound.casID}`,
+                value: casID,
+                url: `https://commonchemistry.cas.org/detail?cas_rn=${casID}`,
               },
               {
                 label: "KEGG",
-                value: compound.keggID,
-                url: `https://www.kegg.jp/dbget-bin/www_bget?cpd:${compound.keggID}`,
+                value: keggID,
+                url: `https://www.kegg.jp/dbget-bin/www_bget?cpd:${keggID}`,
               },
               {
                 label: "CHEBI",
-                value: compound.chebiID,
-                url: `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${compound.chebiID}`,
+                value: chebiID,
+                url: `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${chebiID}`,
               },
               {
                 label: "HMDB",
-                value: compound.hmdbID,
-                url: `https://hmdb.ca/metabolites/${compound.hmdbID}`,
+                value: hmdbID,
+                url: `https://hmdb.ca/metabolites/${hmdbID}`,
               },
               {
                 label: "Lipid Maps",
-                value: compound.lmID,
-                url: `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${compound.lmID}`,
+                value: lmID,
+                url: `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${lmID}`,
               },
               {
                 label: "PubChem",
-                value: compound.pcID,
-                url: `https://pubchem.ncbi.nlm.nih.gov/compound/${compound.pcID}`,
+                value: pcID,
+                url: `https://pubchem.ncbi.nlm.nih.gov/compound/${pcID}`,
               },
               {
                 label: "Knapsack",
-                value: compound.knapsackID,
-                url: `https://www.knapsackfamily.com/knapsack_core/information.php?word=${compound.knapsackID}`,
+                value: knapsackID,
+                url: `https://www.knapsackfamily.com/knapsack_core/information.php?word=${knapsackID}`,
               },
             ]
-              .filter((item) => item.value && item.value !== 0)
+              .filter(
+                (item) =>
+                  item.value &&
+                  item.value !== "0" &&
+                  item.value !== "null" &&
+                  item.value !== "undefined"
+              )
               .map((item) => (
                 <li key={item.label}>
                   {item.label}:{" "}
@@ -126,17 +160,24 @@ const CompoundInfoCard = ({ compound }) => {
               ))}
           </ul>
         </div>
-        <div className="compound-info-col-1">
-          <CompoundViewer3D
-            mol2Data={mol2}
-            sdfData={sdf}
-            className="custom-molecule-viewer"
-          />
-          <div className="click-and-drag">
-            <img src={clickIcon} alt="Search Icon" className="click-icon" />
-            Click and drag to move
+        {(mol2 && mol2 !== "undefined" && mol2 !== "null") ||
+        (sdf && sdf !== "undefined" && sdf !== "null") ? (
+          <div className="compound-info-col-1">
+            <CompoundViewer3D
+              mol2Data={mol2}
+              sdfData={sdf}
+              className="custom-molecule-viewer"
+            />
+            <div className="click-and-drag">
+              <img
+                src={clickIcon}
+                alt="Click and Drag Icon"
+                className="click-icon"
+              />
+              Click and drag to move
+            </div>
           </div>
-        </div>
+        ) : null}
         <div className="compound-info-col-4">
           <CompoundViewer2D smiles={smiles} />
         </div>

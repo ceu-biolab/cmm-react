@@ -3,6 +3,10 @@ import React, { useEffect, useRef } from "react";
 const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
   const containerRef = useRef(null);
 
+  if (!mol2Data && !sdfData) {
+    return null;
+  }
+
   useEffect(() => {
     if (!window.$3Dmol) {
       console.error("$3Dmol is not loaded!");
@@ -13,14 +17,12 @@ const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
       backgroundColor: "#12323B",
     });
 
-    if (mol2Data) {
-      viewer.addModel(mol2Data, "mol2");
-    } else if (sdfData) {
-      viewer.addModel(sdfData, "sdf");
-    } else {
-      console.warn("No molecular data provided.");
-      return;
-    }
+    const model = viewer.addModel(
+      mol2Data || sdfData,
+      mol2Data ? "mol2" : "sdf"
+    );
+    model.setStyle({}, { stick: {}, sphere: {} });
+    model.setCoordinates();
 
     // Carbon (C)
     viewer.setStyle(
@@ -35,8 +37,8 @@ const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
     viewer.setStyle(
       { elem: "H" },
       {
-        stick: { radius: 0.08, color: "white" },
-        sphere: { radius: 0.25, color: "white" },
+        stick: { radius: 0.08, color: "#4fb9af" },
+        sphere: { radius: 0.25, color: "#4fb9af" },
       }
     );
 
@@ -84,7 +86,7 @@ const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
       }
     );
 
-    viewer.setBackgroundColor("#123941");
+    viewer.setBackgroundColor("#f1f7f9");
     viewer.zoomTo();
     viewer.render();
     viewer.zoom(1.1, 500);

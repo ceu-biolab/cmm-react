@@ -1,5 +1,6 @@
 import React from "react";
 import manualIcon from "../assets/svgs/manual.svg";
+import ManualPDF from "../components/manual/ManualPDF";
 
 const Manual = () => {
   return (
@@ -11,6 +12,7 @@ const Manual = () => {
 
       <div className="page outer-container">
         <h2>Manual</h2>
+        <ManualPDF />
       </div>
     </div>
   );

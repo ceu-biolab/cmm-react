@@ -15,13 +15,14 @@ const RtPredSearch = () => {
     mz: [],
     rt: [],
     compSpectra: [],
+    confidenceInterval: "95",
     tolerance: "",
     toleranceMode: "ppm",
     chemAlphabet: "CHNOPS",
     deuteriumCheck: "",
     modifiers: "None",
     ionizationMode: "Positive Mode",
-    metaboliteType: "All except peptides",
+    metaboliteType: "All",
     adductsString: [],
     databases: [],
   });
@@ -55,6 +56,7 @@ const RtPredSearch = () => {
       ],
       rt: ["Working..."],
       compSpectra: ["Working..."],
+      confidenceInterval: "99",
       tolerance: "10",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
@@ -76,12 +78,13 @@ const RtPredSearch = () => {
       rt: [],
       compSpectra: [],
       tolerance: "",
+      confidenceInterval: "95",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
       deuteriumCheck: "",
       modifiers: "None",
       ionizationMode: "Positive Mode",
-      metaboliteType: "All except peptides",
+      metaboliteType: "All",
       adductsString: [],
       databases: [],
     });
@@ -179,10 +182,18 @@ const RtPredSearch = () => {
         <span className="title-text">RT Pred Search</span>
       </header>
       <div className="page outer-container row">
+        <label class="required-label">
+          Required <span class="red-asterisk">*</span>
+        </label>
         <form onSubmit={handleSubmit}>
           <div className="grid-container-rt-pred">
             <TextBoxInput
-              label="CMM IDs of Reference Standards (*)"
+              label={
+                <>
+                  CMM IDs of Reference Standards{" "}
+                  <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="cmmIDs"
               value={formState.cmmIDs}
               onChange={handleChange}
@@ -198,7 +209,11 @@ const RtPredSearch = () => {
             />
 
             <TextBoxInput
-              label="Experimental Masses (*)"
+              label={
+                <>
+                  Experimental Masses <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="mz"
               value={formState.mz}
               onChange={handleChange}
@@ -222,7 +237,11 @@ const RtPredSearch = () => {
             />
 
             <ToleranceRadio
-              label="Tolerance (*)"
+              label={
+                <>
+                  Tolerance <span style={{ color: "red" }}>*</span>
+                </>
+              }
               toleranceValue={formState.tolerance}
               toleranceMode={formState.toleranceMode}
               onChange={handleChange}
@@ -230,7 +249,11 @@ const RtPredSearch = () => {
             />
 
             <GroupRadio
-              label="Confidence Interval (*)"
+              label={
+                <>
+                  Confidence Interval <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="confidenceInterval"
               value={formState.confidenceInterval}
               options={["68", "95", "99"]}
@@ -239,7 +262,11 @@ const RtPredSearch = () => {
             />
 
             <GroupRadio
-              label="Chemical Alphabet (*)"
+              label={
+                <>
+                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="chemAlphabet"
               value={formState.chemAlphabet}
               options={["All", "CHNOPS", "CHNOPS + Cl"]}
@@ -248,7 +275,11 @@ const RtPredSearch = () => {
             />
 
             <GroupRadio
-              label="Modifiers (*)"
+              label={
+                <>
+                  Modifiers <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="modifiers"
               value={formState.modifiers}
               options={[
@@ -264,34 +295,46 @@ const RtPredSearch = () => {
             />
 
             <DatabasesCheckboxes
-              label="Databases (*)"
+              label={
+                <>
+                  Databases <span style={{ color: "red" }}>*</span>
+                </>
+              }
               selectedDatabases={formState.databases}
               onChange={handleChange}
               className="databases-rt-pred"
             />
 
             <GroupRadio
-              label="Metabolites (*)"
+              label={
+                <>
+                  Metabolites <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="metaboliteType"
               value={formState.metaboliteType}
-              options={[
-                "All except peptides",
-                "ONLYLIPIDS",
-                "All including peptides",
-              ]}
+              options={["All", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-rt-pred"
             />
 
             <AdductsCheckboxes
-              label="Adducts (*)"
+              label={
+                <>
+                  Adducts <span style={{ color: "red" }}>*</span>
+                </>
+              }
               selectedAdducts={formState.adductsString}
               onChange={handleChange}
               className="adducts-rt-pred"
             />
 
             <GroupRadio
-              label="Ionization Mode (*)"
+              label={
+                <>
+                  Ionization Mode <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="ionizationMode"
               value={formState.ionizationMode}
               options={["Neutral", "Positive Mode", "Negative Mode"]}

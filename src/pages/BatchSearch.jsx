@@ -14,7 +14,7 @@ const BatchSearch = () => {
     tolerance: "",
     toleranceMode: "ppm",
     ionizationMode: "Positive Mode",
-    metaboliteType: "All except peptides",
+    metaboliteType: "All",
     adductsString: [],
     databases: [],
   });
@@ -59,7 +59,7 @@ const BatchSearch = () => {
       mz: [],
       tolerance: "10",
       toleranceMode: "ppm",
-      metaboliteType: "All except peptides",
+      metaboliteType: "All",
       ionizationMode: "Neutral",
       adductsString: [],
       databases: [],
@@ -159,20 +159,15 @@ const BatchSearch = () => {
               name="mz"
               value={formState.mz}
               onChange={handleChange}
-              className="masses-text-box-batch"
             />
 
             <GroupRadio
-              label="Metabolites"
-              name="metaboliteType"
-              value={formState.metaboliteType}
-              options={[
-                "All except peptides",
-                "ONLYLIPIDS",
-                "All including peptides",
-              ]}
+              label="Ionization Mode"
+              name="ionizationMode"
+              value={formState.ionizationMode}
+              options={["Neutral", "Positive Mode", "Negative Mode"]}
               onChange={handleChange}
-              className="metabolites-div"
+              className="ionization-div"
             />
 
             <AdductsCheckboxes
@@ -193,12 +188,12 @@ const BatchSearch = () => {
             />
 
             <GroupRadio
-              label="Ionization Mode"
-              name="ionizationMode"
-              value={formState.ionizationMode}
-              options={["Neutral", "Positive Mode", "Negative Mode"]}
+              label="Metabolites"
+              name="metaboliteType"
+              value={formState.metaboliteType}
+              options={["All", "ONLYLIPIDS"]}
               onChange={handleChange}
-              className="ionization-div"
+              className="metabolites-div"
             />
           </div>
 

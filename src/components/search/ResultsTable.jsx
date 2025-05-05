@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { createSearchParams } from "react-router-dom";
 import CompoundInfoCard from "./CompoundInfoCard";
 
 const ResultsTable = ({ results }) => {
@@ -107,20 +108,60 @@ const ResultsTable = ({ results }) => {
                       <Link
                         to={{
                           pathname: `/compound/${item.compoundId}`,
+                          search: createSearchParams({
+                            compound_name: item.compoundName,
+                            formula: item.formula,
+                            mass: item.mass,
+                            chargeType: item.chargeType,
+                            chargeNumber: item.chargeNumber,
+                            numCarbons: item.numCarbons,
+                            doubleBonds: item.doubleBonds,
+                            numChains: item.numChains,
+                            inchi: item.inchi,
+                            inchiKey: item.inchiKey,
+                            smiles: item.smiles,
+                            casID: item.casID,
+                            keggID: item.keggID,
+                            chebiID: item.chebiID,
+                            hmdbID: item.hmdbID,
+                            lmID: item.lmID,
+                            pcID: item.pcID,
+                            knapsackID: item.knapsackID,
+                            mol2: item.mol2,
+                            sdf: item.sdf,
+                          }).toString(),
                         }}
-                        state={{ compound: item }}
-                        className="id-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         {item.compoundId}
                       </Link>
-                    ) : isLinkable && value !== "—" ? (
+                    ) : isLinkable && value && value !== 0 && value !== "—" ? (
                       <a
-                        href={`https://dummy-link.com/${urlSafeHeader}/${value}`}
+                        href={
+                          header === "CAS"
+                            ? `https://commonchemistry.cas.org/detail?cas_rn=${value}`
+                            : header === "KEGG"
+                            ? `https://www.kegg.jp/dbget-bin/www_bget?cpd:${value}`
+                            : header === "CHEBI"
+                            ? `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${value}`
+                            : header === "HMDB"
+                            ? `https://hmdb.ca/metabolites/${value}`
+                            : header === "LipidMaps"
+                            ? `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${value}`
+                            : header === "PubChem"
+                            ? `https://pubchem.ncbi.nlm.nih.gov/compound/${value}`
+                            : header === "KNAPSACK"
+                            ? `https://www.knapsackfamily.com/knapsack_core/information.php?word=${value}`
+                            : `https://dummy-link.com/${urlSafeHeader}/${value}`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         {value}
                       </a>
+                    ) : value === 0 ? (
+                      "—"
                     ) : (
                       value
                     )}

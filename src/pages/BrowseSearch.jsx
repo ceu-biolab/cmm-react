@@ -10,7 +10,7 @@ const BrowseSearch = () => {
   const [formState, setFormState] = useState({
     name: "",
     formula: "",
-    metaboliteType: "All except peptides",
+    metaboliteType: "All",
     databases: [],
   });
 
@@ -32,7 +32,7 @@ const BrowseSearch = () => {
     setFormState({
       name: "",
       formula: "",
-      metaboliteType: "All except peptides",
+      metaboliteType: "All",
       databases: [],
     });
   };
@@ -119,11 +119,7 @@ const BrowseSearch = () => {
               label="Metabolites"
               name="metaboliteType"
               value={formState.metaboliteType}
-              options={[
-                "All except peptides",
-                "ONLYLIPIDS",
-                "All including peptides",
-              ]}
+              options={["All", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-browse-div"
             />

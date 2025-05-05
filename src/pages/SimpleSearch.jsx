@@ -7,6 +7,7 @@ import GroupRadio from "../components/search/GroupRadio";
 import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
 import searchIcon from "../assets/svgs/search-svg.svg";
 import ToleranceRadio from "../components/search/ToleranceRadio";
+import { ToastContainer, toast } from "react-toastify";
 
 const SimpleSearch = () => {
   const [formState, setFormState] = useState({
@@ -14,13 +15,16 @@ const SimpleSearch = () => {
     tolerance: "",
     toleranceMode: "ppm",
     ionizationMode: "Positive Mode",
-    metaboliteType: "All except peptides",
+    metaboliteType: "All",
     adductsString: [],
     databases: [],
   });
 
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [matchedAdductCount, setMatchedAdductCount] = useState(0);
+  const [totalAdductCount, setTotalAdductCount] = useState(0);
+  const percentage = (matchedAdductCount / totalAdductCount) * 100 || 0;
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -41,11 +45,29 @@ const SimpleSearch = () => {
       mz: "",
       tolerance: "10",
       toleranceMode: "ppm",
-      metaboliteType: "All except peptides",
+      metaboliteType: "All",
       ionizationMode: "Neutral",
       adductsString: [],
       databases: [],
     });
+  };
+
+  const countDuplicates = (compounds) => {
+    const compoundCount = {};
+    let duplicates = 0;
+
+    compounds.forEach((compound) => {
+      const compoundId = compound.compoundId;
+      compoundCount[compoundId] = (compoundCount[compoundId] || 0) + 1;
+    });
+
+    Object.values(compoundCount).forEach((count) => {
+      if (count > 1) {
+        duplicates += count - 1;
+      }
+    });
+
+    return duplicates;
   };
 
   useEffect(() => {
@@ -112,13 +134,32 @@ const SimpleSearch = () => {
         });
       });
 
-      console.log("Raw results:", rawResults);
+      const adductsWithResults = Object.keys(groupedByAdduct).filter(
+        (adduct) => groupedByAdduct[adduct].length > 0
+      );
+      const totalAdducts = formState.adductsString.length;
+      const matchedAdducts = adductsWithResults.length;
+      setMatchedAdductCount(matchedAdducts);
+      setTotalAdductCount(totalAdducts);
 
+      const allCompounds = Object.values(groupedByAdduct).flat();
+      const duplicateCount = countDuplicates(allCompounds);
+      console.log("Duplicate Count: ", duplicateCount);
+
+      console.log("Raw results:", rawResults);
+      toast.success("Form submitted successfully!", {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        position: 'middle-left',
+      });
       setResults(groupedByAdduct);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      toast.error("Something went wrong.");
     }
   };
 
@@ -151,9 +192,8 @@ const SimpleSearch = () => {
               name="metaboliteType"
               value={formState.metaboliteType}
               options={[
-                "All except peptides",
-                "ONLYLIPIDS",
-                "All including peptides",
+                "All",
+                "ONLYLIPIDS"
               ]}
               onChange={handleChange}
               className="metabolites-div"
@@ -192,6 +232,7 @@ const SimpleSearch = () => {
             </button>
           </div>
         </form>
+        <ToastContainer />
 
         <div className="align-buttons-container">
           <div className="other-buttons">
@@ -210,10 +251,51 @@ const SimpleSearch = () => {
 
         {showResults && (
           <div className="results-div">
-            <div className="search-compounds-found-div">
-              <div className="results-count">{totalCompounds}</div>
-              <div className="results-count-text">
-                Compound{totalCompounds !== 1 ? "s" : ""} found
+            <div className="drop-down-results-summary">
+              <div className="results-summary-col-1">
+                <div className="results-count">{totalCompounds}</div>
+                <div className="results-count-text">
+                  Compound{totalCompounds !== 1 ? "s" : ""} found
+                </div>
+              </div>
+              <div className="results-summary-col-2">
+                <div className="progress-ring-container">
+                  <svg
+                    width="80"
+                    height="80"
+                    viewBox="0 0 36 36"
+                    className="circular-chart"
+                  >
+                    <path
+                      className="circle-bg"
+                      d="M18 2.0845
+         a 15.9155 15.9155 0 0 1 0 31.831
+         a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="#eee"
+                      strokeWidth="2"
+                    />
+                    <path
+                      className="circle"
+                      strokeDasharray={`${percentage}, 100`}
+                      d="M18 2.0845
+         a 15.9155 15.9155 0 0 1 0 31.831
+         a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="#00acc1"
+                      strokeWidth="2"
+                    />
+                    <text
+                      x="18"
+                      y="20.35"
+                      className="percentage-text"
+                      textAnchor="middle"
+                    >
+                      {matchedAdductCount}/{totalAdductCount}
+                    </text>
+                  </svg>
+                </div>
+                <div className="results-count-text">Adduct matches</div>
               </div>
             </div>
 

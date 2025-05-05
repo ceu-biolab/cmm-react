@@ -1,5 +1,4 @@
 import React from "react";
-import "swiper/swiper-bundle.min.css";
 import databaseIcon from "../assets/svgs/database.svg";
 import searchIcon from "../assets/svgs/search-svg.svg";
 import structureIcon from "../assets/svgs/molecule-molecular-svgrepo-com.svg";
@@ -116,8 +115,8 @@ GASTEIGER
           </div>
         </section>
         <section className="section-2">
-          <h2 class="citation-heading">Search</h2>
-          <section class="quick-search-button-container scrollable-citations">
+          <h2 className="citation-heading">Search</h2>
+          <section className="quick-search-button-container scrollable-citations">
             <a href="/simple-search" className="quick-search-button">
               Simple Search
             </a>
@@ -191,12 +190,12 @@ GASTEIGER
           </div>
         </section>
         <section className="section-5">
-          <h2 class="citation-heading">Citing CMM</h2>
-          <section class="citation-links scrollable-citations">
+          <h2 className="citation-heading">Citing CMM</h2>
+          <section className="citation-links scrollable-citations">
             <a
               href="https://www.sciencedirect.com/science/article/abs/pii/S0731708517326559"
               target="_blank"
-              class="citation-link"
+              className="citation-link"
             >
               <strong>CMM 2.0:</strong> Gil-de-la-Fuente A., Godzien J. et al.
               Knowledge-based metabolite annotation tool: CEU Mass Mediator.{" "}
@@ -208,7 +207,7 @@ GASTEIGER
             <a
               href="https://pubs.acs.org/doi/abs/10.1021/acs.jproteome.8b00720"
               target="_blank"
-              class="citation-link"
+              className="citation-link"
             >
               <strong>CMM 3.0:</strong> Gil-de-la-Fuente A., Godzien J. et al.
               CEU Mass Mediator 3.0: A Metabolite Annotation Tool.{" "}
@@ -217,7 +216,7 @@ GASTEIGER
             <a
               href="https://www.sciencedirect.com/science/article/abs/pii/S0021967320310323"
               target="_blank"
-              class="citation-link"
+              className="citation-link"
             >
               <strong>CE-MS Database:</strong> Mamani-Huanca, M.,
               Gil-de-la-Fuente A. et al. Enhancing confidence of metabolite
@@ -229,7 +228,7 @@ GASTEIGER
             <a
               href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-022-00613-8"
               target="_blank"
-              class="citation-link"
+              className="citation-link"
             >
               <strong>RT Pred search:</strong> García, C.A., Gil-de-la-Fuente,
               A., Barbas, C. et al. Probabilistic metabolite annotation using

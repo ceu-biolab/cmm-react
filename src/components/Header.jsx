@@ -95,27 +95,11 @@ const Header = () => {
           Pathway Displayer
         </Link>
 
-        <div className="dropdown">
-          <button className="button">Oxidation</button>
-          <div className="dropdown-content">
-            <ul>
-              <li>
-                <Link to="/oxidation-long-fa-chain">
-                  Oxidation in Long FA Chain
-                </Link>
-              </li>
-              <li>
-                <Link to="/oxidation-short-fa-chain">
-                  Oxidation in Short FA Chain
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
+        {/* 
         <Link to="/spectral-quality" className="button">
           Spectral Quality
         </Link>
+        */}
 
         <Link to="/manual" className="button">
           Manual
