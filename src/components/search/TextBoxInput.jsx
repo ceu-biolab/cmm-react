@@ -4,6 +4,7 @@ const TextBoxInput = ({
   name = "mz",
   label = "Experimental Masses",
   className: customClassName = "",
+  placeholder: customPlaceholder = "",
 }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -36,9 +37,8 @@ const TextBoxInput = ({
         className="experimental-masses"
         value={value}
         onChange={onChange}
-        placeholder="Enter mass values (comma separated)"
+        placeholder={customPlaceholder || "Enter mass values (comma separated)"}
         rows="6"
-        cols="34"
       />
       <label htmlFor={`file-upload-${name}`} className="custom-file-upload">
         <svg

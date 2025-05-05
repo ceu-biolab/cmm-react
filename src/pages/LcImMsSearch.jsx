@@ -1,21 +1,18 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
-import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
-import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
+import AdductsCheckboxes from "../components/search/AdductsCheckboxes.jsx";
+import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes.jsx";
+import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup.jsx";
 import searchIcon from "../assets/svgs/search-svg.svg";
 import TextBoxInput from "../components/search/TextBoxInput.jsx";
+import TextInput from "../components/search/TextInput.jsx";
 import GroupRadio from "../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
 
-const RtPredSearch = () => {
+const LcImMsSearch = () => {
   const [formState, setFormState] = useState({
-    cmmIDs: [],
-    rtKnown: [],
     mz: [],
-    rt: [],
-    compSpectra: [],
-    confidenceInterval: "95",
+    ccsValues: [],
     tolerance: "",
     toleranceMode: "ppm",
     chemAlphabet: "CHNOPS",
@@ -34,8 +31,6 @@ const RtPredSearch = () => {
   const loadDemoData = () => {
     console.log("Loading demo data...");
     setFormState({
-      cmmIDs: ["Working..."],
-      rtKnown: ["Working..."],
       mz: [
         "400.3432",
         "422.32336",
@@ -54,9 +49,7 @@ const RtPredSearch = () => {
         "478.29312",
         "500.27457",
       ],
-      rt: ["Working..."],
-      compSpectra: ["Working..."],
-      confidenceInterval: "99",
+      ccsValues: [],
       tolerance: "10",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
@@ -72,14 +65,11 @@ const RtPredSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      cmmIDs: [],
-      rtKnown: [],
       mz: [],
-      rt: [],
-      compSpectra: [],
+      ccsValues: [],
       tolerance: "",
-      confidenceInterval: "95",
       toleranceMode: "ppm",
+      ccsTol: "",
       chemAlphabet: "CHNOPS",
       deuteriumCheck: "",
       modifiers: "None",
@@ -125,11 +115,8 @@ const RtPredSearch = () => {
     e.preventDefault();
 
     const formattedData = {
-      cmmIDs: formState.mz.map((mass) => parseFloat(mass)),
-      rtKnown: formState.mz.map((mass) => parseFloat(mass)),
       mz: formState.mz.map((mass) => parseFloat(mass)),
-      rt: formState.rt.map((time) => parseFloat(time)),
-      compSpectra: formState.compSpectra.map((spectra) => parseFloat(spectra)),
+      ccsValues: formState.allMz.map((ccs) => parseFloat(ccs)),
       tolerance: parseFloat(formState.tolerance),
       toleranceMode: formState.toleranceMode,
       chemAlphabet: formState.chemAlphabet,
@@ -145,7 +132,7 @@ const RtPredSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}compounds/rt-pred-search`,
+        `${import.meta.env.VITE_API_URL}compounds/lc-im-ms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -179,37 +166,14 @@ const RtPredSearch = () => {
     <div className="page">
       <header className="title-header">
         <img src={searchIcon} alt="Search Icon" className="icon" />
-        <span className="title-text">RT Pred Search</span>
+        <span className="title-text">LC-IM-MS Search</span>
       </header>
       <div className="page outer-container row">
         <label class="required-label">
           Required <span class="red-asterisk">*</span>
         </label>
         <form onSubmit={handleSubmit}>
-          <div className="grid-container-rt-pred">
-            <TextBoxInput
-              label={
-                <>
-                  CMM IDs of Reference Standards{" "}
-                  <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="cmmIDs"
-              value={formState.cmmIDs}
-              onChange={handleChange}
-              className="cmmIDs-text-rt-pred"
-              placeholder="Enter CMM IDs of reference standards (comma separated)"
-            />
-
-            <TextBoxInput
-              label="Retention Times of Known Compounds in Analysis"
-              name="rtKnown"
-              value={formState.rtKnown}
-              onChange={handleChange}
-              className="rts-known-text-rt-pred"
-              placeholder="Enter retention times of known compounds in analysis (comma separated)"
-            />
-
+          <div className="grid-container-im-ms">
             <TextBoxInput
               label={
                 <>
@@ -219,25 +183,16 @@ const RtPredSearch = () => {
               name="mz"
               value={formState.mz}
               onChange={handleChange}
-              className="masses-text-rt-pred"
+              className="masses-text-im-ms"
             />
 
             <TextBoxInput
-              label="Retention Times"
-              name="rt"
-              value={formState.rt}
+              label="CCS Values"
+              name="ccsValues"
+              value={formState.ccsValues}
               onChange={handleChange}
-              className="rt-text-rt-pred"
-              placeholder="Enter retention times (comma separated)"
-            />
-
-            <TextBoxInput
-              label="Composite Spectra"
-              name="compSpectra"
-              value={formState.compSpectra}
-              onChange={handleChange}
-              className="spec-text-rt-pred"
-              placeholder="Enter composite spectra (comma separated)"
+              className="ccs-values-im-ms"
+              placeholder="Enter CCS values (comma separated)"
             />
 
             <ToleranceRadio
@@ -249,20 +204,16 @@ const RtPredSearch = () => {
               toleranceValue={formState.tolerance}
               toleranceMode={formState.toleranceMode}
               onChange={handleChange}
-              className="tolerance-rt-pred"
+              className="tolerance-im-ms"
             />
 
-            <GroupRadio
-              label={
-                <>
-                  Confidence Interval <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="confidenceInterval"
-              value={formState.confidenceInterval}
-              options={["68", "95", "99"]}
+            <TextInput
+              label="CCS Tolerance"
+              name="ccsTol"
+              value={formState.ccsTol}
               onChange={handleChange}
-              className="conf-int-rt-pred"
+              placeholder="3"
+              className="ccs-tol-input-im-ms"
             />
 
             <GroupRadio
@@ -275,7 +226,7 @@ const RtPredSearch = () => {
               value={formState.chemAlphabet}
               options={["All", "CHNOPS", "CHNOPS + Cl"]}
               onChange={handleChange}
-              className="chem-alph-rt-pred"
+              className="chem-alph-im-ms"
             />
 
             <GroupRadio
@@ -295,7 +246,7 @@ const RtPredSearch = () => {
                 "CH3COONH3",
               ]}
               onChange={handleChange}
-              className="modifiers-rt-pred"
+              className="modifiers-im-ms"
             />
 
             <DatabasesCheckboxes
@@ -306,7 +257,7 @@ const RtPredSearch = () => {
               }
               selectedDatabases={formState.databases}
               onChange={handleChange}
-              className="databases-rt-pred"
+              className="databases-im-ms"
             />
 
             <GroupRadio
@@ -319,7 +270,7 @@ const RtPredSearch = () => {
               value={formState.metaboliteType}
               options={["All", "ONLYLIPIDS"]}
               onChange={handleChange}
-              className="metabolites-rt-pred"
+              className="metabolites-im-ms"
             />
 
             <AdductsCheckboxes
@@ -330,7 +281,7 @@ const RtPredSearch = () => {
               }
               selectedAdducts={formState.adductsString}
               onChange={handleChange}
-              className="adducts-rt-pred"
+              className="adducts-im-ms"
             />
 
             <GroupRadio
@@ -343,7 +294,7 @@ const RtPredSearch = () => {
               value={formState.ionizationMode}
               options={["Neutral", "Positive Mode", "Negative Mode"]}
               onChange={handleChange}
-              className="ionization-rt-pred"
+              className="ionization-im-ms"
             />
           </div>
 
@@ -384,4 +335,4 @@ const RtPredSearch = () => {
   );
 };
 
-export default RtPredSearch;
+export default LcImMsSearch;

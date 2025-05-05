@@ -218,6 +218,7 @@ const AspergillusSearch = () => {
               value={formState.rt}
               onChange={handleChange}
               className="rt-text-adv"
+              placeholder="Enter retention times (comma separated)"
             />
 
             {/*
@@ -236,6 +237,7 @@ const AspergillusSearch = () => {
               value={formState.compSpectra}
               onChange={handleChange}
               className="spec-text-adv"
+              placeholder="Enter composite spectra (comma separated)"
             />
 
             {/*

@@ -192,6 +192,7 @@ const ImMsSearch = () => {
               value={formState.ccsValues}
               onChange={handleChange}
               className="ccs-values-im-ms"
+              placeholder="Enter CCS values (comma separated)"
             />
 
             <ToleranceRadio

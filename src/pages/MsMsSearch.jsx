@@ -138,6 +138,7 @@ const MsMsSearch = () => {
               value={formState.msmsPeaks}
               onChange={handleChange}
               className="box-input-msms"
+              placeholder="Enter MS/MS peaks (comma separated)"
             />
 
             <ToleranceRadio
