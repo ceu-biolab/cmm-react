@@ -12,12 +12,12 @@ import { ToastContainer, toast } from "react-toastify";
 const SimpleSearch = () => {
   const [formState, setFormState] = useState({
     mz: "",
+    mzToleranceMode: "PPM",
     tolerance: "",
-    toleranceMode: "ppm",
-    ionizationMode: "Positive Mode",
-    metaboliteType: "All",
+    ionizationMode: "POSITIVE",
     adductsString: [],
     databases: [],
+    metaboliteType: "ALL",
   });
 
   const [results, setResults] = useState([]);
@@ -30,12 +30,22 @@ const SimpleSearch = () => {
     console.log("Loading demo data...");
     setFormState({
       mz: "757.5667",
+      mzToleranceMode: "PPM",
       tolerance: "10",
-      toleranceMode: "ppm",
-      metaboliteType: "ONLYLIPIDS",
-      ionizationMode: "Positive Mode",
+      ionizationMode: "POSITIVE",
       adductsString: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
-      databases: ["HMDB"],
+      databases: [
+        "HMDB",
+        "LIPIDMAPS",
+        "ASPERGILLUS",
+        "FAHFA",
+        "KEGG",
+        "INHOUSE",
+        "CHEBI",
+        "PUBCHEM",
+        "NPATLAS",
+      ],
+      metaboliteType: "ALL",
     });
   };
 
@@ -44,8 +54,8 @@ const SimpleSearch = () => {
     setFormState({
       mz: "",
       tolerance: "10",
-      toleranceMode: "ppm",
-      metaboliteType: "All",
+      mzToleranceMode: "PPM",
+      metaboliteType: "ALL",
       ionizationMode: "Neutral",
       adductsString: [],
       databases: [],
@@ -104,7 +114,7 @@ const SimpleSearch = () => {
     const formattedData = {
       mz: parseFloat(formState.mz),
       tolerance: parseFloat(formState.tolerance),
-      toleranceMode: formState.toleranceMode,
+      mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
       metaboliteType: formState.metaboliteType,
       adductsString: formState.adductsString,
@@ -119,20 +129,38 @@ const SimpleSearch = () => {
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
+      console.log("Response: " + response)
+      console.log("Response data: " + response.data)
+      console.log("Response data msFeatures: " + response.data.msFeatures)
 
       const rawResults = response.data;
 
       const groupedByAdduct = {};
 
-      rawResults.forEach((result) => {
-        result.potentialAnnotations?.forEach((annotation) => {
-          const { adduct, cmm_compounds } = annotation;
-          if (!groupedByAdduct[adduct]) {
-            groupedByAdduct[adduct] = [];
+      if (Array.isArray(rawResults.msfeatures)) {
+        rawResults.msfeatures.forEach((feature) => {
+          const annotationsByAdducts = feature.annotationsByAdducts;
+      
+          if (Array.isArray(annotationsByAdducts)) {
+            annotationsByAdducts.forEach(({ adduct, annotations }) => {
+              if (!groupedByAdduct[adduct]) {
+                groupedByAdduct[adduct] = [];
+              }
+      
+              if (Array.isArray(annotations)) {
+                annotations.forEach((annotation) => {
+                  const compound = annotation.compound;
+                  if (compound) {
+                    groupedByAdduct[adduct].push(compound);
+                  }
+                });
+              }
+            });
           }
-          groupedByAdduct[adduct].push(...cmm_compounds);
         });
-      });
+      } else {
+        console.error("Expected response.data.msfeatures to be an array");
+      }
 
       const adductsWithResults = Object.keys(groupedByAdduct).filter(
         (adduct) => groupedByAdduct[adduct].length > 0
@@ -147,13 +175,12 @@ const SimpleSearch = () => {
       console.log("Duplicate Count: ", duplicateCount);
 
       console.log("Raw results:", rawResults);
+      
       toast.success("Form submitted successfully!", {
-        autoClose: 3000,
-        hideProgressBar: false,
+        autoClose: 2000,
         closeOnClick: true,
-        pauseOnHover: true,
         draggable: true,
-        position: 'middle-left',
+        position: "middle-left",
       });
       setResults(groupedByAdduct);
       setShowResults(true);
@@ -191,10 +218,7 @@ const SimpleSearch = () => {
               label="Metabolites"
               name="metaboliteType"
               value={formState.metaboliteType}
-              options={[
-                "All",
-                "ONLYLIPIDS"
-              ]}
+              options={["ALL", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-div"
             />
@@ -203,7 +227,7 @@ const SimpleSearch = () => {
               label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["Neutral", "Positive Mode", "Negative Mode"]}
+              options={["Neutral", "POSITIVE", "Negative Mode"]}
               onChange={handleChange}
               className="ionization-div"
             />
@@ -221,13 +245,13 @@ const SimpleSearch = () => {
             <ToleranceRadio
               label="Tolerance"
               toleranceValue={formState.tolerance}
-              toleranceMode={formState.toleranceMode}
+              mzToleranceMode={formState.mzToleranceMode}
               onChange={handleChange}
             />
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>

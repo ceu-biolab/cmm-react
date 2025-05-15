@@ -1,11 +1,11 @@
 const ToleranceRadio = ({
   label = "Tolerance",
   toleranceValue,
-  toleranceMode,
+  mzToleranceMode,
   onChange,
   inputName = "tolerance",
-  modeName = "toleranceMode",
-  unitOptions = ["ppm", "mDa"],
+  modeName = "mzToleranceMode",
+  unitOptions = ["PPM", "mDa"],
   className = "",
 }) => {
   return (
@@ -24,7 +24,7 @@ const ToleranceRadio = ({
             type="radio"
             name={modeName}
             value={unit}
-            checked={toleranceMode === unit}
+            checked={mzToleranceMode === unit}
             onChange={onChange}
           />
           {unit}

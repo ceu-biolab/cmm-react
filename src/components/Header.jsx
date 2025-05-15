@@ -19,7 +19,7 @@ const Header = () => {
       {/* Navigation Buttons */}
       <nav className="button-container">
         <div className="dropdown">
-          <button className="button">Search</button>
+          <button className="button">MS Search</button>
           <div className="dropdown-content">
             <ul>
               <li>
@@ -29,27 +29,48 @@ const Header = () => {
                 <Link to="/batch-search">Batch Search</Link>
               </li>
               <li>
+                <Link to="/browse-search">Browse Search</Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="dropdown">
+          <button className="button">LC-MS Search</button>
+          <div className="dropdown-content">
+            <ul>
+              <li>
                 <Link to="/batch-advanced-search">Batch Advanced Search</Link>
+              </li>
+              <li>
+                <Link to="/lc-im-ms-search">LC-IM-MS Search</Link>
+              </li>
+              <li>
+                <Link to="/ms-ms-search">MS/MS Search</Link>
               </li>
               <li>
                 <Link to="/rt-pred-search">RT Pred Search</Link>
               </li>
-              <li>
-                <Link to="/aspergillus-search">Aspergillus Search</Link>
-              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="dropdown">
+          <button className="button">GC-MS Search</button>
+          <div className="dropdown-content">
+            <ul></ul>
+          </div>
+        </div>
+
+        <div className="dropdown">
+          <button className="button">CCS Search</button>
+          <div className="dropdown-content">
+            <ul>
               <li>
                 <Link to="/im-ms-search">IM-MS Search</Link>
               </li>
               <li>
-                <Link to="/lc-im-ms-search">
-                  LC-IM-MS Search
-                </Link>
-              </li>
-              <li>
-                <Link to="/browse-search">Browse Search</Link>
-              </li>
-              <li>
-                <Link to="/ms-ms-search">MS/MS Search</Link>
+                <Link to="/lc-im-ms-search">LC-IM-MS Search</Link>
               </li>
             </ul>
           </div>
