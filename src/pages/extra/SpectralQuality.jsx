@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import TextInput from "../components/search/TextInput";
-import GroupRadio from "../components/search/GroupRadio";
+import TextInput from "../../components/search/TextInput";
+import GroupRadio from "../../components/search/GroupRadio";
 import { ToastContainer, toast } from "react-toastify";
-import pathwayIcon from "../assets/svgs/spectra.svg";
 
 const SpectralQuality = () => {
   const [formState, setFormState] = useState({
@@ -17,6 +16,7 @@ const SpectralQuality = () => {
   });
 
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
@@ -129,7 +129,6 @@ const SpectralQuality = () => {
   return (
     <div className="page">
       <header className="title-header">
-        <img src={pathwayIcon} alt="Pathway Icon" className="icon" />
         <span className="title-text">Spectral Quality</span>
       </header>
 

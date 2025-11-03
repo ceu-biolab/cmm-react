@@ -12,7 +12,9 @@ const TextInput = ({ label, name, value, onChange, placeholder, className, requi
       return;
     }
 
-    if (!/^[-+]?\d*\.?\d*$/.test(val)) {
+    const isNumericField = ['mz', 'tolerance', 'mass'].includes(name);
+
+    if (isNumericField && !/^[-+]?\d*\.?\d*$/.test(val)) {
       setError('Please enter a valid number');
     } else {
       setError('');
@@ -26,13 +28,12 @@ const TextInput = ({ label, name, value, onChange, placeholder, className, requi
         {label} {required && <span style={{ color: 'red' }}>*</span>}
       </label>
       <input
-        type="text"
+        type={['mz', 'tolerance', 'mass'].includes(name) ? 'number' : 'text'}
         name={name}
         value={value}
         placeholder={placeholder}
         onChange={handleInputChange}
         required={required}
-        inputMode="decimal"
       />
       {error && <p style={{ color: 'red', fontSize: '0.8rem' }}>{error}</p>}
     </div>

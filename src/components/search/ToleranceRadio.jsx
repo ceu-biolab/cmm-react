@@ -5,7 +5,7 @@ const ToleranceRadio = ({
   onChange,
   inputName = "tolerance",
   modeName = "mzToleranceMode",
-  unitOptions = ["PPM", "mDa"],
+  unitOptions = ["PPM", "MDA"],
   className = "",
 }) => {
   return (

@@ -1,11 +1,9 @@
 import React from "react";
-import pathwayIcon from "../assets/svgs/molecule-molecular-svgrepo-com.svg";
 
 const PathwayDisplayer = () => {
   return (
     <div className="page">
       <header className="title-header">
-        <img src={pathwayIcon} alt="Pathway Icon" className="icon" />
         <span className="title-text">Pathway Displayer</span>
       </header>
 

@@ -1,32 +1,30 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
-import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
-import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
-import searchIcon from "../assets/svgs/search-svg.svg";
+import AdductsCheckboxes from "../components/search/AdductsCheckboxes.jsx";
+import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes.jsx";
+import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup.jsx";
 import TextBoxInput from "../components/search/TextBoxInput.jsx";
 import GroupRadio from "../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
 
 const BatchSearch = () => {
   const [formState, setFormState] = useState({
-    mz: [],
+    mzValues: [],
     tolerance: "",
-    toleranceMode: "ppm",
-    ionizationMode: "Positive Mode",
-    metaboliteType: "All",
+    mzToleranceMode: "PPM",
+    ionizationMode: "POSITIVE",
+    metaboliteType: "ALL",
     adductsString: [],
     databases: [],
   });
 
   const [results, setResults] = useState([]);
-
+  const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
-    console.log("Loading demo data...");
     setFormState({
-      mz: [
+      mzValues: [
         "400.3432",
         "422.32336",
         "316.24945",
@@ -45,10 +43,17 @@ const BatchSearch = () => {
         "500.27457",
       ],
       tolerance: "10",
-      toleranceMode: "ppm",
+      mzToleranceMode: "PPM",
       metaboliteType: "ONLYLIPIDS",
-      ionizationMode: "Positive Mode",
-      adductsString: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
+      ionizationMode: "POSITIVE",
+      adductsString: [
+        "[M+H]+",
+        "[M+2H]2+",
+        "[M+Na]+",
+        "[M+K]+",
+        "[M+NH4]+",
+        "[M+H-H2O]+",
+      ],
       databases: ["HMDB"],
     });
   };
@@ -56,11 +61,11 @@ const BatchSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      mz: [],
+      mzValues: [],
       tolerance: "10",
-      toleranceMode: "ppm",
-      metaboliteType: "All",
-      ionizationMode: "Neutral",
+      mzToleranceMode: "PPM",
+      metaboliteType: "ALL",
+      ionizationMode: "NEUTRAL",
       adductsString: [],
       databases: [],
     });
@@ -73,7 +78,7 @@ const BatchSearch = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "mz") {
+    if (name === "mzValues") {
       const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
       setFormState((prev) => ({ ...prev, [name]: newMZValues }));
     } else if (type === "checkbox") {
@@ -93,18 +98,18 @@ const BatchSearch = () => {
         }));
       }
     } else {
-      // For other inputs, like text or select
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const formattedData = {
-      mz: formState.mz.map((mass) => parseFloat(mass)),
+      mzValues: formState.mzValues.map((mass) => parseFloat(mass)),
       tolerance: parseFloat(formState.tolerance),
-      toleranceMode: formState.toleranceMode,
+      mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
       metaboliteType: formState.metaboliteType,
       adductsString: formState.adductsString,
@@ -122,42 +127,51 @@ const BatchSearch = () => {
 
       const rawResults = response.data;
 
+      const features = rawResults.msfeatures || [];
+
       const groupedByAdduct = {};
 
-      rawResults.forEach((result) => {
-        result.potentialAnnotations?.forEach((annotation) => {
-          const { adduct, cmm_compounds } = annotation;
-          if (!groupedByAdduct[adduct]) {
-            groupedByAdduct[adduct] = [];
-          }
-          groupedByAdduct[adduct].push(...cmm_compounds);
+      features.forEach((featureObj) => {
+        const adductGroups = featureObj.annotationsByAdducts || [];
+
+        adductGroups.forEach(({ adduct, annotations }) => {
+          if (!groupedByAdduct[adduct]) groupedByAdduct[adduct] = [];
+
+          annotations.forEach(({ compound }) => {
+            if (compound) {
+              groupedByAdduct[adduct].push(compound);
+            }
+          });
         });
       });
 
       console.log("Raw results:", rawResults);
 
       setResults(groupedByAdduct);
-      alert("Request accepted.");
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert("There was an error submitting your search");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page">
       <header className="title-header">
-        <img src={searchIcon} alt="Search Icon" className="icon" />
         <span className="title-text">Batch Search</span>
       </header>
-      <div className="page outer-container row">
+      <div
+        className="page outer-container row"
+        style={{ cursor: loading ? "wait" : "default" }}
+      >
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
             <TextBoxInput
               label="Experimental Masses"
-              name="mz"
-              value={formState.mz}
+              name="mzValues"
+              value={formState.mzValues}
               onChange={handleChange}
             />
 
@@ -165,7 +179,7 @@ const BatchSearch = () => {
               label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["Neutral", "Positive Mode", "Negative Mode"]}
+              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-div"
             />
@@ -183,7 +197,8 @@ const BatchSearch = () => {
             <ToleranceRadio
               label="Tolerance"
               toleranceValue={formState.tolerance}
-              toleranceMode={formState.toleranceMode}
+              mzToleranceMode={formState.mzToleranceMode}
+              modeName="mzToleranceMode"
               onChange={handleChange}
             />
 
@@ -191,7 +206,7 @@ const BatchSearch = () => {
               label="Metabolites"
               name="metaboliteType"
               value={formState.metaboliteType}
-              options={["All", "ONLYLIPIDS"]}
+              options={["ALL", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-div"
             />

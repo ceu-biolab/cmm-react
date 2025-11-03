@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const TextBoxInput = ({
   value,
@@ -10,27 +10,41 @@ const TextBoxInput = ({
   required = false,
 }) => {
   const [error, setError] = useState("");
+  const typingTimeout = useRef(null);
 
-  const handleInputChange = (e) => {
-    const val = e.target.value;
-
-    if (!val && !required) {
-      setError("");
-      onChange(e);
+  const validateInput = (val) => {
+    const trimmed = val.trim();
+    if (!trimmed) {
+      if (required) setError("This field is required");
+      else setError("");
       return;
     }
 
-    // todo FIX REGEX (gives an error due introducing a period (.))
-    const valid = /^[+-]?\d+(\.\d+)?$/;
+    // Split by commas, spaces, semicolons, or newlines
+    const parts = trimmed.split(/[\s,;]+/).filter(Boolean);
+    const invalids = parts.filter((p) => isNaN(Number(p)));
 
-    if (!valid.test(val)) {
-      setError(
-        "Please enter valid numbers (e.g., 123.45, separated by space, comma, or semicolon)"
-      );
+    if (invalids.length > 0) {
+      setError(`Invalid entries: ${invalids.join(", ")}`);
     } else {
       setError("");
-      onChange(e);
     }
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    onChange(e); // Always let React state update first
+
+    // Cancel previous validation while typing fast
+    clearTimeout(typingTimeout.current);
+
+    // Wait 500ms before validating — debounce behavior
+    typingTimeout.current = setTimeout(() => validateInput(val), 500);
+  };
+
+  const handleBlur = (e) => {
+    // Force validation once user leaves the textarea
+    validateInput(e.target.value);
   };
 
   const handleFileUpload = (event) => {
@@ -40,10 +54,15 @@ const TextBoxInput = ({
       reader.onload = (e) => {
         const text = e.target.result;
         const masses = text
-          .split(/[\s,;.]+/)
+          .split(/[\s,;]+/)
           .map((s) => s.trim())
           .filter((s) => /^[-+]?(?:\d+\.?\d*|\.\d+)$/.test(s))
           .map(parseFloat);
+
+        if (!masses.length) {
+          setError("No valid numeric values found in file");
+          return;
+        }
 
         onChange({
           target: {
@@ -62,11 +81,13 @@ const TextBoxInput = ({
       <label className="inner-column-label">
         {label} {required && <span style={{ color: "red" }}>*</span>}
       </label>
+
       <textarea
         name={name}
         className="experimental-masses"
         value={value}
         onChange={handleInputChange}
+        onBlur={handleBlur}
         placeholder={
           customPlaceholder ||
           "Enter mass values separated by commas, spaces, or semicolons"
@@ -75,7 +96,12 @@ const TextBoxInput = ({
         required={required}
         style={error ? { borderColor: "red" } : {}}
       />
-      {error && <div style={{ color: "red", fontSize: "0.9em" }}>{error}</div>}
+
+      {error && (
+        <div style={{ color: "red", fontSize: "0.9em", marginTop: "4px" }}>
+          {error}
+        </div>
+      )}
 
       <label htmlFor={`file-upload-${name}`} className="custom-file-upload">
         <svg
@@ -91,7 +117,6 @@ const TextBoxInput = ({
       <input
         type="file"
         id={`file-upload-${name}`}
-        // todo handle parsing for file uploads
         accept=".txt,.csv,.xls,.xlsx,.json"
         onChange={handleFileUpload}
         style={{ display: "none" }}

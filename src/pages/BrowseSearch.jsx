@@ -4,17 +4,17 @@ import TextInput from "../components/search/TextInput";
 import GroupRadio from "../components/search/GroupRadio";
 import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
 import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
-import searchIcon from "../assets/svgs/search-svg.svg";
 
 const BrowseSearch = () => {
   const [formState, setFormState] = useState({
     name: "",
     formula: "",
-    metaboliteType: "All",
+    metaboliteType: "ALL",
     databases: [],
   });
 
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
@@ -22,7 +22,7 @@ const BrowseSearch = () => {
     setFormState({
       name: "Choline",
       formula: "C5H14NO",
-      metaboliteType: "ONLYLIPIDS",
+      metaboliteType: "ALL",
       databases: ["HMDB"],
     });
   };
@@ -32,7 +32,7 @@ const BrowseSearch = () => {
     setFormState({
       name: "",
       formula: "",
-      metaboliteType: "All",
+      metaboliteType: "ALL",
       databases: [],
     });
   };
@@ -58,6 +58,7 @@ const BrowseSearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const formattedData = {
       name: formState.name,
@@ -70,31 +71,35 @@ const BrowseSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}compounds/browse-search`,
+        `${import.meta.env.VITE_API_URL}browseSearch`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
 
-      const rawResults = response.data;
-
+      const rawResults = response.data || {};
       console.log("Raw results:", rawResults);
-
-      setResults(rawResults);
+      setResults(
+        Array.isArray(rawResults.compoundlist) ? rawResults.compoundlist : []
+      );
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert("There was an error submitting your search");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page">
       <header className="title-header">
-        <img src={searchIcon} alt="Search Icon" className="icon" />
         <span className="title-text">Browse Search</span>
       </header>
 
-      <div className="page outer-container row outer-container-browse">
+      <div
+        className="page outer-container row outer-container-browse"
+        style={{ cursor: loading ? "wait" : "default" }}
+      >
         <form onSubmit={handleSubmit}>
           <div className="grid-container-browse">
             <TextInput
@@ -119,7 +124,7 @@ const BrowseSearch = () => {
               label="Metabolites"
               name="metaboliteType"
               value={formState.metaboliteType}
-              options={["All", "ONLYLIPIDS"]}
+              options={["ALL", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-browse-div"
             />
@@ -132,9 +137,7 @@ const BrowseSearch = () => {
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
-              Submit
-            </button>
+            <button type="submit">Submit</button>
           </div>
         </form>
 

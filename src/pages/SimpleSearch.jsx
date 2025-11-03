@@ -5,9 +5,9 @@ import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
 import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
 import GroupRadio from "../components/search/GroupRadio";
 import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
-import searchIcon from "../assets/svgs/search-svg.svg";
 import ToleranceRadio from "../components/search/ToleranceRadio";
 import { ToastContainer, toast } from "react-toastify";
+import ResultsSummary from "../components/search/ResultsSummary";
 
 const SimpleSearch = () => {
   const [formState, setFormState] = useState({
@@ -24,7 +24,7 @@ const SimpleSearch = () => {
   const [showResults, setShowResults] = useState(false);
   const [matchedAdductCount, setMatchedAdductCount] = useState(0);
   const [totalAdductCount, setTotalAdductCount] = useState(0);
-  const percentage = (matchedAdductCount / totalAdductCount) * 100 || 0;
+  const [loading, setLoading] = useState(false);
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -33,7 +33,14 @@ const SimpleSearch = () => {
       mzToleranceMode: "PPM",
       tolerance: "10",
       ionizationMode: "POSITIVE",
-      adductsString: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
+      adductsString: [
+        "[M+H]+",
+        "[M+2H]2+",
+        "[M+Na]+",
+        "[M+K]+",
+        "[M+NH4]+",
+        "[M+H-H2O]+",
+      ],
       databases: [
         "HMDB",
         "LIPIDMAPS",
@@ -56,7 +63,7 @@ const SimpleSearch = () => {
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ALL",
-      ionizationMode: "Neutral",
+      ionizationMode: "NEUTRAL",
       adductsString: [],
       databases: [],
     });
@@ -110,6 +117,7 @@ const SimpleSearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const formattedData = {
       mz: parseFloat(formState.mz),
@@ -129,9 +137,9 @@ const SimpleSearch = () => {
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log("Response: " + response)
-      console.log("Response data: " + response.data)
-      console.log("Response data msFeatures: " + response.data.msFeatures)
+      console.log("Response: " + response);
+      console.log("Response data: " + response.data);
+      console.log("Response data msFeatures: " + response.data.msFeatures);
 
       const rawResults = response.data;
 
@@ -140,13 +148,13 @@ const SimpleSearch = () => {
       if (Array.isArray(rawResults.msfeatures)) {
         rawResults.msfeatures.forEach((feature) => {
           const annotationsByAdducts = feature.annotationsByAdducts;
-      
+
           if (Array.isArray(annotationsByAdducts)) {
             annotationsByAdducts.forEach(({ adduct, annotations }) => {
               if (!groupedByAdduct[adduct]) {
                 groupedByAdduct[adduct] = [];
               }
-      
+
               if (Array.isArray(annotations)) {
                 annotations.forEach((annotation) => {
                   const compound = annotation.compound;
@@ -175,7 +183,7 @@ const SimpleSearch = () => {
       console.log("Duplicate Count: ", duplicateCount);
 
       console.log("Raw results:", rawResults);
-      
+
       toast.success("Form submitted successfully!", {
         autoClose: 2000,
         closeOnClick: true,
@@ -186,23 +194,22 @@ const SimpleSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      toast.error("Something went wrong.");
+      alert("There was an error submitting your search");
+    } finally {
+      setLoading(false);
     }
   };
-
-  const totalCompounds = Object.values(results).reduce(
-    (sum, compounds) => sum + compounds.length,
-    0
-  );
 
   return (
     <div className="page">
       <header className="title-header">
-        <img src={searchIcon} alt="Search Icon" className="icon" />
         <span className="title-text">Simple Search</span>
       </header>
 
-      <div className="page outer-container row">
+      <div
+        className="page outer-container row"
+        style={{ cursor: loading ? "wait" : "default" }}
+      >
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
             <TextInput
@@ -227,7 +234,7 @@ const SimpleSearch = () => {
               label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["Neutral", "POSITIVE", "Negative Mode"]}
+              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-div"
             />
@@ -246,14 +253,13 @@ const SimpleSearch = () => {
               label="Tolerance"
               toleranceValue={formState.tolerance}
               mzToleranceMode={formState.mzToleranceMode}
+              modeName="mzToleranceMode"
               onChange={handleChange}
             />
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit">
-              Submit
-            </button>
+            <button type="submit">Submit</button>
           </div>
         </form>
         <ToastContainer />
@@ -275,53 +281,11 @@ const SimpleSearch = () => {
 
         {showResults && (
           <div className="results-div">
-            <div className="drop-down-results-summary">
-              <div className="results-summary-col-1">
-                <div className="results-count">{totalCompounds}</div>
-                <div className="results-count-text">
-                  Compound{totalCompounds !== 1 ? "s" : ""} found
-                </div>
-              </div>
-              <div className="results-summary-col-2">
-                <div className="progress-ring-container">
-                  <svg
-                    width="80"
-                    height="80"
-                    viewBox="0 0 36 36"
-                    className="circular-chart"
-                  >
-                    <path
-                      className="circle-bg"
-                      d="M18 2.0845
-         a 15.9155 15.9155 0 0 1 0 31.831
-         a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#eee"
-                      strokeWidth="2"
-                    />
-                    <path
-                      className="circle"
-                      strokeDasharray={`${percentage}, 100`}
-                      d="M18 2.0845
-         a 15.9155 15.9155 0 0 1 0 31.831
-         a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#00acc1"
-                      strokeWidth="2"
-                    />
-                    <text
-                      x="18"
-                      y="20.35"
-                      className="percentage-text"
-                      textAnchor="middle"
-                    >
-                      {matchedAdductCount}/{totalAdductCount}
-                    </text>
-                  </svg>
-                </div>
-                <div className="results-count-text">Adduct matches</div>
-              </div>
-            </div>
+            <ResultsSummary
+              results={results}
+              matchedAdductCount={matchedAdductCount}
+              totalAdductCount={totalAdductCount}
+            />
 
             {Object.entries(results).map(([adduct, compounds]) => (
               <ResultsDropdownGroup

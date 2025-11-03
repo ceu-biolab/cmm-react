@@ -3,7 +3,6 @@ import axios from "axios";
 import AdductsCheckboxes from "../components/search/AdductsCheckboxes.jsx";
 import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes.jsx";
 import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup.jsx";
-import searchIcon from "../assets/svgs/search-svg.svg";
 import TextBoxInput from "../components/search/TextBoxInput.jsx";
 import TextInput from "../components/search/TextInput.jsx";
 import GroupRadio from "../components/search/GroupRadio.jsx";
@@ -25,7 +24,7 @@ const LcImMsSearch = () => {
   });
 
   const [results, setResults] = useState([]);
-
+  const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
@@ -113,6 +112,7 @@ const LcImMsSearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const formattedData = {
       mz: formState.mz.map((mass) => parseFloat(mass)),
@@ -154,21 +154,24 @@ const LcImMsSearch = () => {
       console.log("Raw results:", rawResults);
 
       setResults(groupedByAdduct);
-      alert("Request accepted.");
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert("There was an error submitting your search");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page">
       <header className="title-header">
-        <img src={searchIcon} alt="Search Icon" className="icon" />
         <span className="title-text">LC-IM-MS Search</span>
       </header>
-      <div className="page outer-container row">
+      <div
+        className="page outer-container row"
+        style={{ cursor: loading ? "wait" : "default" }}
+      >
         <label class="required-label">
           Required <span class="red-asterisk">*</span>
         </label>
