@@ -14,7 +14,7 @@ const CustomTooltip = ({ active, payload }) => {
       <div
         style={{
           backgroundColor: "white",
-          border: "1px solid #617475",
+          border: "none",
           padding: "8px",
           color: "#617475",
           borderRadius: "4px",
@@ -34,7 +34,7 @@ const CustomTooltip = ({ active, payload }) => {
 const SpectrumGraph = ({ peaks }) => {
   return (
     <div>
-      <ComposedChart width={1200} height={400} data={peaks}>
+      <ComposedChart width={1400} height={400} data={peaks}>
         <CartesianGrid stroke="#ccc" />
         <XAxis
           dataKey="mz"

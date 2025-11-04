@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import TextInput from "../components/search/TextInput.jsx";
-import TextBoxInput from "../components/search/TextBoxInput.jsx";
-import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
-import GroupRadio from "../components/search/GroupRadio.jsx";
-import SpectrumGraph from "../components/search/SpectrumGraph.jsx";
+import TextInput from "../../components/search/TextInput.jsx";
+import TextBoxInput from "../../components/search/TextBoxInput.jsx";
+import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import GroupRadio from "../../components/search/GroupRadio.jsx";
+import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 
 const MsMsSearch = () => {
   const [formState, setFormState] = useState({

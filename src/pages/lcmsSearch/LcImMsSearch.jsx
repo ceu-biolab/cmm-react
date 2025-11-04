@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import AdductsCheckboxes from "../components/search/AdductsCheckboxes.jsx";
-import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes.jsx";
-import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup.jsx";
-import TextBoxInput from "../components/search/TextBoxInput.jsx";
-import TextInput from "../components/search/TextInput.jsx";
-import GroupRadio from "../components/search/GroupRadio.jsx";
-import ToleranceRadio from "../components/search/ToleranceRadio.jsx";
+import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
+import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
+import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import TextBoxInput from "../../components/search/TextBoxInput.jsx";
+import TextInput from "../../components/search/TextInput.jsx";
+import GroupRadio from "../../components/search/GroupRadio.jsx";
+import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 
 const LcImMsSearch = () => {
   const [formState, setFormState] = useState({

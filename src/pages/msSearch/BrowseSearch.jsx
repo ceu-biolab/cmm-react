@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import TextInput from "../components/search/TextInput";
-import GroupRadio from "../components/search/GroupRadio";
-import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
-import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
+import TextInput from "../../components/search/TextInput";
+import GroupRadio from "../../components/search/GroupRadio";
+import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes";
+import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 
 const BrowseSearch = () => {
   const [formState, setFormState] = useState({

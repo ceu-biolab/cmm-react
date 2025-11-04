@@ -4,16 +4,16 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MainWeb from "../pages/MainWeb";
-import SimpleSearch from "../pages/SimpleSearch";
-import BatchSearch from "../pages/BatchSearch";
-import BatchAdvancedSearch from "../pages/BatchAdvancedSearch";
-import ImMsSearch from "../pages/ImMsSearch";
-import LcImMsSearch from "../pages/LcImMsSearch";
-import BrowseSearch from "../pages/BrowseSearch";
-import MsMsSearch from "../pages/MsMsSearch";
+import SimpleSearch from "../pages/msSearch/SimpleSearch";
+import BatchSearch from "../pages/msSearch/BatchSearch";
+import BatchAdvancedSearch from "../pages/lcmsSearch/BatchAdvancedSearch";
+import ImMsSearch from "../pages/ccsSearch/ImMsSearch";
+import LcImMsSearch from "../pages/lcmsSearch/LcImMsSearch";
+import BrowseSearch from "../pages/msSearch/BrowseSearch";
+import MsMsSearch from "../pages/lcmsSearch/MsMsSearch";
 import CompoundPage from "../pages/CompoundPage";
 import Manual from "../pages/Manual";
-import GcMsSearch from "../pages/GcMsSearch";
+import GcMsSearch from "../pages/gcmsSearch/GcMsSearch";
 
 const App = () => {
   return (

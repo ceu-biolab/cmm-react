@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import TextInput from "../components/search/TextInput";
-import TextBoxInput from "../components/search/TextBoxInput";
-import GroupRadio from "../components/search/GroupRadio";
+import TextInput from "../../components/search/TextInput";
+import TextBoxInput from "../../components/search/TextBoxInput";
+import GroupRadio from "../../components/search/GroupRadio";
 import { ToastContainer, toast } from "react-toastify";
-import MirroredSpectrum from "../components/search/MirroredSpectrum";
+import MirroredSpectrum from "../../components/search/MirroredSpectrum";
+import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 
 const GcMsSearch = () => {
   const [formState, setFormState] = useState({
@@ -184,11 +185,25 @@ const GcMsSearch = () => {
           </div>
         </div>
 
-        {showResults && results && results.gcmsFeatures && (
-          <div className="results-div">
+        <div className="results-div">
+          {showResults && results && results.gcmsFeatures && (
             <MirroredSpectrum data={results} />
-          </div>
-        )}
+          )}
+
+          {showResults &&
+            results?.gcmsFeatures?.map((feature, idx) => {
+              const compounds =
+                feature.gcmsAnnotations?.map((a) => a.gcmsCompound) || [];
+
+              return (
+                <ResultsDropdownGroup
+                  key={idx}
+                  adduct={``}
+                  compounds={compounds}
+                />
+              );
+            })}
+        </div>
       </div>
     </div>
   );

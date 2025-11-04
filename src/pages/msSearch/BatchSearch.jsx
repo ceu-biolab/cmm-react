@@ -1,37 +1,50 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import TextInput from "../components/search/TextInput";
-import AdductsCheckboxes from "../components/search/AdductsCheckboxes";
-import DatabasesCheckboxes from "../components/search/DatabasesCheckboxes";
-import GroupRadio from "../components/search/GroupRadio";
-import ResultsDropdownGroup from "../components/search/ResultsDropdownGroup";
-import ToleranceRadio from "../components/search/ToleranceRadio";
-import { ToastContainer, toast } from "react-toastify";
-import ResultsSummary from "../components/search/ResultsSummary";
+import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
+import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
+import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import TextBoxInput from "../../components/search/TextBoxInput.jsx";
+import GroupRadio from "../../components/search/GroupRadio.jsx";
+import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 
-const SimpleSearch = () => {
+const BatchSearch = () => {
   const [formState, setFormState] = useState({
-    mz: "",
-    mzToleranceMode: "PPM",
+    mzValues: [],
     tolerance: "",
+    mzToleranceMode: "PPM",
     ionizationMode: "POSITIVE",
+    metaboliteType: "ALL",
     adductsString: [],
     databases: [],
-    metaboliteType: "ALL",
   });
 
   const [results, setResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const [matchedAdductCount, setMatchedAdductCount] = useState(0);
-  const [totalAdductCount, setTotalAdductCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
-    console.log("Loading demo data...");
     setFormState({
-      mz: "757.5667",
-      mzToleranceMode: "PPM",
+      mzValues: [
+        "400.3432",
+        "422.32336",
+        "316.24945",
+        "338.2299",
+        "281.24765",
+        "288.2174",
+        "496.3427",
+        "518.3226",
+        "548.37054",
+        "572.3718",
+        "570.3551",
+        "568.3401",
+        "590.3210",
+        "482.324",
+        "478.29312",
+        "500.27457",
+      ],
       tolerance: "10",
+      mzToleranceMode: "PPM",
+      metaboliteType: "ONLYLIPIDS",
       ionizationMode: "POSITIVE",
       adductsString: [
         "[M+H]+",
@@ -41,25 +54,14 @@ const SimpleSearch = () => {
         "[M+NH4]+",
         "[M+H-H2O]+",
       ],
-      databases: [
-        "HMDB",
-        "LIPIDMAPS",
-        "ASPERGILLUS",
-        "FAHFA",
-        "KEGG",
-        "INHOUSE",
-        "CHEBI",
-        "PUBCHEM",
-        "NPATLAS",
-      ],
-      metaboliteType: "ALL",
+      databases: ["HMDB"],
     });
   };
 
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      mz: "",
+      mzValues: [],
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ALL",
@@ -69,24 +71,6 @@ const SimpleSearch = () => {
     });
   };
 
-  const countDuplicates = (compounds) => {
-    const compoundCount = {};
-    let duplicates = 0;
-
-    compounds.forEach((compound) => {
-      const compoundId = compound.compoundId;
-      compoundCount[compoundId] = (compoundCount[compoundId] || 0) + 1;
-    });
-
-    Object.values(compoundCount).forEach((count) => {
-      if (count > 1) {
-        duplicates += count - 1;
-      }
-    });
-
-    return duplicates;
-  };
-
   useEffect(() => {
     console.log("Updated searchData:", formState);
   }, [formState]);
@@ -94,7 +78,10 @@ const SimpleSearch = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (type === "checkbox") {
+    if (name === "mzValues") {
+      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
+      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
+    } else if (type === "checkbox") {
       if (name === "adductsString") {
         setFormState((prev) => ({
           ...prev,
@@ -120,7 +107,7 @@ const SimpleSearch = () => {
     setLoading(true);
 
     const formattedData = {
-      mz: parseFloat(formState.mz),
+      mzValues: formState.mzValues.map((mass) => parseFloat(mass)),
       tolerance: parseFloat(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
@@ -133,63 +120,33 @@ const SimpleSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}compounds/simple-search`,
+        `${import.meta.env.VITE_API_URL}compounds/batch-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log("Response: " + response);
-      console.log("Response data: " + response.data);
-      console.log("Response data msFeatures: " + response.data.msFeatures);
 
       const rawResults = response.data;
 
+      const features = rawResults.msfeatures || [];
+
       const groupedByAdduct = {};
 
-      if (Array.isArray(rawResults.msfeatures)) {
-        rawResults.msfeatures.forEach((feature) => {
-          const annotationsByAdducts = feature.annotationsByAdducts;
+      features.forEach((featureObj) => {
+        const adductGroups = featureObj.annotationsByAdducts || [];
 
-          if (Array.isArray(annotationsByAdducts)) {
-            annotationsByAdducts.forEach(({ adduct, annotations }) => {
-              if (!groupedByAdduct[adduct]) {
-                groupedByAdduct[adduct] = [];
-              }
+        adductGroups.forEach(({ adduct, annotations }) => {
+          if (!groupedByAdduct[adduct]) groupedByAdduct[adduct] = [];
 
-              if (Array.isArray(annotations)) {
-                annotations.forEach((annotation) => {
-                  const compound = annotation.compound;
-                  if (compound) {
-                    groupedByAdduct[adduct].push(compound);
-                  }
-                });
-              }
-            });
-          }
+          annotations.forEach(({ compound }) => {
+            if (compound) {
+              groupedByAdduct[adduct].push(compound);
+            }
+          });
         });
-      } else {
-        console.error("Expected response.data.msfeatures to be an array");
-      }
-
-      const adductsWithResults = Object.keys(groupedByAdduct).filter(
-        (adduct) => groupedByAdduct[adduct].length > 0
-      );
-      const totalAdducts = formState.adductsString.length;
-      const matchedAdducts = adductsWithResults.length;
-      setMatchedAdductCount(matchedAdducts);
-      setTotalAdductCount(totalAdducts);
-
-      const allCompounds = Object.values(groupedByAdduct).flat();
-      const duplicateCount = countDuplicates(allCompounds);
-      console.log("Duplicate Count: ", duplicateCount);
+      });
 
       console.log("Raw results:", rawResults);
 
-      toast.success("Form submitted successfully!", {
-        autoClose: 2000,
-        closeOnClick: true,
-        draggable: true,
-        position: "middle-left",
-      });
       setResults(groupedByAdduct);
       setShowResults(true);
     } catch (error) {
@@ -203,31 +160,19 @@ const SimpleSearch = () => {
   return (
     <div className="page">
       <header className="title-header">
-        <span className="title-text">Simple Search</span>
+        <span className="title-text">Batch Search</span>
       </header>
-
       <div
         className="page outer-container row"
         style={{ cursor: loading ? "wait" : "default" }}
       >
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
-            <TextInput
-              label="Experimental Mass"
-              name="mz"
-              value={formState.mz}
+            <TextBoxInput
+              label="Experimental Masses"
+              name="mzValues"
+              value={formState.mzValues}
               onChange={handleChange}
-              placeholder="Enter mass value"
-              className="experimental-mass-div"
-            />
-
-            <GroupRadio
-              label="Metabolites"
-              name="metaboliteType"
-              value={formState.metaboliteType}
-              options={["ALL", "ONLYLIPIDS"]}
-              onChange={handleChange}
-              className="metabolites-div"
             />
 
             <GroupRadio
@@ -256,14 +201,23 @@ const SimpleSearch = () => {
               modeName="mzToleranceMode"
               onChange={handleChange}
             />
+
+            <GroupRadio
+              label="Metabolites"
+              name="metaboliteType"
+              value={formState.metaboliteType}
+              options={["ALL", "ONLYLIPIDS"]}
+              onChange={handleChange}
+              className="metabolites-div"
+            />
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit">Submit</button>
+            <button type="submit" onClick={handleSubmit}>
+              Submit
+            </button>
           </div>
         </form>
-        <ToastContainer />
-
         <div className="align-buttons-container">
           <div className="other-buttons">
             <div className="form-buttons-container">
@@ -271,6 +225,7 @@ const SimpleSearch = () => {
                 Load Demo Data
               </button>
             </div>
+
             <div className="form-buttons-container">
               <button type="button" onClick={clearInput}>
                 Clear Input
@@ -279,26 +234,19 @@ const SimpleSearch = () => {
           </div>
         </div>
 
-        {showResults && (
-          <div className="results-div">
-            <ResultsSummary
-              results={results}
-              matchedAdductCount={matchedAdductCount}
-              totalAdductCount={totalAdductCount}
-            />
-
-            {Object.entries(results).map(([adduct, compounds]) => (
+        <div className="results-div">
+          {showResults &&
+            Object.entries(results).map(([adduct, compounds]) => (
               <ResultsDropdownGroup
                 key={adduct}
                 adduct={adduct}
                 compounds={compounds}
               />
             ))}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default SimpleSearch;
+export default BatchSearch;
