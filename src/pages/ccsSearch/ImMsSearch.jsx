@@ -14,7 +14,7 @@ const ImMsSearch = () => {
     mzTolerance: "",
     mzToleranceMode: "PPM",
     ccsTolerance: "",
-    ccsToleranceMode: "PERCENTAGE", // CANNOT USE SAME TOLERANCE RADIO, NEED TO CHANGE OPTIONS
+    ccsToleranceMode: "PERCENTAGE",
     ionizationMode: "POSITIVE",
     bufferGas: "N2",
     adducts: [],

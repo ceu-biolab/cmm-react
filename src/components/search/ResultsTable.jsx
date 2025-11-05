@@ -44,7 +44,7 @@ const ResultsTable = ({ results }) => {
     "compoundName",
     "formula",
     "mass",
-    "error",
+    "massErrorPpm",
     "casID",
     "keggID",
     "chebiID",
@@ -55,6 +55,8 @@ const ResultsTable = ({ results }) => {
     "npatlasID",
     "pathway",
   ];
+
+  console.log("ResultsTable received results:", results);
 
   return (
     <div className="results-container">
@@ -78,7 +80,11 @@ const ResultsTable = ({ results }) => {
                 const dataKey = dataKeys[idx];
                 let value = item[dataKey] ?? "—";
 
-                if (header === "Mass" && value !== "—") {
+                if (
+                  (header === "Mass" || header === "Error") &&
+                  value !== "—" &&
+                  !isNaN(parseFloat(value))
+                ) {
                   value = parseFloat(value).toFixed(4);
                 }
 

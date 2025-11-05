@@ -11,6 +11,8 @@ import ImMsSearch from "../pages/ccsSearch/ImMsSearch";
 import LcImMsSearch from "../pages/lcmsSearch/LcImMsSearch";
 import BrowseSearch from "../pages/msSearch/BrowseSearch";
 import MsMsSearch from "../pages/lcmsSearch/MsMsSearch";
+import CeMsMt1Search from "../pages/cemsSearch/CeMsMt1Search";
+import CeMsMt2Search from "../pages/cemsSearch/CeMsMt2Search";
 import CompoundPage from "../pages/CompoundPage";
 import Manual from "../pages/Manual";
 import GcMsSearch from "../pages/gcmsSearch/GcMsSearch";
@@ -34,6 +36,8 @@ const App = () => {
           <Route path="/browse-search" element={<BrowseSearch />} />
           <Route path="/ms-ms-search" element={<MsMsSearch />} />
           <Route path="/gc-ms-search" element={<GcMsSearch />} />
+          <Route path="/ce-ms-mt-1-marker" element={<CeMsMt1Search />} />
+          <Route path="/ce-ms-mt-2-markers" element={<CeMsMt2Search />} />
           <Route path="/compound/:id" element={<CompoundPage />} />
           <Route path="/manual" element={<Manual />} />
         </Routes>
