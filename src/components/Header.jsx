@@ -58,7 +58,7 @@ const Header = () => {
             <div className="dropdown-content">
               <ul>
                 <li>
-                  <Link to="/batch-advanced-search">Batch Advanced Search</Link>
+                  <Link to="/lc-ms-search">LC-MS Search</Link>
                 </li>
                 <li>
                   <Link to="/lc-im-ms-search">LC-IM-MS Search</Link>

@@ -12,7 +12,7 @@ const CeMsMt2Search = () => {
     masses: "",
     mt: "",
     tolerance: "",
-    tolerance_mode: "ppm",
+    tolerance_mode: "PPM",
     mt_tolerance: "",
     mt_tolerance_mode: "percentage",
     buffer: "FORMIC_ACID_1M",
@@ -33,7 +33,7 @@ const CeMsMt2Search = () => {
         ", "
       ),
       tolerance: "10",
-      tolerance_mode: "ppm",
+      tolerance_mode: "PPM",
       mt: ["11.56", "13.65", "15.62", "12.59", "6.99"].join(", "),
       mt_tolerance: "10",
       mt_tolerance_mode: "percentage",
@@ -63,7 +63,7 @@ const CeMsMt2Search = () => {
       masses: "",
       mt: "",
       tolerance: "",
-      tolerance_mode: "ppm",
+      tolerance_mode: "PPM",
       mt_tolerance: "",
       mt_tolerance_mode: "percentage",
       buffer: "FORMIC_ACID_1M",
@@ -206,9 +206,11 @@ const CeMsMt2Search = () => {
                 </>
               }
               toleranceValue={formState.tolerance}
-              toleranceMode={formState.tolerance_mode}
+              mzToleranceMode={formState.tolerance_mode}
               onChange={handleChange}
+              unitOptions={["PPM", "DA"]}
               inputName="tolerance"
+              modeName="tolerance_mode"
               className="tolerance-im-ms"
             />
 
@@ -219,7 +221,7 @@ const CeMsMt2Search = () => {
                 </>
               }
               toleranceValue={formState.mt_tolerance}
-              toleranceMode={formState.mt_tolerance_mode}
+              mzToleranceMode={formState.mt_tolerance_mode}
               onChange={handleChange}
               unitOptions={["percentage", "absolute"]}
               inputName="mt_tolerance"

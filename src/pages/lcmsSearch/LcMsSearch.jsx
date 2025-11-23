@@ -7,7 +7,7 @@ import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 
-const BatchAdvancedSearch = () => {
+const LcMsSearch = () => {
   const [formState, setFormState] = useState({
     mz: [],
     //allMz: [],
@@ -218,7 +218,7 @@ const BatchAdvancedSearch = () => {
   return (
     <div className="page">
       <header className="title-header">
-        <span className="title-text">Batch Advanced Search</span>
+        <span className="title-text">LC-MS Search</span>
       </header>
       <div
         className="page outer-container row"
@@ -420,4 +420,4 @@ const BatchAdvancedSearch = () => {
   );
 };
 
-export default BatchAdvancedSearch;
+export default LcMsSearch;

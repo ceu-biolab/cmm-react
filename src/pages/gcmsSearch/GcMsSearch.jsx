@@ -34,11 +34,11 @@ const GcMsSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      spectrum: "", //* TEXTBOX INPUT
-      retentionIndex: "1500", //* INPUT
-      retentionIndexTolerance: "10", //* INPUT
-      derivatizationMethod: "METHYL_CHLOROFORMATE", //* GROUP RADIO
-      columnType: "STANDARD_NON_POLAR", //* GROUP RADIO
+      spectrum: "",
+      retentionIndex: "1500",
+      retentionIndexTolerance: "10",
+      derivatizationMethod: "METHYL_CHLOROFORMATE",
+      columnType: "STANDARD_NON_POLAR",
     });
   };
 

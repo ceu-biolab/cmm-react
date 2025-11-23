@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import MainWeb from "../pages/MainWeb";
 import SimpleSearch from "../pages/msSearch/SimpleSearch";
 import BatchSearch from "../pages/msSearch/BatchSearch";
-import BatchAdvancedSearch from "../pages/lcmsSearch/BatchAdvancedSearch";
+import LcMsSearch from "../pages/lcmsSearch/LcMsSearch";
 import ImMsSearch from "../pages/ccsSearch/ImMsSearch";
 import LcImMsSearch from "../pages/lcmsSearch/LcImMsSearch";
 import BrowseSearch from "../pages/msSearch/BrowseSearch";
@@ -28,8 +28,8 @@ const App = () => {
           <Route path="/simple-search" element={<SimpleSearch />} />
           <Route path="/batch-search" element={<BatchSearch />} />
           <Route
-            path="/batch-advanced-search"
-            element={<BatchAdvancedSearch />}
+            path="/lc-ms-search"
+            element={<LcMsSearch />}
           />
           <Route path="/im-ms-search" element={<ImMsSearch />} />
           <Route path="/lc-im-ms-search" element={<LcImMsSearch />} />

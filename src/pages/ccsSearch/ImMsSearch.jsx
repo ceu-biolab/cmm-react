@@ -21,10 +21,6 @@ const ImMsSearch = () => {
     formulaType: "CHNOPS",
   });
 
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-
   const loadDemoData = () => {
     console.log("Loading demo data...");
     setFormState({
@@ -56,6 +52,10 @@ const ImMsSearch = () => {
       adducts: [],
     });
   };
+
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
@@ -94,8 +94,6 @@ const ImMsSearch = () => {
       bufferGas: formState.bufferGas,
       adducts: formState.adducts,
     };
-
-    console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
 
     try {
       const response = await axios.post(
