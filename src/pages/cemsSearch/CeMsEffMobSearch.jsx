@@ -155,7 +155,7 @@ const CeMsEffMobSearch = () => {
           Required <span className="red-asterisk">*</span>
         </label>
         <form onSubmit={handleSubmit}>
-          <div className="grid-container-im-ms">
+          <div className="grid-container-ce-ms-search">
             <TextInput
               label={
                 <>
@@ -180,6 +180,7 @@ const CeMsEffMobSearch = () => {
               unitOptions={["mDa", "PPM"]}
               inputName="mz_tolerance"
               modeName="mz_tolerance_mode"
+              className="mz-tolerance-radio-cems"
             />
 
             <ToleranceRadio
@@ -195,6 +196,7 @@ const CeMsEffMobSearch = () => {
               unitOptions={["percentage", "absolute"]}
               inputName="eff_mob_tolerance"
               modeName="eff_mob_tolerance_mode"
+              className="tolerance-radio-cems"
             />
 
             <GroupRadio
@@ -207,6 +209,7 @@ const CeMsEffMobSearch = () => {
               value={formState.chemical_alphabet}
               options={["ALL", "CHNOPS", "CHNOPSD", "CHNOPSCL", "CHNOPSCLD"]}
               onChange={handleChange}
+              className="formula-type-radio-cems"
             />
 
             <GroupRadio
@@ -263,6 +266,7 @@ const CeMsEffMobSearch = () => {
               selectedAdducts={formState.adducts}
               onChange={handleChange}
               name="adducts"
+              className="adducts-checkboxes-cems"
             />
           </div>
 

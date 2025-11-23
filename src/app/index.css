@@ -1307,15 +1307,42 @@ tbody tr:hover {
   grid-column: 2 / 3;
 }
 
-/* Adducts in column 3 ONLY */
 .adducts-container {
   grid-column: 3;
-  grid-row: span 4; /* make it taller & avoid collision */
+  grid-row: span 4;
   background: #f8f8f8;
   padding: 15px;
   border-radius: 8px;
   border: 1px solid #ddd;
   overflow-y: auto;
+}
+
+.grid-container-ce-ms-search {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+  align-items: start;
+}
+
+.mz-tolerance-radio-cems {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.tolerance-radio-cems {
+  grid-column: 1 / 2;
+  grid-row: 3 / 4;
+}
+
+.formula-type-radio-cems {
+  grid-column: 4 / 5;
+  grid-row: 1 / 2;
+}
+
+.adducts-checkboxes-cems {
+  grid-column: 3 / 4;
+  grid-row: 1 / 4;
 }
 
 /* Compound Info Card */
@@ -1626,62 +1653,32 @@ tbody tr:hover {
 /* Advanced Batch Search Container */
 .grid-container-batch-adv {
   display: grid;
-  grid-template-columns: 23% 23% 23% 23%;
-  grid-template-rows: auto auto auto;
-  grid-gap: 5%;
-  border-radius: 10px;
-  padding: 5%;
-  margin-bottom: 7%;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
 }
 
-.masses-text-adv {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
-}
-
-.rt-text-adv {
-  grid-column: 2 / 3;
-  grid-row: 1 / 2;
-}
-
+.masses-text-adv,
+.rt-text-adv,
 .spec-text-adv {
-  grid-column: 3 / 4;
-  grid-row: 1 / 2;
+  width: 100%;
 }
 
-.tolerance-adv {
-  grid-column: 1 / 2;
-  grid-row: 4 / 5;
-}
-
-.chem-alph-adv {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-}
-
-.modifiers-adv {
-  grid-column: 2 / 3;
-  grid-row: 3 / 5;
-}
-
-.databases-adv {
-  grid-column: 4 / 5;
-  grid-row: 2 / 4;
-}
-
-.metabolites-adv {
-  grid-column: 1 / 2;
-  grid-row: 3 / 4;
-}
-
-.adducts-adv {
-  grid-column: 3 / 4;
-  grid-row: 2 / 4;
-}
-
+.tolerance-adv,
+.chem-alph-adv,
+.modifiers-adv,
+.metabolites-adv,
 .ionization-adv {
-  grid-column: 2 / 3;
-  grid-row: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deuterium-container,
+.databases-adv,
+.adducts-adv {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 /* RT Pred Search Container */
