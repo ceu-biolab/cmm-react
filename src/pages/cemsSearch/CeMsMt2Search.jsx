@@ -151,7 +151,35 @@ const CeMsMt2Search = () => {
       const rawResults = response.data;
       console.log(rawResults);
 
-      const features = rawResults.ceFeatures || rawResults.imFeatures || [];
+      const rawFeatures = rawResults.ceFeatures || rawResults.imFeatures || [];
+
+      const features = rawFeatures.map((item) => {
+        const annotationsByAdducts =
+          item.annotationsByAdducts?.map((adductGroup) => {
+            const annotations =
+              adductGroup.annotations
+                ?.filter((a) => a.compound)
+                ?.map((a) => ({
+                  ...a,
+                  ...a.compound,
+                })) || [];
+
+            return {
+              adduct: adductGroup.adduct,
+              annotations,
+            };
+          }) || [];
+
+        const hasResults = annotationsByAdducts.some(
+          (group) => group.annotations.length > 0
+        );
+
+        return {
+          feature: item.feature,
+          annotationsByAdducts,
+          hasResults,
+        };
+      });
 
       setResults(features);
       setShowResults(true);
@@ -371,21 +399,20 @@ const CeMsMt2Search = () => {
                   {featureObj.feature?.effectiveMobility?.toFixed(2)}
                 </h3>
 
-                {featureObj.annotationsByAdducts?.map(
-                  (adductGroup, adductIndex) => (
-                    <ResultsDropdownGroup
-                      key={`${featureIndex}-${adductIndex}`}
-                      adduct={adductGroup.adduct}
-                      compounds={
-                        adductGroup.annotations
-                          ?.filter((a) => a.compound)
-                          ?.map((a) => ({
-                            ...a,
-                            ...a.compound,
-                          })) || []
-                      }
-                    />
+                {featureObj.hasResults ? (
+                  featureObj.annotationsByAdducts.map(
+                    (adductGroup, adductIndex) => (
+                      <ResultsDropdownGroup
+                        key={`${featureIndex}-${adductIndex}`}
+                        adduct={adductGroup.adduct}
+                        compounds={adductGroup.annotations}
+                      />
+                    )
                   )
+                ) : (
+                  <p className="no-results">
+                    No results found for this feature.
+                  </p>
                 )}
               </div>
             ))}
