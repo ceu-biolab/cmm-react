@@ -122,15 +122,39 @@ body {
 
 /* Contact Us Button */
 .contact-button {
-  background-color: #4a5859;
-  border-radius: 24px;
+  background-color: #5E888A;
+  border-radius: 50%;
   color: #f8f9fa;
+  min-width: 3rem;
+  min-height: 3rem;
+  width: 3rem;
+  height: 3rem;
+  max-width: 3rem;
+  max-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .contact-button:hover {
   background-color: #4a5859;
   transform: scale(1.02);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.contact-button img {
+  min-width: 2rem;
+  min-height: 2rem;
+  width: 2rem;
+  height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.contact-button:hover img {
+  transform: rotate(90deg);
 }
 
 /* Dropdown Styling */
@@ -467,7 +491,6 @@ h2 {
   clear: both;
 }
 
-/* Input fields and labels */
 input[type="text"],
 input[type="radio"],
 input[type="number"],
@@ -520,6 +543,7 @@ label {
 
 .row {
   min-height: 15rem;
+  background-color: #ffffff !important;
 }
 
 .adducts-label {
@@ -617,6 +641,9 @@ body {
   margin-left: auto;
   margin-right: auto;
   margin-top: 3%;
+  height: 100%;
+
+  background-color: #f8f9fa;
 }
 
 @keyframes fadeIn {
@@ -2637,7 +2664,7 @@ body {
 
 .compound-select:focus {
   outline: none;
-  border-color: #3b82f6; /* Blue focus */
+  border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 
@@ -2645,4 +2672,14 @@ body {
   background-color: #ffffff;
   color: #1e293b;
   font-size: 14px;
+}
+
+.cemspage h3 {
+  color: #2f90a3;
+  font-size: 1rem;
+  background-color: #2f90a327;
+  padding: 5px 20px;
+  border-radius: 10px;
+  margin-top: 30px;
+  margin-bottom: 10px;
 }

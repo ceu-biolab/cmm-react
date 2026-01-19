@@ -55,7 +55,7 @@ const MirroredSpectrum = ({ data }) => {
   const [tooltip, setTooltip] = useState(null);
 
   return (
-    <div class="graph-div">
+    <div className="graph-div">
       <label className="compound-select-label">
         <select
           className="compound-select"

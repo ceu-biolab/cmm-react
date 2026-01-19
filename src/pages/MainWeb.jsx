@@ -103,7 +103,7 @@ const MainWeb = () => {
                 </div>
               </section>
               <section className="section-3">
-                <aside class="sidebar-info">
+                <aside className="sidebar-info">
                   <h3>About CEU Mass Mediator</h3>
                   <h5>
                     A powerful tool for searching metabolites across multiple
@@ -178,9 +178,9 @@ const MainWeb = () => {
               </section>
             </main>
           </div>
-          <section class="second-main-con">
+          <section className="second-main-con">
             <section>
-              <h2 className="citation-heading">Our Publications</h2>
+              <h2 className="citation-heading">Publications</h2>
               <section className="citation-links">
                 <div className="citation-link">
                   <div className="link-subtitle">
@@ -272,7 +272,7 @@ const MainWeb = () => {
             </section>
           </section>
           {/* 
-        <section class="third-main-con">
+        <section className="third-main-con">
           <img src={labImg} />
         </section>
         */}

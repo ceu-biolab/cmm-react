@@ -143,7 +143,7 @@ const CeMsEffMobSearch = () => {
   };
 
   return (
-    <div className="page">
+    <div className="page cemspage">
       <header className="title-header">
         <span className="title-text">CE-MS Effective Mobility Search</span>
       </header>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../assets/images/logo-gray.png";
+import logo from "../assets/images/logo copy 2.png";
+import ceu from "../assets/images/logo-ceu-blanco.png";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -29,12 +30,10 @@ const Header = () => {
         </a>
       </section>
       <section className="header">
-        {/* Logo with Link to home (MainWeb) */}
         <Link to="/" className="logo" onClick={goToMainWeb}>
           <img src={logo} alt="CMM Logo" />
         </Link>
 
-        {/* Navigation Buttons */}
         <nav className="button-container">
           <div className="dropdown">
             <button className="button">MS Search</button>
@@ -122,7 +121,15 @@ const Header = () => {
           </Link>
         </nav>
 
-        <button className="button contact-button">Contact Us</button>
+        <a
+          href="https://www.uspceu.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="button contact-button"
+        >
+          {" "}
+          <img src={ceu} alt="CEU Logo" />
+        </a>
       </section>
     </header>
   );

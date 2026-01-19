@@ -172,8 +172,8 @@ const LcImMsSearch = () => {
         className="page outer-container row"
         style={{ cursor: loading ? "wait" : "default" }}
       >
-        <label class="required-label">
-          Required <span class="red-asterisk">*</span>
+        <label className="required-label">
+          Required <span className="red-asterisk">*</span>
         </label>
         <form onSubmit={handleSubmit}>
           <div className="grid-container-im-ms">
