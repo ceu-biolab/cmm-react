@@ -2726,3 +2726,84 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.deuterium-container label input {
+  margin: 10px;
+}
+
+.grid-container-lc-im-ms {
+  display: grid;
+  grid-template-columns: 23% 23% 23% 23%;
+  grid-gap: 3%;
+  border-radius: 10px;
+  padding: 5%;
+  margin-bottom: 7%;
+}
+
+.masses-text-lc-im-ms {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2;
+}
+
+.ccs-values-lc-im-ms {
+  grid-column: 3 / 5;
+  grid-row: 1 / 2;
+}
+
+.tolerance-lc-im-ms {
+  grid-column: 1 / 2;
+  grid-row: 3 / 6;
+}
+
+.ccs-tolerance-lc-im-ms {
+  grid-column: 1 / 2;
+  grid-row: 3 / 5;
+}
+
+.ccs-tol-input-lc-im-ms {
+  grid-column: 1 / 2;
+  grid-row: 4 / 6;
+}
+
+.chem-alph-lc-im-ms {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.modifiers-lc-im-ms {
+  grid-column: 2 / 3;
+  grid-row: 3 / 5;
+}
+
+.adducts-lc-im-ms {
+  grid-column: 4 / 5;
+  grid-row: 2 / 5;
+}
+
+.ionization-lc-im-ms {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+}
+
+.databases-lc-im-ms {
+  grid-column: 3 / 4;
+  grid-row: 2 / 5;
+}
+
+.metabolites-lc-im-ms {
+  grid-column: 1 / 2;
+  grid-row: 5 / 6;
+}
+
+.spectrum-graph-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-top: 2rem;
+}
+
+.spectrum-graph-wrapper svg,
+.spectrum-graph-wrapper canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}

@@ -13,7 +13,7 @@ const LcImMsSearch = () => {
     mz: [],
     ccsValues: [],
     tolerance: "",
-    toleranceMode: "ppm",
+    toleranceMode: "PPM",
     chemAlphabet: "CHNOPS",
     deuteriumCheck: "",
     modifiers: "None",
@@ -50,7 +50,7 @@ const LcImMsSearch = () => {
       ],
       ccsValues: [],
       tolerance: "10",
-      toleranceMode: "ppm",
+      toleranceMode: "PPM",
       chemAlphabet: "CHNOPS",
       deuteriumCheck: "",
       modifiers: "NH3",
@@ -67,7 +67,7 @@ const LcImMsSearch = () => {
       mz: [],
       ccsValues: [],
       tolerance: "",
-      toleranceMode: "ppm",
+      toleranceMode: "PPM",
       ccsTol: "",
       chemAlphabet: "CHNOPS",
       deuteriumCheck: "",
@@ -183,7 +183,7 @@ const LcImMsSearch = () => {
           Required <span className="red-asterisk">*</span>
         </label>
         <form onSubmit={handleSubmit}>
-          <div className="grid-container-im-ms">
+          <div className="grid-container-lc-im-ms">
             <TextBoxInput
               label={
                 <>
@@ -193,7 +193,7 @@ const LcImMsSearch = () => {
               name="mz"
               value={formState.mz}
               onChange={handleChange}
-              className="masses-text-im-ms"
+              className="masses-text-lc-im-ms"
             />
 
             <TextBoxInput
@@ -201,7 +201,7 @@ const LcImMsSearch = () => {
               name="ccsValues"
               value={formState.ccsValues}
               onChange={handleChange}
-              className="ccs-values-im-ms"
+              className="ccs-values-lc-im-ms"
               placeholder="Enter CCS values (comma separated)"
             />
 
@@ -214,7 +214,7 @@ const LcImMsSearch = () => {
               toleranceValue={formState.tolerance}
               toleranceMode={formState.toleranceMode}
               onChange={handleChange}
-              className="tolerance-im-ms"
+              className="tolerance-lc-im-ms"
             />
 
             <TextInput
@@ -223,7 +223,7 @@ const LcImMsSearch = () => {
               value={formState.ccsTol}
               onChange={handleChange}
               placeholder="3"
-              className="ccs-tol-input-im-ms"
+              className="ccs-tol-input-lc-im-ms"
             />
 
             <GroupRadio
@@ -236,7 +236,7 @@ const LcImMsSearch = () => {
               value={formState.chemAlphabet}
               options={["All", "CHNOPS", "CHNOPS + Cl"]}
               onChange={handleChange}
-              className="chem-alph-im-ms"
+              className="chem-alph-lc-im-ms"
             />
 
             <GroupRadio
@@ -256,7 +256,7 @@ const LcImMsSearch = () => {
                 "CH3COONH3",
               ]}
               onChange={handleChange}
-              className="modifiers-im-ms"
+              className="modifiers-lc-im-ms"
             />
 
             <DatabasesCheckboxes
@@ -267,7 +267,7 @@ const LcImMsSearch = () => {
               }
               selectedDatabases={formState.databases}
               onChange={handleChange}
-              className="databases-im-ms"
+              className="databases-lc-im-ms"
             />
 
             <GroupRadio
@@ -280,7 +280,7 @@ const LcImMsSearch = () => {
               value={formState.metaboliteType}
               options={["All", "ONLYLIPIDS"]}
               onChange={handleChange}
-              className="metabolites-im-ms"
+              className="metabolites-lc-im-ms"
             />
 
             <AdductsCheckboxes
@@ -291,7 +291,7 @@ const LcImMsSearch = () => {
               }
               selectedAdducts={formState.adductsString}
               onChange={handleChange}
-              className="adducts-im-ms"
+              className="adducts-lc-im-ms"
             />
 
             <GroupRadio
@@ -304,7 +304,7 @@ const LcImMsSearch = () => {
               value={formState.ionizationMode}
               options={["Neutral", "Positive Mode", "Negative Mode"]}
               onChange={handleChange}
-              className="ionization-im-ms"
+              className="ionization-lc-im-ms"
             />
           </div>
 

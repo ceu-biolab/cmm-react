@@ -187,10 +187,35 @@ const MsMsSearch = () => {
       );
 
       const rawResults = response.data;
+      console.log(rawResults);
 
-      console.log("Raw results:", rawResults);
+      const groupedByAdduct = Object.values(
+        rawResults.msmsList.reduce((acc, hit) => {
+          const adduct = hit.adduct || "Unknown";
 
-      setResults(rawResults.msmsList || []);
+          if (!acc[adduct]) {
+            acc[adduct] = {
+              adduct,
+              compounds: [],
+            };
+          }
+
+          acc[adduct].compounds.push({
+            ...hit.compound,
+            score: hit.msmsCosineScore,
+            spectrum: hit.spectrum,
+            msmsId: hit.msmsId,
+          });
+
+          return acc;
+        }, {})
+      );
+
+      setResults({
+        experimentalSpectrum: rawResults.experimentalSpectrum,
+        precursorMz: rawResults.precursorMz,
+        adductGroups: groupedByAdduct,
+      });
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert("There was an error submitting your search");
@@ -317,17 +342,14 @@ const MsMsSearch = () => {
           </div>
         </div>
 
-        {results.map((msmsHit) => (
-          <div key={msmsHit.msmsId} className="msms-result">
-            <h3>
-              {msmsHit.compound.compoundName} ({msmsHit.compound.formula})
-            </h3>
-            <p>
-              Adduct: {msmsHit.adduct}, Score: {msmsHit.msmsCosineScore}
-            </p>
-            <SpectrumGraph peaks={msmsHit.spectrum} />
+        {results?.experimentalSpectrum && (
+          <div className="spectrum-graph-wrapper">
+            <SpectrumGraph
+              peaks={results.experimentalSpectrum.peaks}
+              precursorMz={results.precursorMz}
+            />
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
