@@ -23,7 +23,7 @@ const LcMsSearch = () => {
     databases: [],
   });
 
-  const [results, setResults] = useState({});
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
@@ -323,22 +323,28 @@ const LcMsSearch = () => {
       );
 
       const rawResults = response.data;
-
-      const groupedByAdduct = {};
-
-      rawResults.forEach((result) => {
-        result.potentialAnnotations?.forEach((annotation) => {
-          const { adduct, cmm_compounds } = annotation;
-          if (!groupedByAdduct[adduct]) {
-            groupedByAdduct[adduct] = [];
-          }
-          groupedByAdduct[adduct].push(...cmm_compounds);
-        });
-      });
-
       console.log("Raw results:", rawResults);
 
-      setResults(groupedByAdduct);
+      const features = rawResults.map((item) => {
+        const annotationsByAdducts =
+          item.annotationsByAdducts?.map((adductGroup) => ({
+            adduct: adductGroup.adduct,
+            annotations: adductGroup.annotations || [],
+          })) || [];
+
+        const hasResults = annotationsByAdducts.some(
+          (group) => group.annotations.length > 0
+        );
+
+        return {
+          mzValue: item.feature?.mzValue,
+          retentionTime: item.feature?.retentionTime,
+          annotationsByAdducts,
+          hasResults,
+        };
+      });
+
+      setResults(features);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -349,15 +355,17 @@ const LcMsSearch = () => {
   };
 
   return (
-    <div className="page">
+    <div className="page cemspage">
       {loading && (
         <div className="spinner-overlay">
           <div className="spinner" />
         </div>
       )}
+
       <header className="title-header">
         <span className="title-text">LC-MS Search</span>
       </header>
+
       <div className="page outer-container row">
         <div className="form-container" style={{ position: "relative" }}>
           <label className="required-label">
@@ -462,7 +470,7 @@ const LcMsSearch = () => {
                 name="modifiersType"
                 value={formState.modifiersType}
                 options={[
-                  "None",
+                  "none",
                   "NH3",
                   "HCOO",
                   "CH3COO",
@@ -554,17 +562,64 @@ const LcMsSearch = () => {
           </div>
 
           <div className="results-div">
-            {showResults && Object.keys(results).length === 0 && (
-              <p className="no-results">No results found.</p>
-            )}
-
             {showResults &&
-              Object.entries(results).map(([adduct, compounds]) => (
-                <ResultsDropdownGroup
-                  key={adduct}
-                  adduct={adduct}
-                  compounds={compounds}
-                />
+              results.map((featureObj, featureIndex) => (
+                <div key={featureIndex} className="feature-group">
+                  <h3>
+                    Feature {featureIndex + 1}: m/z{" "}
+                    {featureObj.mzValue?.toFixed(4) ?? "N/A"} | RT:{" "}
+                    {featureObj.retentionTime?.toFixed(2) ?? "N/A"}
+                  </h3>
+
+                  {featureObj.hasResults &&
+                  featureObj.annotationsByAdducts.length > 0 ? (
+                    featureObj.annotationsByAdducts.map(
+                      (adductGroup, adductIndex) => {
+                        const normalizedCompounds = adductGroup.annotations.map(
+                          (annotation, i) => ({
+                            compoundId: annotation.compound?.compoundId ?? i,
+                            compoundName:
+                              annotation.compound?.compoundName ??
+                              annotation.compound?.formula ??
+                              "Unknown",
+                            mass: annotation.compound?.mass ?? null,
+                            massErrorPpm: annotation.massErrorPpm ?? null,
+                            formula: annotation.compound?.formula,
+                            chargeType: annotation.compound?.chargeType,
+                            chargeNumber: annotation.compound?.chargeNumber,
+                            numCarbons: annotation.compound?.numCarbons,
+                            doubleBonds: annotation.compound?.doubleBonds,
+                            numChains: annotation.compound?.numChains,
+                            inchi: annotation.compound?.inchi,
+                            inchiKey: annotation.compound?.inchiKey,
+                            smiles: annotation.compound?.smiles,
+                            casID: annotation.compound?.casID,
+                            keggID: annotation.compound?.keggID,
+                            chebiID: annotation.compound?.chebiID,
+                            hmdbID: annotation.compound?.hmdbID,
+                            lmID: annotation.compound?.lmID,
+                            pcID: annotation.compound?.pcID,
+                            knapsackID: annotation.compound?.knapsackID,
+                            mol2: annotation.compound?.mol2,
+                            sdf: annotation.compound?.sdf,
+                          })
+                        );
+
+                        return (
+                          <ResultsDropdownGroup
+                            key={`${featureIndex}-${adductIndex}`}
+                            adduct={adductGroup.adduct}
+                            compounds={normalizedCompounds}
+                          />
+                        );
+                      }
+                    )
+                  ) : (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+                </div>
               ))}
           </div>
         </div>

@@ -137,7 +137,7 @@ const CeMsEffMobSearch = () => {
             mzValue: item.feature?.mzValue,
             effectiveMobility: item.feature?.effectiveMobility,
             annotationsByAdducts,
-            hasResults, // 👈 important
+            hasResults,
           };
         }) || [];
 

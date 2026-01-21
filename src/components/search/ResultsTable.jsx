@@ -99,7 +99,7 @@ const ResultsTable = ({ results }) => {
                     className={isIdColumn ? "id-column" : ""}
                     onMouseEnter={() => {
                       if (isIdColumn) {
-                        setHoveredId(item.compoundId);
+                        setHoveredId(item.compoundId || item.id);
                         setHoveredCompound(item);
                       }
                     }}
@@ -115,7 +115,7 @@ const ResultsTable = ({ results }) => {
                         to={{
                           pathname: `/compound/${item.compoundId}`,
                           search: createSearchParams({
-                            compound_name: item.compoundName,
+                            compound_name: item.compoundName || item.name,
                             formula: item.formula,
                             mass: item.mass,
                             chargeType: item.chargeType,
