@@ -153,9 +153,16 @@ const CeMsEffMobSearch = () => {
 
   return (
     <div className="page cemspage">
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner" />
+        </div>
+      )}
+
       <header className="title-header">
         <span className="title-text">CE-MS Effective Mobility Search</span>
       </header>
+
       <div
         className="page outer-container row"
         style={{ cursor: loading ? "wait" : "default" }}

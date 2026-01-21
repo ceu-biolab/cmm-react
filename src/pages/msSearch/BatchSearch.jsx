@@ -159,6 +159,12 @@ const BatchSearch = () => {
 
   return (
     <div className="page">
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner" />
+        </div>
+      )}
+      
       <header className="title-header">
         <span className="title-text">Batch Search</span>
       </header>

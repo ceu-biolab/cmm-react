@@ -92,6 +92,12 @@ const BrowseSearch = () => {
 
   return (
     <div className="page">
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner" />
+        </div>
+      )}
+
       <header className="title-header">
         <span className="title-text">Browse Search</span>
       </header>

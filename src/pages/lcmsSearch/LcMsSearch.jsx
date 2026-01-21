@@ -9,21 +9,21 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 
 const LcMsSearch = () => {
   const [formState, setFormState] = useState({
-    mz: [],
-    retentionTimes: [],
-    compositeSpectrum: [],
+    mz: "",
+    retentionTimes: "",
+    compositeSpectrum: "",
     tolerance: "",
     mzToleranceMode: "PPM",
     chemicalAlphabet: "CHNOPS",
     deuterium: false,
     modifiersType: "None",
-    ionizationMode: "Positive Mode",
+    ionizationMode: "POSITIVE",
     metaboliteType: "All",
     adductsString: [],
     databases: [],
   });
 
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
@@ -34,7 +34,7 @@ const LcMsSearch = () => {
         518.3226, 548.37054, 572.3718, 570.3551, 568.3401, 590.321, 482.324,
         478.29312, 500.27457, 502.29303, 526.2927, 548.27484, 512.33417,
         534.31616,
-      ],
+      ].join(", "),
 
       mzToleranceMode: "PPM",
       tolerance: 50,
@@ -61,7 +61,7 @@ const LcMsSearch = () => {
         19.46886, 21.503885, 20.90083, 18.852442, 17.863642, 17.863642,
         17.41639, 16.68847, 16.68847, 17.76522, 17.698446, 17.698446, 16.254662,
         16.254662,
-      ],
+      ].join(", "),
 
       compositeSpectrum: JSON.stringify(
         [
@@ -224,9 +224,9 @@ const LcMsSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      mz: [],
-      retentionTimes: [],
-      compositeSpectrum: [],
+      mz: "",
+      retentionTimes: "",
+      compositeSpectrum: "",
       tolerance: "",
       mzToleranceMode: "PPM",
       chemicalAlphabet: "CHNOPS",
@@ -240,16 +240,25 @@ const LcMsSearch = () => {
   };
 
   useEffect(() => {
+    if (loading) {
+      document.body.style.cursor = "wait";
+    } else {
+      document.body.style.cursor = "default";
+    }
+
+    return () => {
+      document.body.style.cursor = "default";
+    };
+  }, [loading]);
+
+  useEffect(() => {
     console.log("Updated searchData:", formState);
   }, [formState]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "mz") {
-      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
-      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
-    } else if (type === "checkbox") {
+    if (type === "checkbox") {
       if (name === "adductsString") {
         setFormState((prev) => ({
           ...prev,
@@ -271,7 +280,10 @@ const LcMsSearch = () => {
         }));
       }
     } else {
-      setFormState((prev) => ({ ...prev, [name]: value || null }));
+      setFormState((prev) => ({
+        ...prev,
+        [name]: value ?? "",
+      }));
     }
   };
 
@@ -280,8 +292,15 @@ const LcMsSearch = () => {
     setLoading(true);
 
     const formattedData = {
-      mz: formState.mz.map((mass) => parseFloat(mass)),
-      retentionTimes: formState.retentionTimes.map((time) => parseFloat(time)),
+      mz: formState.mz
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map(Number),
+
+      retentionTimes: formState.retentionTimes
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map(Number),
       compositeSpectrum: JSON.parse(formState.compositeSpectrum),
       tolerance: parseFloat(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
@@ -331,31 +350,34 @@ const LcMsSearch = () => {
 
   return (
     <div className="page">
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner" />
+        </div>
+      )}
       <header className="title-header">
         <span className="title-text">LC-MS Search</span>
       </header>
-      <div
-        className="page outer-container row"
-        style={{ cursor: loading ? "wait" : "default" }}
-      >
-        <label className="required-label">
-          Required <span className="red-asterisk">*</span>
-        </label>
-        <form onSubmit={handleSubmit}>
-          <div className="grid-container-batch-adv">
-            <TextBoxInput
-              label={
-                <>
-                  Experimental Masses <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="mz"
-              value={formState.mz}
-              onChange={handleChange}
-              className="masses-text-adv"
-            />
+      <div className="page outer-container row">
+        <div className="form-container" style={{ position: "relative" }}>
+          <label className="required-label">
+            Required <span className="red-asterisk">*</span>
+          </label>
+          <form onSubmit={handleSubmit}>
+            <div className="grid-container-batch-adv">
+              <TextBoxInput
+                label={
+                  <>
+                    Experimental Masses <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                name="mz"
+                value={formState.mz}
+                onChange={handleChange}
+                className="masses-text-adv"
+              />
 
-            {/*
+              {/*
             <TextBoxInput
               label="All Experimental Masses"
               name="allMz"
@@ -365,16 +387,16 @@ const LcMsSearch = () => {
             />
             */}
 
-            <TextBoxInput
-              label="Retention Times"
-              name="retentionTimes"
-              value={formState.retentionTimes}
-              onChange={handleChange}
-              className="rt-text-adv"
-              placeholder="Enter retention times (comma separated)"
-            />
+              <TextBoxInput
+                label="Retention Times"
+                name="retentionTimes"
+                value={formState.retentionTimes}
+                onChange={handleChange}
+                className="rt-text-adv"
+                placeholder="Enter retention times (comma separated)"
+              />
 
-            {/*
+              {/*
             <TextBoxInput
               label="All Retention Times"
               name="allRt"
@@ -384,16 +406,16 @@ const LcMsSearch = () => {
             />
             */}
 
-            <TextBoxInput
-              label="Composite Spectra"
-              name="compositeSpectrum"
-              value={formState.compositeSpectrum}
-              onChange={handleChange}
-              className="spec-text-adv"
-              placeholder="Enter composite spectra (comma separated)"
-            />
+              <TextBoxInput
+                label="Composite Spectra"
+                name="compositeSpectrum"
+                value={formState.compositeSpectrum}
+                onChange={handleChange}
+                className="spec-text-adv"
+                placeholder="Enter composite spectra (comma separated)"
+              />
 
-            {/*
+              {/*
             <TextBoxInput
               label="All Composite Spectra"
               name="allCompSpectra"
@@ -403,145 +425,148 @@ const LcMsSearch = () => {
             />
             */}
 
-            <ToleranceRadio
-              label={
-                <>
-                  Tolerance <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              toleranceValue={formState.tolerance}
-              mzToleranceMode={formState.mzToleranceMode}
-              onChange={handleChange}
-              unitOptions={["PPM", "DA"]}
-              inputName="tolerance"
-              modeName="mzToleranceMode"
-              className="tolerance-adv"
-            />
-
-            <GroupRadio
-              label={
-                <>
-                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="chemicalAlphabet"
-              value={formState.chemicalAlphabet}
-              options={["All", "CHNOPS", "CHNOPS + Cl"]}
-              onChange={handleChange}
-              className="chem-alph-adv"
-            />
-
-            <GroupRadio
-              label={
-                <>
-                  Modifiers <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="modifiersType"
-              value={formState.modifiersType}
-              options={[
-                "None",
-                "NH3",
-                "HCOO",
-                "CH3COO",
-                "HCOONH3",
-                "CH3COONH3",
-              ]}
-              onChange={handleChange}
-              className="modifiers-adv"
-            />
-
-            <DatabasesCheckboxes
-              label={
-                <>
-                  Databases <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              selectedDatabases={formState.databases}
-              onChange={handleChange}
-              className="databases-adv"
-            />
-
-            <GroupRadio
-              label={
-                <>
-                  Metabolites <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="metaboliteType"
-              value={formState.metaboliteType}
-              options={["All", "ONLYLIPIDS"]}
-              onChange={handleChange}
-              className="metabolites-adv"
-            />
-
-            <div className="deuterium-container">
-              <label>
-                <input
-                  type="checkbox"
-                  name="deuterium"
-                  checked={formState.deuterium}
-                  onChange={handleChange}
-                />
-                Deuterium
-              </label>
-            </div>
-
-            <AdductsCheckboxes
-              label={
-                <>
-                  Adducts <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              selectedAdducts={formState.adductsString}
-              onChange={handleChange}
-              className="adducts-adv"
-            />
-
-            <GroupRadio
-              label={
-                <>
-                  Ionization Mode <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="ionizationMode"
-              value={formState.ionizationMode}
-              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
-              onChange={handleChange}
-              className="ionization-adv"
-            />
-          </div>
-          <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
-              Submit
-            </button>
-          </div>
-        </form>
-        <div className="align-buttons-container">
-          <div className="other-buttons">
-            <div className="form-buttons-container">
-              <button type="button" onClick={loadDemoData}>
-                Load Demo Data
-              </button>
-            </div>
-
-            <div className="form-buttons-container">
-              <button type="button" onClick={clearInput}>
-                Clear Input
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="results-div">
-          {showResults &&
-            Object.entries(results).map(([adduct, compounds]) => (
-              <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
+              <ToleranceRadio
+                label={
+                  <>
+                    Tolerance <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                toleranceValue={formState.tolerance}
+                mzToleranceMode={formState.mzToleranceMode}
+                onChange={handleChange}
+                unitOptions={["PPM", "DA"]}
+                inputName="tolerance"
+                modeName="mzToleranceMode"
+                className="tolerance-adv"
               />
-            ))}
+
+              <GroupRadio
+                label={
+                  <>
+                    Chemical Alphabet <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                name="chemicalAlphabet"
+                value={formState.chemicalAlphabet}
+                options={["All", "CHNOPS", "CHNOPS + Cl"]}
+                onChange={handleChange}
+                className="chem-alph-adv"
+              />
+
+              <GroupRadio
+                label={
+                  <>
+                    Modifiers <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                name="modifiersType"
+                value={formState.modifiersType}
+                options={[
+                  "None",
+                  "NH3",
+                  "HCOO",
+                  "CH3COO",
+                  "HCOONH3",
+                  "CH3COONH3",
+                ]}
+                onChange={handleChange}
+                className="modifiers-adv"
+              />
+
+              <DatabasesCheckboxes
+                label={
+                  <>
+                    Databases <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                selectedDatabases={formState.databases}
+                onChange={handleChange}
+                className="databases-adv"
+              />
+
+              <GroupRadio
+                label={
+                  <>
+                    Metabolites <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                name="metaboliteType"
+                value={formState.metaboliteType}
+                options={["All", "ONLYLIPIDS"]}
+                onChange={handleChange}
+                className="metabolites-adv"
+              />
+
+              <div className="deuterium-container">
+                <label>
+                  <input
+                    type="checkbox"
+                    name="deuterium"
+                    checked={formState.deuterium}
+                    onChange={handleChange}
+                  />
+                  Deuterium
+                </label>
+              </div>
+
+              <AdductsCheckboxes
+                label={
+                  <>
+                    Adducts <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                selectedAdducts={formState.adductsString}
+                onChange={handleChange}
+                className="adducts-adv"
+              />
+
+              <GroupRadio
+                label={
+                  <>
+                    Ionization Mode <span style={{ color: "red" }}>*</span>
+                  </>
+                }
+                name="ionizationMode"
+                value={formState.ionizationMode}
+                options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
+                onChange={handleChange}
+                className="ionization-adv"
+              />
+            </div>
+            <div className="form-buttons-container center-button">
+              <button type="submit">Submit</button>
+            </div>
+          </form>
+          <div className="align-buttons-container">
+            <div className="other-buttons">
+              <div className="form-buttons-container">
+                <button type="button" onClick={loadDemoData}>
+                  Load Demo Data
+                </button>
+              </div>
+
+              <div className="form-buttons-container">
+                <button type="button" onClick={clearInput}>
+                  Clear Input
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="results-div">
+            {showResults && Object.keys(results).length === 0 && (
+              <p className="no-results">No results found.</p>
+            )}
+
+            {showResults &&
+              Object.entries(results).map(([adduct, compounds]) => (
+                <ResultsDropdownGroup
+                  key={adduct}
+                  adduct={adduct}
+                  compounds={compounds}
+                />
+              ))}
+          </div>
         </div>
       </div>
     </div>

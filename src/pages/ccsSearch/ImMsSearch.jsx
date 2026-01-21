@@ -136,9 +136,16 @@ const ImMsSearch = () => {
 
   return (
     <div className="page">
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner" />
+        </div>
+      )}
+
       <header className="title-header">
         <span className="title-text">IM-MS Search</span>
       </header>
+
       <div
         className="page outer-container row"
         style={{ cursor: loading ? "wait" : "default" }}
