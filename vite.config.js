@@ -4,6 +4,10 @@ import fs from "fs";
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/setupTests.jsx",
+  },
   server: {
     https: {
       key: fs.readFileSync("./localhost+2-key.pem"),

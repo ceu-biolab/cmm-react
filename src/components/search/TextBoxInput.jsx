@@ -8,6 +8,7 @@ const TextBoxInput = ({
   className: customClassName = "",
   placeholder: customPlaceholder = "",
   required = false,
+  validationMode = "numbers",
 }) => {
   const [error, setError] = useState("");
   const typingTimeout = useRef(null);
@@ -22,7 +23,22 @@ const TextBoxInput = ({
 
     // Split by commas, spaces, semicolons, or newlines
     const parts = trimmed.split(/[\s,;]+/).filter(Boolean);
-    const invalids = parts.filter((p) => isNaN(Number(p)));
+    const invalids = parts.filter((part) => {
+      if (validationMode === "mzIntensityPairs") {
+        if (part.includes(":")) {
+          const [mzStr, intensityStr] = part.split(":");
+          return (
+            mzStr === undefined ||
+            intensityStr === undefined ||
+            isNaN(Number(mzStr)) ||
+            isNaN(Number(intensityStr))
+          );
+        }
+        return isNaN(Number(part));
+      }
+
+      return isNaN(Number(part));
+    });
 
     if (invalids.length > 0) {
       setError(`Invalid entries: ${invalids.join(", ")}`);

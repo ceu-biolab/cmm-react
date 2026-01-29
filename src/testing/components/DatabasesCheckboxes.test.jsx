@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes";
 import userEvent from "@testing-library/user-event";
 import { expect, it, describe, vi } from "vitest";
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 
 describe("DatabasesCheckboxes", () => {
   it("renders checkboxes with correct default state", () => {

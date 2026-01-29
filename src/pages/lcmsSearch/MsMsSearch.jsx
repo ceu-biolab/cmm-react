@@ -16,7 +16,7 @@ const MsMsSearch = () => {
     toleranceFragments: "",
     toleranceModeFragments: "PPM",
     ionizationMode: "POSITIVE",
-    adducts: ["M+H"],
+    adducts: ["[M+H]+"],
     fragmentsMZsIntensities: {
       precursorMz: "",
       peaks: "",
@@ -115,7 +115,7 @@ const MsMsSearch = () => {
       toleranceFragments: "",
       toleranceModeFragments: "PPM",
       ionizationMode: "POSITIVE",
-      adducts: ["M+H"],
+      adducts: ["[M+H]+"],
       fragmentsMZsIntensities: {
         precursorMz: "",
         peaks: "",
@@ -129,7 +129,7 @@ const MsMsSearch = () => {
   }, [formState]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
     if (name === "precursorIonMz") {
       setFormState((prev) => ({
@@ -143,23 +143,55 @@ const MsMsSearch = () => {
       return;
     }
 
+    if (type === "checkbox") {
+      setFormState((prev) => ({
+        ...prev,
+        [name]: checked
+          ? [...prev[name], value]
+          : prev[name].filter((entry) => entry !== value),
+      }));
+      return;
+    }
+
     setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const parseMsmsPeaks = (input) => {
+    const trimmed = input?.trim();
+    if (!trimmed) return [];
+
+    const tokens = trimmed.split(/[\s,;]+/).filter(Boolean);
+    const pairs = [];
+    const numericBuffer = [];
+
+    for (const token of tokens) {
+      if (token.includes(":")) {
+        const [mzStr, intensityStr] = token.split(":");
+        const mz = parseFloat(mzStr);
+        const intensity = parseFloat(intensityStr);
+        if (!Number.isNaN(mz) && !Number.isNaN(intensity)) {
+          pairs.push({ mz, intensity });
+        }
+      } else {
+        const value = parseFloat(token);
+        if (!Number.isNaN(value)) {
+          numericBuffer.push(value);
+        }
+      }
+    }
+
+    for (let i = 0; i + 1 < numericBuffer.length; i += 2) {
+      pairs.push({ mz: numericBuffer[i], intensity: numericBuffer[i + 1] });
+    }
+
+    return pairs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const peaksArray = formState.fragmentsMZsIntensities.peaks
-      .split(/[\s,;]+/)
-      .map((v) => parseFloat(v))
-      .filter((v) => !isNaN(v))
-      .reduce((acc, val, i, arr) => {
-        if (i % 2 === 0 && arr[i + 1] != null) {
-          acc.push({ mz: arr[i], intensity: arr[i + 1] });
-        }
-        return acc;
-      }, []);
+    const peaksArray = parseMsmsPeaks(formState.fragmentsMZsIntensities.peaks);
 
     const formattedData = {
       CIDEnergy: formState.CIDEnergy,
@@ -271,6 +303,7 @@ const MsMsSearch = () => {
               onChange={handleNestedChange}
               className="box-input-msms"
               placeholder="Enter MS/MS peaks (comma separated)"
+              validationMode="mzIntensityPairs"
             />
 
             <ToleranceRadio
@@ -315,9 +348,8 @@ const MsMsSearch = () => {
 
             <AdductsCheckboxes
               selectedAdducts={formState.adducts}
-              onChange={(newAdducts) =>
-                setFormState((prev) => ({ ...prev, adducts: newAdducts }))
-              }
+              onChange={handleChange}
+              name="adducts"
               className="adducts-container-msms"
             />
           </div>

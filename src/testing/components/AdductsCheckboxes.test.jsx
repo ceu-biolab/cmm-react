@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes";
 import userEvent from "@testing-library/user-event";
 import { expect, it, describe, vi } from "vitest";
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 
 describe("AdductsCheckboxes", () => {
   it("renders the checkboxes and label", () => {
