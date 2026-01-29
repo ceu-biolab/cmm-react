@@ -1,12 +1,24 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import CompoundInfoCard from "../components/search/CompoundInfoCard.jsx";
 
 const CompoundPage = () => {
+  const { id } = useParams();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
 
-  const compound = {
-    compound_name: queryParams.get("compound_name"),
+  let storedCompound = null;
+  if (id) {
+    try {
+      const raw = localStorage.getItem(`compound:${id}`);
+      storedCompound = raw ? JSON.parse(raw) : null;
+    } catch {
+      // no-op
+    }
+  }
+
+  const compound = storedCompound ?? {
+    compoundId: id,
+    compoundName: queryParams.get("compound_name"),
     formula: queryParams.get("formula"),
     mass: queryParams.get("mass"),
     chargeType: queryParams.get("chargeType"),

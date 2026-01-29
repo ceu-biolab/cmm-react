@@ -7,6 +7,16 @@ const ResultsTable = ({ results }) => {
   const [hoveredId, setHoveredId] = useState(null);
   const [hoveredCompound, setHoveredCompound] = useState(null);
 
+  const storeCompound = (compound) => {
+    const compoundId = compound?.compoundId ?? compound?.id;
+    if (!compoundId) return;
+    try {
+      localStorage.setItem(`compound:${compoundId}`, JSON.stringify(compound));
+    } catch {
+      // no-op
+    }
+  };
+
   const linkableFields = [
     "CAS",
     "KEGG",
@@ -79,6 +89,7 @@ const ResultsTable = ({ results }) => {
               {displayHeaders.map((header, idx) => {
                 const dataKey = dataKeys[idx];
                 let value = item[dataKey] ?? "—";
+                const compoundId = item.compoundId ?? item.id;
 
                 if (
                   (header === "Mass" || header === "Error") &&
@@ -113,7 +124,7 @@ const ResultsTable = ({ results }) => {
                     {isIdColumn ? (
                       <Link
                         to={{
-                          pathname: `/compound/${item.compoundId}`,
+                          pathname: `/compound/${compoundId}`,
                           search: createSearchParams({
                             compound_name: item.compoundName || item.name,
                             formula: item.formula,
@@ -133,14 +144,13 @@ const ResultsTable = ({ results }) => {
                             lmID: item.lmID,
                             pcID: item.pcID,
                             knapsackID: item.knapsackID,
-                            mol2: item.mol2,
-                            sdf: item.sdf,
                           }).toString(),
                         }}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => storeCompound(item)}
                       >
-                        {item.compoundId}
+                        {compoundId}
                       </Link>
                     ) : isLinkable && value && value !== 0 && value !== "—" ? (
                       <a

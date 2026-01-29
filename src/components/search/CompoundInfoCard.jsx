@@ -6,7 +6,7 @@ import CompoundViewer3D from "./CompoundViewer3D";
 import CompoundViewer2D from "./CompoundViewer2D";
 import { useLocation } from "react-router-dom";
 
-const CompoundInfoCard = () => {
+const CompoundInfoCard = ({ compound }) => {
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
 
@@ -14,31 +14,32 @@ const CompoundInfoCard = () => {
     return queryParams.get(paramName) || defaultValue;
   };
 
-  const compound_name = queryParams.get("compound_name");
-  console.log("Compound Name:", compound_name);
+  const compoundName =
+    compound?.compoundName ?? compound?.compound_name ?? getParam("compound_name");
+  console.log("Compound Name:", compoundName);
 
-  const compoundFormula = getParam("formula");
-  const mass = parseFloat(getParam("mass", "0"));
-  const chargeType = getParam("chargeType");
-  const chargeNumber = getParam("chargeNumber");
-  const numCarbons = getParam("numCarbons");
-  const doubleBonds = getParam("doubleBonds");
-  const numChains = getParam("numChains");
+  const compoundFormula = compound?.formula ?? getParam("formula");
+  const mass = parseFloat(compound?.mass ?? getParam("mass", "0"));
+  const chargeType = compound?.chargeType ?? getParam("chargeType");
+  const chargeNumber = compound?.chargeNumber ?? getParam("chargeNumber");
+  const numCarbons = compound?.numCarbons ?? getParam("numCarbons");
+  const doubleBonds = compound?.doubleBonds ?? getParam("doubleBonds");
+  const numChains = compound?.numChains ?? getParam("numChains");
 
-  const inchi = getParam("inchi");
-  const inchiKey = getParam("inchiKey");
-  const smiles = getParam("smiles");
+  const inchi = compound?.inchi ?? getParam("inchi");
+  const inchiKey = compound?.inchiKey ?? getParam("inchiKey");
+  const smiles = compound?.smiles ?? getParam("smiles");
 
-  const casID = getParam("casID");
-  const keggID = getParam("keggID");
-  const chebiID = getParam("chebiID");
-  const hmdbID = getParam("hmdbID");
-  const lmID = getParam("lmID");
-  const pcID = getParam("pcID");
-  const knapsackID = getParam("knapsackID");
+  const casID = compound?.casID ?? getParam("casID");
+  const keggID = compound?.keggID ?? getParam("keggID");
+  const chebiID = compound?.chebiID ?? getParam("chebiID");
+  const hmdbID = compound?.hmdbID ?? getParam("hmdbID");
+  const lmID = compound?.lmID ?? getParam("lmID");
+  const pcID = compound?.pcID ?? getParam("pcID");
+  const knapsackID = compound?.knapsackID ?? getParam("knapsackID");
 
-  const mol2 = getParam("mol2");
-  const sdf = getParam("sdf");
+  const mol2 = compound?.mol2 ?? queryParams.get("mol2");
+  const sdf = compound?.sdf ?? queryParams.get("sdf");
 
   console.log("Smiles: " + smiles);
 
@@ -53,7 +54,7 @@ const CompoundInfoCard = () => {
               className="compounds-search-icon"
             />
           </div>
-          <div className="compound-name-info-card">{compound_name}</div>
+          <div className="compound-name-info-card">{compoundName}</div>
           <ul>
             <li>
               <strong>Formula: </strong>
