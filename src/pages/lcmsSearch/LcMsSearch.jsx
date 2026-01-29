@@ -287,8 +287,29 @@ const LcMsSearch = () => {
     }
   };
 
+  const parseCompositeSpectrum = (value) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return [];
+
+    const parsed = JSON.parse(trimmed);
+    if (!Array.isArray(parsed)) {
+      throw new Error("Composite spectra must be a JSON array.");
+    }
+    return parsed;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let compositeSpectrum = [];
+    try {
+      compositeSpectrum = parseCompositeSpectrum(formState.compositeSpectrum);
+    } catch (error) {
+      console.error("Invalid composite spectra JSON:", error);
+      alert("Composite spectra must be valid JSON.");
+      return;
+    }
+
     setLoading(true);
 
     const formattedData = {
@@ -301,7 +322,7 @@ const LcMsSearch = () => {
         .split(/[\s,;]+/)
         .filter(Boolean)
         .map(Number),
-      compositeSpectrum: JSON.parse(formState.compositeSpectrum),
+      compositeSpectrum,
       tolerance: parseFloat(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       chemicalAlphabet: formState.chemicalAlphabet,
@@ -420,7 +441,8 @@ const LcMsSearch = () => {
                 value={formState.compositeSpectrum}
                 onChange={handleChange}
                 className="spec-text-adv"
-                placeholder="Enter composite spectra (comma separated)"
+                placeholder="Enter composite spectra (JSON array)"
+                validationMode="json"
               />
 
               {/*

@@ -21,6 +21,16 @@ const TextBoxInput = ({
       return;
     }
 
+    if (validationMode === "json") {
+      try {
+        JSON.parse(trimmed);
+        setError("");
+      } catch {
+        setError("Invalid JSON");
+      }
+      return;
+    }
+
     // Split by commas, spaces, semicolons, or newlines
     const parts = trimmed.split(/[\s,;]+/).filter(Boolean);
     const invalids = parts.filter((part) => {
@@ -69,6 +79,17 @@ const TextBoxInput = ({
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target.result;
+        if (validationMode === "json") {
+          onChange({
+            target: {
+              name,
+              value: text,
+            },
+          });
+          validateInput(text);
+          return;
+        }
+
         const masses = text
           .split(/[\s,;]+/)
           .map((s) => s.trim())
