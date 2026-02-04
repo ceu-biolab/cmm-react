@@ -250,7 +250,7 @@ const ImMsSearch = () => {
               }
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
+              options={["POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-im-ms"
             />

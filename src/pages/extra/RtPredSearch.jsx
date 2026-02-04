@@ -344,7 +344,7 @@ const RtPredSearch = () => {
               }
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["Neutral", "Positive Mode", "Negative Mode"]}
+              options={["Positive Mode", "Negative Mode"]}
               onChange={handleChange}
               className="ionization-rt-pred"
             />

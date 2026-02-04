@@ -63,7 +63,7 @@ const SimpleSearch = () => {
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ALL",
-      ionizationMode: "NEUTRAL",
+      ionizationMode: "POSITIVE",
       adductsString: [],
       databases: [],
     });
@@ -240,7 +240,7 @@ const SimpleSearch = () => {
               label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
+              options={["POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-div"
             />
