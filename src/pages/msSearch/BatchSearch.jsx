@@ -9,7 +9,7 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 
 const BatchSearch = () => {
   const [formState, setFormState] = useState({
-    mzValues: [],
+    mzValues: "",
     tolerance: "",
     mzToleranceMode: "PPM",
     ionizationMode: "POSITIVE",
@@ -41,7 +41,7 @@ const BatchSearch = () => {
         "482.324",
         "478.29312",
         "500.27457",
-      ],
+      ].join(", "),
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ONLYLIPIDS",
@@ -61,7 +61,7 @@ const BatchSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      mzValues: [],
+      mzValues: "",
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ALL",
@@ -79,9 +79,11 @@ const BatchSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (name === "mzValues") {
-      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
-      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
-    } else if (type === "checkbox") {
+      setFormState((prev) => ({ ...prev, [name]: value }));
+      return;
+    }
+
+    if (type === "checkbox") {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
@@ -103,8 +105,13 @@ const BatchSearch = () => {
     e.preventDefault();
     setLoading(true);
 
+    const mzValues = (formState.mzValues || "")
+      .split(/[\s,;]+/)
+      .filter(Boolean)
+      .map((mass) => parseFloat(mass));
+
     const formattedData = {
-      mzValues: formState.mzValues.map((mass) => parseFloat(mass)),
+      mzValues,
       tolerance: parseFloat(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
