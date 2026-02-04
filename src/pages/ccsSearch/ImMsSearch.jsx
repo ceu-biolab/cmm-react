@@ -65,17 +65,14 @@ const ImMsSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adducts") {
-        setFormState((prev) => ({
-          ...prev,
-          adducts: checked
-            ? [...prev.adducts, value]
-            : prev.adducts.filter((adduct) => adduct !== value),
-        }));
-      }
+      return;
     } else {
       setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -237,7 +234,8 @@ const ImMsSearch = () => {
                 </>
               }
               selectedAdducts={formState.adducts}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
               name="adducts"
               className="adducts-im-ms"
             />

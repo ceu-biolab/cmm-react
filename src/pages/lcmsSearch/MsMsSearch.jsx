@@ -144,16 +144,14 @@ const MsMsSearch = () => {
     }
 
     if (type === "checkbox") {
-      setFormState((prev) => ({
-        ...prev,
-        [name]: checked
-          ? [...prev[name], value]
-          : prev[name].filter((entry) => entry !== value),
-      }));
       return;
     }
 
     setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adducts }));
   };
 
   const parseMsmsPeaks = (input) => {
@@ -348,7 +346,8 @@ const MsMsSearch = () => {
 
             <AdductsCheckboxes
               selectedAdducts={formState.adducts}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
               name="adducts"
               className="adducts-container-msms"
             />

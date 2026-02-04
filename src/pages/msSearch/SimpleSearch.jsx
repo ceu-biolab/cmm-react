@@ -95,14 +95,7 @@ const SimpleSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adductsString") {
-        setFormState((prev) => ({
-          ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((adduct) => adduct !== value),
-        }));
-      } else if (name === "databases") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
           databases: checked
@@ -113,6 +106,10 @@ const SimpleSearch = () => {
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -247,7 +244,8 @@ const SimpleSearch = () => {
 
             <AdductsCheckboxes
               selectedAdducts={formState.adductsString}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
             />
 
             <DatabasesCheckboxes

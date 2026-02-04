@@ -82,14 +82,7 @@ const BatchSearch = () => {
       const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
       setFormState((prev) => ({ ...prev, [name]: newMZValues }));
     } else if (type === "checkbox") {
-      if (name === "adductsString") {
-        setFormState((prev) => ({
-          ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((adduct) => adduct !== value),
-        }));
-      } else if (name === "databases") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
           databases: checked
@@ -100,6 +93,10 @@ const BatchSearch = () => {
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -192,7 +189,8 @@ const BatchSearch = () => {
 
             <AdductsCheckboxes
               selectedAdducts={formState.adductsString}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
             />
 
             <DatabasesCheckboxes

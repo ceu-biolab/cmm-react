@@ -69,16 +69,15 @@ const CeMsEffMobSearch = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (type === "checkbox" && name === "adducts") {
-      setFormState((prev) => ({
-        ...prev,
-        adducts: checked
-          ? [...prev.adducts, value]
-          : prev.adducts.filter((adduct) => adduct !== value),
-      }));
+    if (type === "checkbox") {
+      return;
     } else {
       setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -280,7 +279,8 @@ const CeMsEffMobSearch = () => {
                 </>
               }
               selectedAdducts={formState.adducts}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionization_mode}
               name="adducts"
               className="adducts-checkboxes-cems"
             />

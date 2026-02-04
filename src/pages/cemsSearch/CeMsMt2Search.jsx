@@ -91,17 +91,14 @@ const CeMsMt2Search = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adducts") {
-        setFormState((prev) => ({
-          ...prev,
-          adducts: checked
-            ? [...prev.adducts, value]
-            : prev.adducts.filter((adduct) => adduct !== value),
-        }));
-      }
+      return;
     } else {
       setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -367,7 +364,8 @@ const CeMsMt2Search = () => {
                 </>
               }
               selectedAdducts={formState.adducts}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ion_mode}
               name="adducts"
               className="adducts-im-ms"
             />

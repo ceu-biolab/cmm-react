@@ -56,7 +56,14 @@ const LcImMsSearch = () => {
       modifiers: "NH3",
       metaboliteType: "ONLYLIPIDS",
       ionizationMode: "Positive Mode",
-      adductsString: ["M+H", "M+2H", "M+Na", "M+K", "M+NH4", "M+H-H2O"],
+      adductsString: [
+        "[M+H]+",
+        "[M+2H]2+",
+        "[M+Na]+",
+        "[M+K]+",
+        "[M+NH4]+",
+        "[M+H-H2O]+",
+      ],
       databases: ["HMDB"],
     });
   };
@@ -90,14 +97,7 @@ const LcImMsSearch = () => {
       const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
       setFormState((prev) => ({ ...prev, [name]: newMZValues }));
     } else if (type === "checkbox") {
-      if (name === "adductsString") {
-        setFormState((prev) => ({
-          ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((adduct) => adduct !== value),
-        }));
-      } else if (name === "databases") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
           databases: checked
@@ -108,6 +108,10 @@ const LcImMsSearch = () => {
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -290,7 +294,8 @@ const LcImMsSearch = () => {
                 </>
               }
               selectedAdducts={formState.adductsString}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
               className="adducts-lc-im-ms"
             />
 

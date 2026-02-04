@@ -259,14 +259,7 @@ const LcMsSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adductsString") {
-        setFormState((prev) => ({
-          ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((a) => a !== value),
-        }));
-      } else if (name === "databases") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
           databases: checked
@@ -285,6 +278,10 @@ const LcMsSearch = () => {
         [name]: value ?? "",
       }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
   };
 
   const parseCompositeSpectrum = (value) => {
@@ -546,7 +543,8 @@ const LcMsSearch = () => {
                   </>
                 }
                 selectedAdducts={formState.adductsString}
-                onChange={handleChange}
+                onSelectionChange={handleAdductsChange}
+                ionizationMode={formState.ionizationMode}
                 className="adducts-adv"
               />
 
