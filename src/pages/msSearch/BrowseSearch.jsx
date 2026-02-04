@@ -16,6 +16,7 @@ const BrowseSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -60,9 +61,23 @@ const BrowseSearch = () => {
     e.preventDefault();
     setLoading(true);
 
+    const trimmedName = formState.name?.trim();
+    const trimmedFormula = formState.formula?.trim();
+
+    if (!trimmedName && !trimmedFormula) {
+      setErrors({
+        name: "Provide a name or a formula.",
+        formula: "Provide a name or a formula.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setErrors({});
+
     const formattedData = {
-      name: formState.name,
-      formula: formState.formula,
+      name: trimmedName || null,
+      formula: trimmedFormula || null,
       metaboliteType: formState.metaboliteType,
       databases: formState.databases,
     };
@@ -116,6 +131,11 @@ const BrowseSearch = () => {
               placeholder="Compound name"
               className="compound-name-div"
             />
+            {errors.name && (
+              <div style={{ color: "red", fontSize: "0.9em" }}>
+                {errors.name}
+              </div>
+            )}
 
             <TextInput
               label="Formula"
@@ -125,6 +145,11 @@ const BrowseSearch = () => {
               placeholder="Compound formula"
               className="compound-formula-div"
             />
+            {errors.formula && (
+              <div style={{ color: "red", fontSize: "0.9em" }}>
+                {errors.formula}
+              </div>
+            )}
 
             <GroupRadio
               label="Metabolites"
