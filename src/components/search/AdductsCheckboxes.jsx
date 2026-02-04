@@ -211,7 +211,7 @@ const AdductsCheckboxes = ({
     }
 
     previousAvailableRef.current = availableAdducts;
-  }, [availableAdducts, selectedAdducts]);
+  }, [availableAdducts, selectedAdducts, onSelectionChange]);
 
   const handleToggleAll = (event) => {
     if (event.target.checked) {

@@ -7,6 +7,126 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 
+const formatNumber = (value, digits = 4) => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "—";
+  }
+  const num = Number(value);
+  if (Number.isNaN(num)) {
+    return "—";
+  }
+  return num.toFixed(digits);
+};
+
+const normalizePeaks = (peaks) => {
+  if (!Array.isArray(peaks) || peaks.length === 0) {
+    return [];
+  }
+  const maxIntensity = peaks.reduce((max, peak) => {
+    const intensity = Number(peak?.intensity) || 0;
+    return Math.max(max, intensity);
+  }, 0);
+
+  if (!maxIntensity) {
+    return peaks.map((peak) => ({
+      mz: peak?.mz,
+      intensity: 0,
+    }));
+  }
+
+  return peaks.map((peak) => ({
+    mz: peak?.mz,
+    intensity: (Number(peak?.intensity) || 0) / maxIntensity,
+  }));
+};
+
+const MsmsResultsGroup = ({
+  adduct,
+  compounds,
+  selectedMsmsId,
+  onSelectMatch,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!compounds?.length) {
+    return null;
+  }
+
+  return (
+    <div className="dropdown-container">
+      <div className="dropdown-group">
+        <button
+          type="button"
+          className="dropdown-toggle"
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          {adduct} ({compounds.length} compounds) {isOpen ? "▲" : "▼"}
+        </button>
+      </div>
+      {isOpen && (
+        <div className="results-container">
+          <table className="results-table" border="1">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Formula</th>
+                <th>Mass</th>
+                <th>Cosine</th>
+                <th>ΔPPM</th>
+                <th>Collision</th>
+                <th>Compare</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compounds.map((compound, index) => {
+                const compoundId = compound?.compoundId ?? compound?.id;
+                const hasSpectrum = Array.isArray(compound?.spectrum?.peaks);
+                const isSelected =
+                  compound?.msmsId !== undefined &&
+                  compound?.msmsId === selectedMsmsId;
+                const score =
+                  compound?.msmsCosineScore ??
+                  compound?.score ??
+                  compound?.cosineScore;
+                const deltaPpm =
+                  compound?.deltaPpmPrecursorIon ?? compound?.deltaPpm;
+                const collisionEnergy =
+                  compound?.collisionEnergy ?? compound?.collision;
+
+                return (
+                  <tr key={`${compoundId ?? "compound"}-${index}`}>
+                    <td>{compoundId ?? "—"}</td>
+                    <td>{compound?.compoundName ?? compound?.name ?? "—"}</td>
+                    <td>{compound?.formula ?? "—"}</td>
+                    <td>{formatNumber(compound?.mass, 4)}</td>
+                    <td>{formatNumber(score, 4)}</td>
+                    <td>{formatNumber(deltaPpm, 2)}</td>
+                    <td>{formatNumber(collisionEnergy, 2)}</td>
+                    <td>
+                      {hasSpectrum ? (
+                        <button
+                          type="button"
+                          onClick={() => onSelectMatch(compound)}
+                          disabled={isSelected}
+                        >
+                          {isSelected ? "Selected" : "Compare"}
+                        </button>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MsMsSearch = () => {
   const [formState, setFormState] = useState({
     CIDEnergy: "LOW",
@@ -26,6 +146,7 @@ const MsMsSearch = () => {
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   const loadDemoData = () => {
     const demo = {
@@ -232,7 +353,9 @@ const MsMsSearch = () => {
 
           acc[adduct].compounds.push({
             ...hit.compound,
-            score: hit.msmsCosineScore,
+            msmsCosineScore: hit.msmsCosineScore,
+            deltaPpmPrecursorIon: hit.deltaPpmPrecursorIon,
+            collisionEnergy: hit.collisionEnergy,
             spectrum: hit.spectrum,
             msmsId: hit.msmsId,
           });
@@ -246,6 +369,7 @@ const MsMsSearch = () => {
         precursorMz: rawResults.precursorMz,
         adductGroups: groupedByAdduct,
       });
+      setSelectedMatch(null);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert("There was an error submitting your search");
@@ -373,11 +497,43 @@ const MsMsSearch = () => {
           </div>
         </div>
 
+        {results?.adductGroups?.length > 0 && (
+          <div className="results-div">
+            {results.adductGroups.map((group) => (
+              <MsmsResultsGroup
+                key={group.adduct}
+                adduct={group.adduct}
+                compounds={group.compounds}
+                selectedMsmsId={selectedMatch?.msmsId}
+                onSelectMatch={setSelectedMatch}
+              />
+            ))}
+          </div>
+        )}
+
         {results?.experimentalSpectrum && (
           <div className="spectrum-graph-wrapper">
+            <h3>Experimental Spectrum</h3>
             <SpectrumGraph
-              peaks={results.experimentalSpectrum.peaks}
+              peaks={normalizePeaks(results.experimentalSpectrum.peaks)}
               precursorMz={results.precursorMz}
+            />
+          </div>
+        )}
+
+        {selectedMatch?.spectrum?.peaks?.length > 0 && (
+          <div className="spectrum-graph-wrapper">
+            <h3>
+              Matched Spectrum{" "}
+              {selectedMatch?.compoundName
+                ? `- ${selectedMatch.compoundName}`
+                : selectedMatch?.compoundId
+                ? `- ${selectedMatch.compoundId}`
+                : ""}
+            </h3>
+            <SpectrumGraph
+              peaks={normalizePeaks(selectedMatch.spectrum.peaks)}
+              precursorMz={selectedMatch.spectrum.precursorMz}
             />
           </div>
         )}
