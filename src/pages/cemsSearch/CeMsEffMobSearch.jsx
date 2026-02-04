@@ -3,6 +3,7 @@ import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import TextInput from "../../components/search/TextInput.jsx";
+import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 
@@ -171,7 +172,7 @@ const CeMsEffMobSearch = () => {
         </label>
         <form onSubmit={handleSubmit}>
           <div className="grid-container-ce-ms-search">
-            <TextInput
+            <TextBoxInput
               label={
                 <>
                   m/z Values <span style={{ color: "red" }}>*</span>
@@ -198,20 +199,16 @@ const CeMsEffMobSearch = () => {
               className="mz-tolerance-radio-cems"
             />
 
-            <ToleranceRadio
+            <TextBoxInput
               label={
                 <>
-                  Effective Mobility Tolerance{" "}
-                  <span style={{ color: "red" }}>*</span>
+                  Effective Mobilities <span style={{ color: "red" }}>*</span>
                 </>
               }
-              toleranceValue={formState.eff_mob_tolerance}
-              mzToleranceMode={formState.eff_mob_tolerance_mode}
+              name="effective_mobilities"
+              value={formState.effective_mobilities}
               onChange={handleChange}
-              unitOptions={["percentage", "absolute"]}
-              inputName="eff_mob_tolerance"
-              modeName="eff_mob_tolerance_mode"
-              className="tolerance-radio-cems"
+              placeholder="Enter effective mobilities (comma separated)"
             />
 
             <GroupRadio
@@ -270,6 +267,22 @@ const CeMsEffMobSearch = () => {
               value={formState.temperature}
               onChange={handleChange}
               placeholder="e.g. 20"
+            />
+
+            <ToleranceRadio
+              label={
+                <>
+                  Effective Mobility Tolerance{" "}
+                  <span style={{ color: "red" }}>*</span>
+                </>
+              }
+              toleranceValue={formState.eff_mob_tolerance}
+              mzToleranceMode={formState.eff_mob_tolerance_mode}
+              onChange={handleChange}
+              unitOptions={["percentage", "absolute"]}
+              inputName="eff_mob_tolerance"
+              modeName="eff_mob_tolerance_mode"
+              className="tolerance-radio-cems"
             />
 
             <AdductsCheckboxes
