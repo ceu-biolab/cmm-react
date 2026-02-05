@@ -6,6 +6,7 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
+import MirroredMsmsSpectrum from "../../components/search/MirroredMsmsSpectrum.jsx";
 
 const formatNumber = (value, digits = 4) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -511,31 +512,31 @@ const MsMsSearch = () => {
           </div>
         )}
 
-        {results?.experimentalSpectrum && (
+        {selectedMatch?.spectrum?.peaks?.length > 0 &&
+        results?.experimentalSpectrum?.peaks?.length > 0 ? (
           <div className="spectrum-graph-wrapper">
-            <h3>Experimental Spectrum</h3>
-            <SpectrumGraph
-              peaks={normalizePeaks(results.experimentalSpectrum.peaks)}
-              precursorMz={results.precursorMz}
+            <MirroredMsmsSpectrum
+              title={
+                selectedMatch?.compoundName
+                  ? `Experimental vs ${selectedMatch.compoundName}`
+                  : selectedMatch?.compoundId
+                  ? `Experimental vs ${selectedMatch.compoundId}`
+                  : "Experimental vs Match"
+              }
+              experimentalPeaks={results.experimentalSpectrum.peaks}
+              compoundPeaks={selectedMatch.spectrum.peaks}
             />
           </div>
-        )}
-
-        {selectedMatch?.spectrum?.peaks?.length > 0 && (
-          <div className="spectrum-graph-wrapper">
-            <h3>
-              Matched Spectrum{" "}
-              {selectedMatch?.compoundName
-                ? `- ${selectedMatch.compoundName}`
-                : selectedMatch?.compoundId
-                ? `- ${selectedMatch.compoundId}`
-                : ""}
-            </h3>
-            <SpectrumGraph
-              peaks={normalizePeaks(selectedMatch.spectrum.peaks)}
-              precursorMz={selectedMatch.spectrum.precursorMz}
-            />
-          </div>
+        ) : (
+          results?.experimentalSpectrum && (
+            <div className="spectrum-graph-wrapper">
+              <h3>Experimental Spectrum</h3>
+              <SpectrumGraph
+                peaks={normalizePeaks(results.experimentalSpectrum.peaks)}
+                precursorMz={results.precursorMz}
+              />
+            </div>
+          )
         )}
       </div>
     </div>
