@@ -6,6 +6,11 @@ import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.j
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
 
 const RtPredSearch = () => {
   const [formState, setFormState] = useState({
@@ -23,7 +28,7 @@ const RtPredSearch = () => {
     ionizationMode: "Positive Mode",
     metaboliteType: "All",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
 
   const [results, setResults] = useState([]);
@@ -71,7 +76,7 @@ const RtPredSearch = () => {
         "[M+NH4]+",
         "[M+H-H2O]+",
       ],
-      databases: ["HMDB"],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -92,7 +97,7 @@ const RtPredSearch = () => {
       ionizationMode: "Positive Mode",
       metaboliteType: "All",
       adductsString: [],
-      databases: [],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -110,9 +115,7 @@ const RtPredSearch = () => {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
       }
     } else {
@@ -174,7 +177,7 @@ const RtPredSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }

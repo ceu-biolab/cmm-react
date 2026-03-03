@@ -33,7 +33,7 @@ const MainWeb = () => {
         </div>*/}
           <div className="main-background">
             <section className="cmm-title-con">
-              <h5 className="version">V.04 CEU Mass Mediator</h5>
+              <h5 className="version">V4 CEU Mass Mediator</h5>
 
               <div className="title-block">
                 <h2>

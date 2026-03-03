@@ -4,13 +4,18 @@ import TextInput from "../../components/search/TextInput";
 import GroupRadio from "../../components/search/GroupRadio";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
+import { formatApiError } from "../../utils/apiError";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
 
 const BrowseSearch = () => {
   const [formState, setFormState] = useState({
     name: "",
     formula: "",
     metaboliteType: "ALL",
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
 
   const [results, setResults] = useState([]);
@@ -24,7 +29,7 @@ const BrowseSearch = () => {
       name: "Choline",
       formula: "C5H14NO",
       metaboliteType: "ALL",
-      databases: ["HMDB"],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -34,7 +39,7 @@ const BrowseSearch = () => {
       name: "",
       formula: "",
       metaboliteType: "ALL",
-      databases: [],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -48,9 +53,7 @@ const BrowseSearch = () => {
     if (type === "checkbox") {
       setFormState((prev) => ({
         ...prev,
-        databases: checked
-          ? [...prev.databases, value]
-          : prev.databases.filter((db) => db !== value),
+        databases: toggleDatabaseSelection(prev.databases, value, checked),
       }));
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
@@ -99,7 +102,7 @@ const BrowseSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }

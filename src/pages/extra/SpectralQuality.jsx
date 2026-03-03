@@ -3,6 +3,7 @@ import axios from "axios";
 import TextInput from "../../components/search/TextInput";
 import GroupRadio from "../../components/search/GroupRadio";
 import { ToastContainer, toast } from "react-toastify";
+import { formatApiError } from "../../utils/apiError";
 
 const SpectralQuality = () => {
   const [formState, setFormState] = useState({
@@ -110,6 +111,7 @@ const SpectralQuality = () => {
       });
 
       console.log("Raw results:", rawResults);
+      toast.dismiss();
       toast.success("Form submitted successfully!", {
         autoClose: 3000,
         hideProgressBar: false,
@@ -122,7 +124,8 @@ const SpectralQuality = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      toast.error("Something went wrong.");
+      toast.dismiss();
+      toast.error(formatApiError(error, { action: "submit your search" }));
     }
   };
 
@@ -208,7 +211,7 @@ const SpectralQuality = () => {
             </button>
           </div>
         </form>
-        <ToastContainer />
+        <ToastContainer limit={1} />
 
         <div className="align-buttons-container">
           <div className="other-buttons">

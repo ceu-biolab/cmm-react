@@ -88,6 +88,7 @@ const GcMsSearch = () => {
       const rawResults = response.data;
       console.log("Raw results:", rawResults);
 
+      toast.dismiss();
       toast.success("Form submitted successfully!", {
         autoClose: 2000,
         closeOnClick: true,
@@ -98,6 +99,7 @@ const GcMsSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
+      toast.dismiss();
       toast.error(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
@@ -176,7 +178,7 @@ const GcMsSearch = () => {
             <button type="submit">Submit</button>
           </div>
         </form>
-        <ToastContainer />
+        <ToastContainer limit={1} />
 
         <div className="align-buttons-container">
           <div className="other-buttons">

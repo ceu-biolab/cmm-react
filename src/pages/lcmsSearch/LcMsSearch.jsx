@@ -8,6 +8,10 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
 
 const LcMsSearch = () => {
   const [formState, setFormState] = useState({
@@ -22,7 +26,7 @@ const LcMsSearch = () => {
     ionizationMode: "POSITIVE",
     metaboliteType: "All",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
 
   const [results, setResults] = useState([]);
@@ -39,22 +43,12 @@ const LcMsSearch = () => {
       ].join(", "),
 
       mzToleranceMode: "PPM",
-      tolerance: 50,
+      tolerance: 10,
       ionizationMode: "POSITIVE",
 
       adductsString: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+H-H2O]+"],
 
-      databases: [
-        "HMDB",
-        "LIPIDMAPS",
-        "ASPERGILLUS",
-        "FAHFA",
-        "KEGG",
-        "INHOUSE",
-        "CHEBI",
-        "PUBCHEM",
-        "NPATLAS",
-      ],
+      databases: DEFAULT_DATABASES,
 
       metaboliteType: "ONLYLIPIDS",
 
@@ -237,7 +231,7 @@ const LcMsSearch = () => {
       ionizationMode: "POSITIVE",
       metaboliteType: "All",
       adductsString: [],
-      databases: [],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -264,9 +258,7 @@ const LcMsSearch = () => {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
       } else if (name === "deuterium") {
         setFormState((prev) => ({

@@ -8,6 +8,10 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
 
 const formatNumber = (value, digits = 4) => {
   const parsed = Number(value);
@@ -22,7 +26,7 @@ const BatchSearch = () => {
     ionizationMode: "POSITIVE",
     metaboliteType: "ALL",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
 
   const [results, setResults] = useState([]);
@@ -62,7 +66,7 @@ const BatchSearch = () => {
         "[M+NH4]+",
         "[M+H-H2O]+",
       ],
-      databases: ["HMDB"],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -75,7 +79,7 @@ const BatchSearch = () => {
       metaboliteType: "ALL",
       ionizationMode: "POSITIVE",
       adductsString: [],
-      databases: [],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -95,9 +99,7 @@ const BatchSearch = () => {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
       }
     } else {

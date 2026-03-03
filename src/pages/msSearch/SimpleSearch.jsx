@@ -7,7 +7,12 @@ import GroupRadio from "../../components/search/GroupRadio";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 import ToleranceRadio from "../../components/search/ToleranceRadio";
 import { ToastContainer, toast } from "react-toastify";
+import { formatApiError } from "../../utils/apiError";
 import ResultsSummary from "../../components/search/ResultsSummary";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
 
 const SimpleSearch = () => {
   const [formState, setFormState] = useState({
@@ -16,7 +21,7 @@ const SimpleSearch = () => {
     tolerance: "",
     ionizationMode: "POSITIVE",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
     metaboliteType: "ALL",
   });
 
@@ -41,17 +46,7 @@ const SimpleSearch = () => {
         "[M+NH4]+",
         "[M+H-H2O]+",
       ],
-      databases: [
-        "HMDB",
-        "LIPIDMAPS",
-        "ASPERGILLUS",
-        "FAHFA",
-        "KEGG",
-        "INHOUSE",
-        "CHEBI",
-        "PUBCHEM",
-        "NPATLAS",
-      ],
+      databases: DEFAULT_DATABASES,
       metaboliteType: "ALL",
     });
   };
@@ -65,7 +60,7 @@ const SimpleSearch = () => {
       metaboliteType: "ALL",
       ionizationMode: "POSITIVE",
       adductsString: [],
-      databases: [],
+      databases: DEFAULT_DATABASES,
     });
   };
 
@@ -98,9 +93,7 @@ const SimpleSearch = () => {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
       }
     } else {
@@ -181,6 +174,7 @@ const SimpleSearch = () => {
 
       console.log("Raw results:", rawResults);
 
+      toast.dismiss();
       toast.success("Form submitted successfully!", {
         autoClose: 2000,
         closeOnClick: true,
@@ -191,7 +185,8 @@ const SimpleSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      toast.dismiss();
+      toast.error(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -266,7 +261,7 @@ const SimpleSearch = () => {
             <button type="submit">Submit</button>
           </div>
         </form>
-        <ToastContainer />
+        <ToastContainer limit={1} />
 
         <div className="align-buttons-container">
           <div className="other-buttons">

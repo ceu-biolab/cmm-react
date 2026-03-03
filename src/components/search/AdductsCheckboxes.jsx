@@ -117,11 +117,22 @@ const normalizeMode = (value) => {
 
 const uniqueList = (values) => Array.from(new Set(values));
 
+const DEFAULT_ADDUCTS_BY_MODE = {
+  positive: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+H-H2O]+"],
+  negative: ["[M-H]-", "[M+Cl]-", "[M+HCOOH-H]-", "[M+FA-H]-", "[M-H-H2O]-"],
+};
+
 const hasSameItems = (left, right) => {
   if (left.length !== right.length) return false;
   const leftSet = new Set(left);
   if (leftSet.size !== left.length) return false;
   return right.every((item) => leftSet.has(item));
+};
+
+const getDefaultAdducts = (modeKey, availableAdducts) => {
+  const preferred = DEFAULT_ADDUCTS_BY_MODE[modeKey] || [];
+  const defaults = preferred.filter((adduct) => availableAdducts.includes(adduct));
+  return defaults.length ? defaults : availableAdducts.slice(0, 6);
 };
 
 const AdductsCheckboxes = ({
@@ -187,6 +198,16 @@ const AdductsCheckboxes = ({
       const filtered = selectedAdducts.filter((adduct) =>
         availableAdducts.includes(adduct)
       );
+
+      if (!filtered.length && !selectedAdducts.length && modeKey) {
+        const defaults = getDefaultAdducts(modeKey, availableAdducts);
+        if (defaults.length) {
+          notifySelectionChange(defaults);
+          previousAvailableRef.current = availableAdducts;
+          return;
+        }
+      }
+
       if (!hasSameItems(filtered, selectedAdducts)) {
         notifySelectionChange(filtered);
       }
@@ -205,13 +226,23 @@ const AdductsCheckboxes = ({
       const filtered = selectedAdducts.filter((adduct) =>
         availableAdducts.includes(adduct)
       );
+
+      if (!filtered.length && modeKey) {
+        const defaults = getDefaultAdducts(modeKey, availableAdducts);
+        if (defaults.length) {
+          notifySelectionChange(defaults);
+          previousAvailableRef.current = availableAdducts;
+          return;
+        }
+      }
+
       if (!hasSameItems(filtered, selectedAdducts)) {
         notifySelectionChange(filtered);
       }
     }
 
     previousAvailableRef.current = availableAdducts;
-  }, [availableAdducts, selectedAdducts, onSelectionChange]);
+  }, [availableAdducts, selectedAdducts, onSelectionChange, modeKey]);
 
   const handleToggleAll = (event) => {
     if (event.target.checked) {
