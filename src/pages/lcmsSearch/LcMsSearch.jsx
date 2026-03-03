@@ -6,6 +6,8 @@ import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.j
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
 
 const LcMsSearch = () => {
   const [formState, setFormState] = useState({
@@ -366,7 +368,7 @@ const LcMsSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -596,33 +598,11 @@ const LcMsSearch = () => {
                     featureObj.annotationsByAdducts.map(
                       (adductGroup, adductIndex) => {
                         const normalizedCompounds = adductGroup.annotations.map(
-                          (annotation, i) => ({
-                            compoundId: annotation.compound?.compoundId ?? i,
-                            compoundName:
-                              annotation.compound?.compoundName ??
-                              annotation.compound?.formula ??
-                              "Unknown",
-                            mass: annotation.compound?.mass ?? null,
-                            massErrorPpm: annotation.massErrorPpm ?? null,
-                            formula: annotation.compound?.formula,
-                            chargeType: annotation.compound?.chargeType,
-                            chargeNumber: annotation.compound?.chargeNumber,
-                            numCarbons: annotation.compound?.numCarbons,
-                            doubleBonds: annotation.compound?.doubleBonds,
-                            numChains: annotation.compound?.numChains,
-                            inchi: annotation.compound?.inchi,
-                            inchiKey: annotation.compound?.inchiKey,
-                            smiles: annotation.compound?.smiles,
-                            casID: annotation.compound?.casID,
-                            keggID: annotation.compound?.keggID,
-                            chebiID: annotation.compound?.chebiID,
-                            hmdbID: annotation.compound?.hmdbID,
-                            lmID: annotation.compound?.lmID,
-                            pcID: annotation.compound?.pcID,
-                            knapsackID: annotation.compound?.knapsackID,
-                            mol2: annotation.compound?.mol2,
-                            sdf: annotation.compound?.sdf,
-                          })
+                          (annotation, index) =>
+                            normalizeAnnotation(
+                              annotation,
+                              `${featureIndex}-${adductIndex}-${index}`
+                            )
                         );
 
                         return (

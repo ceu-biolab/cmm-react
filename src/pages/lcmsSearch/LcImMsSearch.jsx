@@ -1,88 +1,64 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
-import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
-import TextInput from "../../components/search/TextInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
 
 const LcImMsSearch = () => {
   const [formState, setFormState] = useState({
-    mz: [],
-    ccsValues: [],
-    tolerance: "",
-    toleranceMode: "PPM",
-    chemAlphabet: "CHNOPS",
-    deuteriumCheck: "",
-    modifiers: "None",
-    ionizationMode: "Positive Mode",
-    metaboliteType: "All",
-    adductsString: [],
-    databases: [],
+    mzValues: "",
+    ccsValues: "",
+    rtValues: "",
+    mzTolerance: "",
+    mzToleranceMode: "PPM",
+    ccsTolerance: "",
+    ccsToleranceMode: "PERCENTAGE",
+    formulaType: "CHNOPS",
+    deuterium: false,
+    bufferGas: "N2",
+    ionizationMode: "POSITIVE",
+    adducts: [],
   });
 
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
-    console.log("Loading demo data...");
     setFormState({
-      mz: [
-        "400.3432",
-        "422.32336",
-        "316.24945",
-        "338.2299",
-        "281.24765",
-        "288.2174",
-        "496.3427",
-        "518.3226",
-        "548.37054",
-        "572.3718",
-        "570.3551",
-        "568.3401",
-        "590.3210",
-        "482.324",
-        "478.29312",
-        "500.27457",
-      ],
-      ccsValues: [],
-      tolerance: "10",
-      toleranceMode: "PPM",
-      chemAlphabet: "CHNOPS",
-      deuteriumCheck: "",
-      modifiers: "NH3",
-      metaboliteType: "ONLYLIPIDS",
-      ionizationMode: "Positive Mode",
-      adductsString: [
-        "[M+H]+",
-        "[M+2H]2+",
-        "[M+Na]+",
-        "[M+K]+",
-        "[M+NH4]+",
-        "[M+H-H2O]+",
-      ],
-      databases: ["HMDB"],
+      mzValues: ["400.3432", "281.24765"].join(", "),
+      ccsValues: ["202.881", "178.546"].join(", "),
+      rtValues: ["8.5", "6.2"].join(", "),
+      mzTolerance: "10",
+      mzToleranceMode: "PPM",
+      ccsTolerance: "2",
+      ccsToleranceMode: "PERCENTAGE",
+      formulaType: "CHNOPS",
+      deuterium: false,
+      bufferGas: "N2",
+      ionizationMode: "POSITIVE",
+      adducts: ["[M+H]+"],
     });
   };
 
   const clearInput = () => {
-    console.log("Clearing input...");
     setFormState({
-      mz: [],
-      ccsValues: [],
-      tolerance: "",
-      toleranceMode: "PPM",
-      ccsTol: "",
-      chemAlphabet: "CHNOPS",
-      deuteriumCheck: "",
-      modifiers: "None",
-      ionizationMode: "Positive Mode",
-      metaboliteType: "All",
-      adductsString: [],
-      databases: [],
+      mzValues: "",
+      ccsValues: "",
+      rtValues: "",
+      mzTolerance: "",
+      mzToleranceMode: "PPM",
+      ccsTolerance: "",
+      ccsToleranceMode: "PERCENTAGE",
+      formulaType: "CHNOPS",
+      deuterium: false,
+      bufferGas: "N2",
+      ionizationMode: "POSITIVE",
+      adducts: [],
     });
   };
 
@@ -93,75 +69,94 @@ const LcImMsSearch = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "mz") {
-      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
-      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
-    } else if (type === "checkbox") {
-      if (name === "databases") {
-        setFormState((prev) => ({
-          ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
-        }));
-      }
+    if (type === "checkbox") {
+      setFormState((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setFormState((prev) => ({ ...prev, [name]: value || null }));
+      setFormState((prev) => ({ ...prev, [name]: value || "" }));
     }
   };
 
   const handleAdductsChange = (adducts) => {
-    setFormState((prev) => ({ ...prev, adductsString: adducts }));
+    setFormState((prev) => ({ ...prev, adducts }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    const parseNumericValues = (rawValue) =>
+      (rawValue || "")
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map((entry) => Number(entry))
+        .filter((entry) => Number.isFinite(entry));
+
+    const mzValues = parseNumericValues(formState.mzValues);
+    const ccsValues = parseNumericValues(formState.ccsValues);
+    const rtValues = parseNumericValues(formState.rtValues);
+
+    if (!mzValues.length || !ccsValues.length || !rtValues.length) {
+      alert("Masses, CCS values, and RT values are all required.");
+      return;
+    }
+
+    if (
+      mzValues.length !== ccsValues.length ||
+      mzValues.length !== rtValues.length
+    ) {
+      alert("Masses, CCS values, and RT values must have the same length.");
+      return;
+    }
 
     const formattedData = {
-      mz: formState.mz.map((mass) => parseFloat(mass)),
-      ccsValues: formState.allMz.map((ccs) => parseFloat(ccs)),
-      tolerance: parseFloat(formState.tolerance),
-      toleranceMode: formState.toleranceMode,
-      chemAlphabet: formState.chemAlphabet,
-      deuteriumCheck: formState.deuteriumCheck,
-      modifiers: formState.modifiers,
+      mzValues,
+      ccsValues,
+      rtValues,
+      mzTolerance: parseFloat(formState.mzTolerance),
+      mzToleranceMode: formState.mzToleranceMode,
+      ccsTolerance: parseFloat(formState.ccsTolerance),
+      ccsToleranceMode: formState.ccsToleranceMode,
+      formulaType: formState.formulaType,
       ionizationMode: formState.ionizationMode,
-      metaboliteType: formState.metaboliteType,
-      adductsString: formState.adductsString,
-      databases: formState.databases,
+      bufferGas: formState.bufferGas,
+      adducts: formState.adducts,
+      deuterium: formState.deuterium,
     };
 
-    console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
+    setLoading(true);
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}compounds/lc-im-ms-search`,
+        `${import.meta.env.VITE_API_URL}ccs`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
 
       const rawResults = response.data;
-
       const groupedByAdduct = {};
+      const features = rawResults.imFeatures || rawResults;
 
-      rawResults.forEach((result) => {
-        result.potentialAnnotations?.forEach((annotation) => {
-          const { adduct, cmm_compounds } = annotation;
+      features.forEach((feature, featureIndex) => {
+        feature.annotationsByAdducts?.forEach((adductGroup) => {
+          const { adduct, annotations } = adductGroup;
           if (!groupedByAdduct[adduct]) {
             groupedByAdduct[adduct] = [];
           }
-          groupedByAdduct[adduct].push(...cmm_compounds);
+
+          annotations?.forEach((annotation, annotationIndex) => {
+            groupedByAdduct[adduct].push(
+              normalizeAnnotation(
+                annotation,
+                `${adduct}-${featureIndex}-${annotationIndex}`
+              )
+            );
+          });
         });
       });
-
-      console.log("Raw results:", rawResults);
 
       setResults(groupedByAdduct);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -194,19 +189,39 @@ const LcImMsSearch = () => {
                   Experimental Masses <span style={{ color: "red" }}>*</span>
                 </>
               }
-              name="mz"
-              value={formState.mz}
+              name="mzValues"
+              value={formState.mzValues}
               onChange={handleChange}
               className="masses-text-lc-im-ms"
+              required
             />
 
             <TextBoxInput
-              label="CCS Values"
+              label={
+                <>
+                  CCS Values <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="ccsValues"
               value={formState.ccsValues}
               onChange={handleChange}
               className="ccs-values-lc-im-ms"
               placeholder="Enter CCS values (comma separated)"
+              required
+            />
+
+            <TextBoxInput
+              label={
+                <>
+                  RT Values <span style={{ color: "red" }}>*</span>
+                </>
+              }
+              name="rtValues"
+              value={formState.rtValues}
+              onChange={handleChange}
+              className="rt-values-lc-im-ms"
+              placeholder="Enter RT values (comma separated)"
+              required
             />
 
             <ToleranceRadio
@@ -215,19 +230,27 @@ const LcImMsSearch = () => {
                   Tolerance <span style={{ color: "red" }}>*</span>
                 </>
               }
-              toleranceValue={formState.tolerance}
-              toleranceMode={formState.toleranceMode}
+              toleranceValue={formState.mzTolerance}
+              mzToleranceMode={formState.mzToleranceMode}
               onChange={handleChange}
+              inputName="mzTolerance"
+              modeName="mzToleranceMode"
               className="tolerance-lc-im-ms"
             />
 
-            <TextInput
-              label="CCS Tolerance"
-              name="ccsTol"
-              value={formState.ccsTol}
+            <ToleranceRadio
+              label={
+                <>
+                  CCS Tolerance <span style={{ color: "red" }}>*</span>
+                </>
+              }
+              toleranceValue={formState.ccsTolerance}
+              mzToleranceMode={formState.ccsToleranceMode}
               onChange={handleChange}
-              placeholder="3"
-              className="ccs-tol-input-lc-im-ms"
+              unitOptions={["PERCENTAGE", "ABSOLUTE"]}
+              inputName="ccsTolerance"
+              modeName="ccsToleranceMode"
+              className="ccs-tolerance-lc-im-ms"
             />
 
             <GroupRadio
@@ -236,9 +259,9 @@ const LcImMsSearch = () => {
                   Chemical Alphabet <span style={{ color: "red" }}>*</span>
                 </>
               }
-              name="chemAlphabet"
-              value={formState.chemAlphabet}
-              options={["All", "CHNOPS", "CHNOPS + Cl"]}
+              name="formulaType"
+              value={formState.formulaType}
+              options={["ALL", "CHNOPS", "CHNOPSD", "CHNOPSCL", "CHNOPSCLD"]}
               onChange={handleChange}
               className="chem-alph-lc-im-ms"
             />
@@ -249,42 +272,11 @@ const LcImMsSearch = () => {
                   Modifiers <span style={{ color: "red" }}>*</span>
                 </>
               }
-              name="modifiers"
-              value={formState.modifiers}
-              options={[
-                "None",
-                "NH3",
-                "HCOO",
-                "CH3COO",
-                "HCOONH3",
-                "CH3COONH3",
-              ]}
+              name="bufferGas"
+              value={formState.bufferGas}
+              options={["N2", "He"]}
               onChange={handleChange}
               className="modifiers-lc-im-ms"
-            />
-
-            <DatabasesCheckboxes
-              label={
-                <>
-                  Databases <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              selectedDatabases={formState.databases}
-              onChange={handleChange}
-              className="databases-lc-im-ms"
-            />
-
-            <GroupRadio
-              label={
-                <>
-                  Metabolites <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="metaboliteType"
-              value={formState.metaboliteType}
-              options={["All", "ONLYLIPIDS"]}
-              onChange={handleChange}
-              className="metabolites-lc-im-ms"
             />
 
             <AdductsCheckboxes
@@ -293,7 +285,7 @@ const LcImMsSearch = () => {
                   Adducts <span style={{ color: "red" }}>*</span>
                 </>
               }
-              selectedAdducts={formState.adductsString}
+              selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
               ionizationMode={formState.ionizationMode}
               className="adducts-lc-im-ms"
@@ -307,14 +299,26 @@ const LcImMsSearch = () => {
               }
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["Positive Mode", "Negative Mode"]}
+              options={["POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-lc-im-ms"
             />
+
+            <div className="deuterium-lc-im-ms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>
