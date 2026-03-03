@@ -16,8 +16,6 @@ const SpectralQuality = () => {
     crossTalk: "No cross-talk",
   });
 
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const loadDemoData = () => {
@@ -98,18 +96,6 @@ const SpectralQuality = () => {
 
       const rawResults = response.data;
 
-      const groupedByAdduct = {};
-
-      rawResults.forEach((result) => {
-        result.potentialAnnotations?.forEach((annotation) => {
-          const { adduct, cmm_compounds } = annotation;
-          if (!groupedByAdduct[adduct]) {
-            groupedByAdduct[adduct] = [];
-          }
-          groupedByAdduct[adduct].push(...cmm_compounds);
-        });
-      });
-
       console.log("Raw results:", rawResults);
       toast.dismiss();
       toast.success("Form submitted successfully!", {
@@ -120,7 +106,6 @@ const SpectralQuality = () => {
         draggable: true,
         position: 'bottom-left',
       });
-      setResults(groupedByAdduct);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -206,7 +191,7 @@ const SpectralQuality = () => {
             />
           </div>
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>

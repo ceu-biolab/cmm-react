@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import CMMFinalHeader from "../assets/images/ceu-mass-mediator-logo.png";
 import omarImg from "../assets/images/omar-lopez-rincon-XkPNEqAhlaI-unsplash.jpg";
 import cembioImg from "../assets/images/cembio03.jpg";
@@ -14,11 +13,7 @@ import { Link } from "react-router-dom";
 
 const MainWeb = () => {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
-    >
+    <div>
       <div>
         {/*<section className="full-width-section-main">
         <img src={CMMFinalHeader} alt="CMM Header" />
@@ -290,7 +285,7 @@ const MainWeb = () => {
       </section>
       */}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

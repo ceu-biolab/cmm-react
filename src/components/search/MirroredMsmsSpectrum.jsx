@@ -28,6 +28,7 @@ const MirroredMsmsSpectrum = ({
   compoundPeaks,
   title,
 }) => {
+  const [tooltip, setTooltip] = useState(null);
   const normalizedExperimental = normalizePeaks(experimentalPeaks);
   const normalizedCompound = normalizePeaks(compoundPeaks);
 
@@ -67,8 +68,6 @@ const MirroredMsmsSpectrum = ({
     padding;
 
   const scaleY = (val) => (val / 100) * (height / 2 - padding);
-
-  const [tooltip, setTooltip] = useState(null);
 
   return (
     <div className="graph-div">

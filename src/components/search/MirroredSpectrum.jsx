@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const MirroredSpectrum = ({ data }) => {
   const [selectedCompoundIndex, setSelectedCompoundIndex] = useState(0);
+  const [tooltip, setTooltip] = useState(null);
 
   const feature = data?.gcmsFeatures?.[0];
   if (!feature) return <div>No GCMS features available.</div>;
@@ -51,8 +52,6 @@ const MirroredSpectrum = ({ data }) => {
     ((mz - minMz) / (maxMz - minMz)) * (width - 2 * padding) + padding;
 
   const scaleY = (val) => (val / 100) * (height / 2 - padding);
-
-  const [tooltip, setTooltip] = useState(null);
 
   return (
     <div className="graph-div">
