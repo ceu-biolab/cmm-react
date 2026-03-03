@@ -1,4 +1,5 @@
-import React from "react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import CMMFinalHeader from "../assets/images/ceu-mass-mediator-logo.png";
 import omarImg from "../assets/images/omar-lopez-rincon-XkPNEqAhlaI-unsplash.jpg";
 import cembioImg from "../assets/images/cembio03.jpg";
@@ -11,7 +12,54 @@ import threeImg from "../assets/svgs/three-link.svg";
 import searchImg from "../assets/svgs/search-link.svg";
 import { Link } from "react-router-dom";
 
+const FALLBACK_STATS = {
+  compounds: 306000,
+  msmsSpectra: 455000,
+  gcmsSpectra: 0,
+  ccsRecords: 173000,
+};
+
+const formatCompact = (value) =>
+  new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(Number(value) || 0);
+
 const MainWeb = () => {
+  const [stats, setStats] = useState(FALLBACK_STATS);
+
+  useEffect(() => {
+    let mounted = true;
+
+    axios
+      .get(`${import.meta.env.VITE_API_URL}get/stats`)
+      .then((response) => {
+        if (!mounted) return;
+        setStats((prev) => ({
+          ...prev,
+          ...(response.data || {}),
+        }));
+      })
+      .catch(() => {
+        // keep fallback stats on network/API failures
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const statCards = useMemo(() => {
+    const totalSpectra =
+      (Number(stats.msmsSpectra) || 0) + (Number(stats.gcmsSpectra) || 0);
+
+    return [
+      { label: "Compounds", value: stats.compounds },
+      { label: "Spectra", value: totalSpectra },
+      { label: "CCS Records", value: stats.ccsRecords },
+    ];
+  }, [stats]);
+
   return (
     <div>
       <div>
@@ -42,18 +90,12 @@ const MainWeb = () => {
               </div>
 
               <section className="stats">
-                <div className="stat">
-                  <div className="value">306k</div>
-                  <div className="label">Compounds</div>
-                </div>
-                <div className="stat">
-                  <div className="value">455k</div>
-                  <div className="label">Spectra</div>
-                </div>
-                <div className="stat">
-                  <div className="value">173k</div>
-                  <div className="label">Classifications</div>
-                </div>
+                {statCards.map((item) => (
+                  <div className="stat" key={item.label}>
+                    <div className="value">{formatCompact(item.value)}</div>
+                    <div className="label">{item.label}</div>
+                  </div>
+                ))}
               </section>
             </section>
 
