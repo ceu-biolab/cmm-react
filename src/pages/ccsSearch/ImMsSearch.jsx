@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
@@ -7,6 +7,7 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
+import { getCcsAdductOrder, sortAdductEntries } from "../../utils/ccsAdducts";
 
 const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   if (!deuteriumEnabled || formulaType === "ALL") {
@@ -76,13 +77,31 @@ const ImMsSearch = () => {
     });
   };
 
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [adductOrder, setAdductOrder] = useState([]);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
   }, [formState]);
+
+  useEffect(() => {
+    let mounted = true;
+    getCcsAdductOrder(formState.ionizationMode).then((order) => {
+      if (!mounted) return;
+      setAdductOrder(order);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [formState.ionizationMode]);
+
+  const sortedResultEntries = useMemo(
+    () => sortAdductEntries(Object.entries(results), adductOrder),
+    [results, adductOrder]
+  );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -319,6 +338,7 @@ const ImMsSearch = () => {
               selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
               ionizationMode={formState.ionizationMode}
+              adductsEndpoint="get/ccs-adducts"
               name="adducts"
               className="adducts-im-ms"
             />
@@ -373,7 +393,7 @@ const ImMsSearch = () => {
 
         <div className="results-div">
           {showResults &&
-            Object.entries(results).map(([adduct, compounds]) => (
+            sortedResultEntries.map(([adduct, compounds]) => (
               <ResultsDropdownGroup
                 key={adduct}
                 adduct={adduct}

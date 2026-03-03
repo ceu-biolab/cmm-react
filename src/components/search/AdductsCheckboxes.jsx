@@ -65,15 +65,39 @@ const FALLBACK_ADDUCTS = {
   ],
 };
 
-let cachedAdducts = null;
-let adductsPromise = null;
+const FALLBACK_CCS_ADDUCTS = {
+  positive: ["[M+Na]+", "[M+H]+"],
+  negative: ["[M-H]-", "[M+Na-2H]-", "[M-H2O-H]-"],
+};
+
+const cachedAdductsByEndpoint = {};
+const adductsPromiseByEndpoint = {};
+
+const resolveFallbackAdducts = (endpoint) => {
+  if (endpoint === "get/ccs-adducts") {
+    return FALLBACK_CCS_ADDUCTS;
+  }
+  return FALLBACK_ADDUCTS;
+};
+
+const normalizeAdductValue = (value) => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    return value.adduct || value.code || value.name || null;
+  }
+
+  return null;
+};
 
 const normalizeAdducts = (data) => {
   const positive = Array.isArray(data?.positive)
-    ? data.positive.filter(Boolean)
+    ? data.positive.map(normalizeAdductValue).filter(Boolean)
     : [];
   const negative = Array.isArray(data?.negative)
-    ? data.negative.filter(Boolean)
+    ? data.negative.map(normalizeAdductValue).filter(Boolean)
     : [];
 
   if (!positive.length && !negative.length) {
@@ -83,28 +107,28 @@ const normalizeAdducts = (data) => {
   return { positive, negative };
 };
 
-const fetchAdducts = async () => {
-  if (cachedAdducts) {
-    return cachedAdducts;
+const fetchAdducts = async (endpoint) => {
+  if (cachedAdductsByEndpoint[endpoint]) {
+    return cachedAdductsByEndpoint[endpoint];
   }
 
-  if (!adductsPromise) {
-    adductsPromise = axios
-      .get(`${import.meta.env.VITE_API_URL}get/adducts`)
+  if (!adductsPromiseByEndpoint[endpoint]) {
+    adductsPromiseByEndpoint[endpoint] = axios
+      .get(`${import.meta.env.VITE_API_URL}${endpoint}`)
       .then((response) => {
         const normalized = normalizeAdducts(response.data);
         if (normalized) {
-          cachedAdducts = normalized;
+          cachedAdductsByEndpoint[endpoint] = normalized;
         }
-        return cachedAdducts;
+        return cachedAdductsByEndpoint[endpoint];
       })
       .catch(() => null)
       .finally(() => {
-        adductsPromise = null;
+        adductsPromiseByEndpoint[endpoint] = null;
       });
   }
 
-  return adductsPromise;
+  return adductsPromiseByEndpoint[endpoint];
 };
 
 const normalizeMode = (value) => {
@@ -129,10 +153,18 @@ const hasSameItems = (left, right) => {
   return right.every((item) => leftSet.has(item));
 };
 
-const getDefaultAdducts = (modeKey, availableAdducts) => {
-  const preferred = DEFAULT_ADDUCTS_BY_MODE[modeKey] || [];
-  const defaults = preferred.filter((adduct) => availableAdducts.includes(adduct));
-  return defaults.length ? defaults : availableAdducts.slice(0, 6);
+const getDefaultAdducts = (modeKey, availableAdducts, preferPreset = true) => {
+  if (preferPreset) {
+    const preferred = DEFAULT_ADDUCTS_BY_MODE[modeKey] || [];
+    const defaults = preferred.filter((adduct) =>
+      availableAdducts.includes(adduct)
+    );
+    if (defaults.length) {
+      return defaults;
+    }
+  }
+
+  return availableAdducts.slice(0, 6);
 };
 
 const AdductsCheckboxes = ({
@@ -142,24 +174,31 @@ const AdductsCheckboxes = ({
   label = "Adducts",
   name = "adductsString",
   ionizationMode,
+  adductsEndpoint = "get/adducts",
 }) => {
+  const usePresetDefaults = adductsEndpoint !== "get/ccs-adducts";
   const [adducts, setAdducts] = useState(
-    cachedAdducts || FALLBACK_ADDUCTS
+    cachedAdductsByEndpoint[adductsEndpoint] ||
+      resolveFallbackAdducts(adductsEndpoint)
   );
   const previousAvailableRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
+    const fallbackAdducts = resolveFallbackAdducts(adductsEndpoint);
+    previousAvailableRef.current = null;
 
-    fetchAdducts().then((data) => {
+    setAdducts(cachedAdductsByEndpoint[adductsEndpoint] || fallbackAdducts);
+
+    fetchAdducts(adductsEndpoint).then((data) => {
       if (!isMounted) return;
-      setAdducts(data || FALLBACK_ADDUCTS);
+      setAdducts(data || fallbackAdducts);
     });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [adductsEndpoint]);
 
   const modeKey = useMemo(
     () => normalizeMode(ionizationMode),
@@ -203,7 +242,11 @@ const AdductsCheckboxes = ({
       );
 
       if (!filtered.length && !selectedAdducts.length && modeKey) {
-        const defaults = getDefaultAdducts(modeKey, availableAdducts);
+        const defaults = getDefaultAdducts(
+          modeKey,
+          availableAdducts,
+          usePresetDefaults
+        );
         if (defaults.length) {
           notifySelectionChange(defaults);
           previousAvailableRef.current = availableAdducts;
@@ -231,7 +274,11 @@ const AdductsCheckboxes = ({
       );
 
       if (!filtered.length && modeKey) {
-        const defaults = getDefaultAdducts(modeKey, availableAdducts);
+        const defaults = getDefaultAdducts(
+          modeKey,
+          availableAdducts,
+          usePresetDefaults
+        );
         if (defaults.length) {
           notifySelectionChange(defaults);
           previousAvailableRef.current = availableAdducts;
@@ -245,7 +292,13 @@ const AdductsCheckboxes = ({
     }
 
     previousAvailableRef.current = availableAdducts;
-  }, [availableAdducts, selectedAdducts, notifySelectionChange, modeKey]);
+  }, [
+    availableAdducts,
+    selectedAdducts,
+    notifySelectionChange,
+    modeKey,
+    usePresetDefaults,
+  ]);
 
   const handleToggleAll = (event) => {
     if (event.target.checked) {

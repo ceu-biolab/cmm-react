@@ -5,21 +5,40 @@ const FALLBACK_BUFFERS = ["FORMIC_ACID_1M", "N2", "He"];
 let cachedBuffers = null;
 let buffersPromise = null;
 
+const normalizeBufferCode = (value) => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    return value.code || value.bufferCode || value.name || null;
+  }
+
+  return null;
+};
+
+const normalizeBufferArray = (value) =>
+  Array.isArray(value) ? value.map(normalizeBufferCode).filter(Boolean) : null;
+
 const normalizeBuffers = (data) => {
-  if (Array.isArray(data)) {
-    return data.filter(Boolean);
+  const directList = normalizeBufferArray(data);
+  if (directList && directList.length) {
+    return directList;
   }
 
-  if (Array.isArray(data?.buffers)) {
-    return data.buffers.filter(Boolean);
+  const bufferList = normalizeBufferArray(data?.buffers);
+  if (bufferList && bufferList.length) {
+    return bufferList;
   }
 
-  if (Array.isArray(data?.items)) {
-    return data.items.filter(Boolean);
+  const itemList = normalizeBufferArray(data?.items);
+  if (itemList && itemList.length) {
+    return itemList;
   }
 
-  if (Array.isArray(data?.values)) {
-    return data.values.filter(Boolean);
+  const valueList = normalizeBufferArray(data?.values);
+  if (valueList && valueList.length) {
+    return valueList;
   }
 
   return null;
