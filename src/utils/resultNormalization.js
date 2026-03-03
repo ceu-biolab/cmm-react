@@ -166,6 +166,13 @@ export const normalizeCompound = (rawCompound = {}) => {
     massErrorPpm: toMaybeNumber(
       firstMeaningfulValue(rawCompound, [
         "massErrorPpm",
+        "ppmError",
+        "ppmDifference",
+        "errorPpm",
+        "massPpmError",
+        "massDifferencePpm",
+        "deltaPPM",
+        "deltaPpm",
         "error",
         "massError",
         "deltaMassPpm",

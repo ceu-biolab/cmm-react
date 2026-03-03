@@ -5,6 +5,7 @@ import databaseIcon from "../../assets/svgs/database.svg";
 import CompoundViewer3D from "./CompoundViewer3D";
 import CompoundViewer2D from "./CompoundViewer2D";
 import { useLocation } from "react-router-dom";
+import { extractPathwayNames } from "../../utils/resultNormalization";
 
 const CompoundInfoCard = ({ compound }) => {
   const { search } = useLocation();
@@ -37,9 +38,27 @@ const CompoundInfoCard = ({ compound }) => {
   const lmID = compound?.lmID ?? getParam("lmID");
   const pcID = compound?.pcID ?? getParam("pcID");
   const knapsackID = compound?.knapsackID ?? getParam("knapsackID");
+  const npatlasID = compound?.npatlasID ?? compound?.npatlasId ?? getParam("npatlasID");
 
   const mol2 = compound?.mol2 ?? queryParams.get("mol2");
   const sdf = compound?.sdf ?? queryParams.get("sdf");
+  const pathways = extractPathwayNames(compound?.pathways ?? compound?.pathway);
+
+  const classifications = Array.isArray(compound?.lipidMapsClassifications)
+    ? compound.lipidMapsClassifications
+    : [];
+  const organismsRaw = compound?.organisms ?? compound?.organism;
+  const organisms = Array.isArray(organismsRaw)
+    ? organismsRaw
+    : organismsRaw
+    ? [organismsRaw]
+    : [];
+  const referencesRaw = compound?.references ?? compound?.reference;
+  const references = Array.isArray(referencesRaw)
+    ? referencesRaw
+    : referencesRaw
+    ? [referencesRaw]
+    : [];
 
   console.log("Smiles: " + smiles);
 
@@ -110,8 +129,10 @@ const CompoundInfoCard = ({ compound }) => {
             {[
               {
                 label: "CAS",
-                value: casID,
-                url: `https://commonchemistry.cas.org/detail?cas_rn=${casID}`,
+                value: casID ?? compound?.casId,
+                url: `https://commonchemistry.cas.org/detail?cas_rn=${
+                  casID ?? compound?.casId
+                }`,
               },
               {
                 label: "KEGG",
@@ -143,6 +164,11 @@ const CompoundInfoCard = ({ compound }) => {
                 value: knapsackID,
                 url: `https://www.knapsackfamily.com/knapsack_core/information.php?word=${knapsackID}`,
               },
+              {
+                label: "NP Atlas",
+                value: npatlasID,
+                url: `https://www.npatlas.org/explore/compounds/${npatlasID}`,
+              },
             ]
               .filter(
                 (item) =>
@@ -160,6 +186,42 @@ const CompoundInfoCard = ({ compound }) => {
                 </li>
               ))}
           </ul>
+          <div className="identifiers-box">
+            <strong>Classification & Context</strong>
+            <ul>
+              {classifications.length > 0 ? (
+                classifications.map((entry, index) => (
+                  <li key={`class-${index}`}>
+                    {[
+                      entry.category,
+                      entry.mainClass,
+                      entry.subClass,
+                      entry.classLevel4,
+                    ]
+                      .filter(Boolean)
+                      .join(" / ")}
+                  </li>
+                ))
+              ) : (
+                <li>Classification: N/A</li>
+              )}
+              {organisms.length > 0 ? (
+                <li>Organisms: {organisms.join(", ")}</li>
+              ) : (
+                <li>Organisms: N/A</li>
+              )}
+              {pathways.length > 0 ? (
+                <li>Pathways: {pathways.join(", ")}</li>
+              ) : (
+                <li>Pathways: N/A</li>
+              )}
+              {references.length > 0 ? (
+                <li>References: {references.join(", ")}</li>
+              ) : (
+                <li>References: N/A</li>
+              )}
+            </ul>
+          </div>
         </div>
         {(mol2 && mol2 !== "undefined" && mol2 !== "null") ||
         (sdf && sdf !== "undefined" && sdf !== "null") ? (
