@@ -1332,6 +1332,10 @@ tbody tr:hover {
   transition: background-color 0.3s ease;
 }
 
+.selected-result-row td {
+  background-color: #dff1f5 !important;
+}
+
 .grid-container-msms {
   display: grid;
   grid-template-columns: 1fr 1fr 300px;

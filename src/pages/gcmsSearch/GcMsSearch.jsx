@@ -6,6 +6,8 @@ import GroupRadio from "../../components/search/GroupRadio";
 import { ToastContainer, toast } from "react-toastify";
 import MirroredSpectrum from "../../components/search/MirroredSpectrum";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
 
 const GcMsSearch = () => {
   const [formState, setFormState] = useState({
@@ -96,7 +98,7 @@ const GcMsSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      toast.error(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -198,13 +200,21 @@ const GcMsSearch = () => {
 
           {showResults &&
             results?.gcmsFeatures?.map((feature, idx) => {
-              const compounds =
-                feature.gcmsAnnotations?.map((a) => a.gcmsCompound) || [];
+              const compounds = (feature.gcmsAnnotations || [])
+                .slice()
+                .sort(
+                  (left, right) =>
+                    (right.gcmsCosineScore ?? -Infinity) -
+                    (left.gcmsCosineScore ?? -Infinity)
+                )
+                .map((annotation, annotationIndex) =>
+                  normalizeAnnotation(annotation, `${idx}-${annotationIndex}`)
+                );
 
               return (
                 <ResultsDropdownGroup
                   key={idx}
-                  adduct={``}
+                  adduct={`Feature ${idx + 1}`}
                   compounds={compounds}
                 />
               );

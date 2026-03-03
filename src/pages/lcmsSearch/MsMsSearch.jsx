@@ -7,6 +7,7 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import MirroredMsmsSpectrum from "../../components/search/MirroredMsmsSpectrum.jsx";
+import { formatApiError } from "../../utils/apiError";
 
 const formatNumber = (value, digits = 4) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -76,7 +77,6 @@ const MsmsResultsGroup = ({
                 <th>Cosine</th>
                 <th>ΔPPM</th>
                 <th>Collision</th>
-                <th>Compare</th>
               </tr>
             </thead>
             <tbody>
@@ -94,9 +94,18 @@ const MsmsResultsGroup = ({
                   compound?.deltaPpmPrecursorIon ?? compound?.deltaPpm;
                 const collisionEnergy =
                   compound?.collisionEnergy ?? compound?.collision;
+                const rowClickable =
+                  hasSpectrum && typeof onSelectMatch === "function";
 
                 return (
-                  <tr key={`${compoundId ?? "compound"}-${index}`}>
+                  <tr
+                    key={`${compoundId ?? "compound"}-${index}`}
+                    className={isSelected ? "selected-result-row" : ""}
+                    onClick={
+                      rowClickable ? () => onSelectMatch(compound) : undefined
+                    }
+                    style={{ cursor: rowClickable ? "pointer" : "default" }}
+                  >
                     <td>{compoundId ?? "—"}</td>
                     <td>{compound?.compoundName ?? compound?.name ?? "—"}</td>
                     <td>{compound?.formula ?? "—"}</td>
@@ -104,19 +113,6 @@ const MsmsResultsGroup = ({
                     <td>{formatNumber(score, 4)}</td>
                     <td>{formatNumber(deltaPpm, 2)}</td>
                     <td>{formatNumber(collisionEnergy, 2)}</td>
-                    <td>
-                      {hasSpectrum ? (
-                        <button
-                          type="button"
-                          onClick={() => onSelectMatch(compound)}
-                          disabled={isSelected}
-                        >
-                          {isSelected ? "Selected" : "Compare"}
-                        </button>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
                   </tr>
                 );
               })}
@@ -370,10 +366,13 @@ const MsMsSearch = () => {
         precursorMz: rawResults.precursorMz,
         adductGroups: groupedByAdduct,
       });
-      setSelectedMatch(null);
+      const firstAvailableMatch = groupedByAdduct
+        .flatMap((group) => group.compounds)
+        .find((compound) => Array.isArray(compound?.spectrum?.peaks));
+      setSelectedMatch(firstAvailableMatch || null);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }

@@ -168,6 +168,10 @@ export const normalizeCompound = (rawCompound = {}) => {
         "massErrorPpm",
         "error",
         "massError",
+        "deltaMassPpm",
+        "massErrorPpmPrecursorIon",
+        "gcmsMassError",
+        "deltaMass",
         "deltaPpmPrecursorIon",
       ])
     ),

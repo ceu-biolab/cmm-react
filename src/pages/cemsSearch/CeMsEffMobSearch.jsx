@@ -6,6 +6,7 @@ import TextInput from "../../components/search/TextInput.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
 
 const CeMsEffMobSearch = () => {
   const [formState, setFormState] = useState({
@@ -145,7 +146,7 @@ const CeMsEffMobSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -214,7 +215,7 @@ const CeMsEffMobSearch = () => {
             <GroupRadio
               label={
                 <>
-                  Formula Type <span style={{ color: "red" }}>*</span>
+                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
                 </>
               }
               name="chemical_alphabet"
