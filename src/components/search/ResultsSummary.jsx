@@ -1,6 +1,7 @@
 import React from "react";
 import ProgressRing from "./ProgressRing";
 import FileDownload from "../effects/FileDownload";
+import { normalizeCompound } from "../../utils/resultNormalization";
 
 const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
   const displayHeaders = [
@@ -9,6 +10,12 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
     "Formula",
     "Mass",
     "Error",
+    "Score",
+    "RT Score",
+    "Adduct Score",
+    "Ionization Score",
+    "Cosine",
+    "RI Error",
     "CAS",
     "KEGG",
     "CHEBI",
@@ -25,7 +32,13 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
     "compoundName",
     "formula",
     "mass",
-    "error",
+    "massErrorPpm",
+    "score",
+    "rtScore",
+    "adductScore",
+    "ionizationScore",
+    "gcmsCosineScore",
+    "riError",
     "casID",
     "keggID",
     "chebiID",
@@ -37,7 +50,7 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
     "pathway",
   ];
 
-  const allCompounds = Object.values(results).flat();
+  const allCompounds = Object.values(results).flat().map(normalizeCompound);
 
   const totalCompounds = allCompounds.length;
 

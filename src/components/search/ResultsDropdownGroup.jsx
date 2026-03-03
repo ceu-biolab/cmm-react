@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import ResultsTable from "./ResultsTable";
-import FileDownload from "../effects/FileDownload";
 
 const ResultsDropdownGroup = ({ adduct, compounds }) => {
   const [isOpen, setIsOpen] = useState(false);
