@@ -2739,6 +2739,33 @@ body {
   text-align: center;
 }
 
+.feature-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.feature-tab {
+  border: 1px solid #8eaab0;
+  background: #f0f6f7;
+  color: #34545d;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.feature-tab.active {
+  background: #2f90a3;
+  border-color: #2f90a3;
+  color: #ffffff;
+}
+
+.feature-tab-panel {
+  width: 100%;
+}
+
 .spinner-overlay {
   position: absolute;
   top: 0;

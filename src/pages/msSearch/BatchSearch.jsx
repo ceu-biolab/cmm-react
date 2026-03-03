@@ -6,6 +6,13 @@ import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.j
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
+
+const formatNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
 
 const BatchSearch = () => {
   const [formState, setFormState] = useState({
@@ -21,6 +28,7 @@ const BatchSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     setFormState({
@@ -132,30 +140,34 @@ const BatchSearch = () => {
       const rawResults = response.data;
 
       const features = rawResults.msfeatures || [];
+      const normalizedFeatures = features.map((featureObj, featureIndex) => {
+        const adductGroups = (featureObj.annotationsByAdducts || [])
+          .map((adductGroup, adductIndex) => ({
+            adduct: adductGroup.adduct,
+            compounds: (adductGroup.annotations || [])
+              .map((annotation, annotationIndex) =>
+                normalizeAnnotation(
+                  annotation,
+                  `${featureIndex}-${adductIndex}-${annotationIndex}`
+                )
+              ),
+          }))
+          .filter((group) => group.compounds.length > 0);
 
-      const groupedByAdduct = {};
-
-      features.forEach((featureObj) => {
-        const adductGroups = featureObj.annotationsByAdducts || [];
-
-        adductGroups.forEach(({ adduct, annotations }) => {
-          if (!groupedByAdduct[adduct]) groupedByAdduct[adduct] = [];
-
-          annotations.forEach(({ compound }) => {
-            if (compound) {
-              groupedByAdduct[adduct].push(compound);
-            }
-          });
-        });
+        return {
+          feature: featureObj.feature,
+          adductGroups,
+        };
       });
 
       console.log("Raw results:", rawResults);
 
-      setResults(groupedByAdduct);
+      setResults(normalizedFeatures);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -224,7 +236,7 @@ const BatchSearch = () => {
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>
@@ -245,16 +257,47 @@ const BatchSearch = () => {
           </div>
         </div>
 
-        <div className="results-div">
-          {showResults &&
-            Object.entries(results).map(([adduct, compounds]) => (
-              <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
-              />
-            ))}
-        </div>
+        {showResults && (
+          <div className="results-div">
+            {results.length > 0 ? (
+              <>
+                <div className="feature-tabs" role="tablist">
+                  {results.map((featureObj, featureIndex) => (
+                    <button
+                      key={`feature-tab-${featureIndex}`}
+                      type="button"
+                      className={`feature-tab ${
+                        featureIndex === activeFeatureIndex ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFeatureIndex(featureIndex)}
+                    >
+                      Feature {featureIndex + 1} | m/z{" "}
+                      {formatNumber(featureObj.feature?.mzValue, 4)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="feature-tab-panel">
+                  {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
+                    results[activeFeatureIndex].adductGroups.map((group) => (
+                      <ResultsDropdownGroup
+                        key={`${activeFeatureIndex}-${group.adduct}`}
+                        adduct={group.adduct}
+                        compounds={group.compounds}
+                      />
+                    ))
+                  ) : (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="no-results">No features returned.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
