@@ -3,18 +3,21 @@ import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
-import TextInput from "../../components/search/TextInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
 
 const ImMsSearch = () => {
   const [formState, setFormState] = useState({
     mzValues: "",
     ccsValues: "",
+    rtValues: "",
     mzTolerance: "",
     mzToleranceMode: "PPM",
     ccsTolerance: "",
     ccsToleranceMode: "PERCENTAGE",
+    deuterium: false,
     ionizationMode: "POSITIVE",
     bufferGas: "N2",
     adducts: [],
@@ -26,11 +29,13 @@ const ImMsSearch = () => {
     setFormState({
       mzValues: ["400.3432", "281.24765"].join(", "),
       ccsValues: ["202.881", "178.546"].join(", "),
+      rtValues: ["8.5", "6.2"].join(", "),
       mzTolerance: "10",
       mzToleranceMode: "PPM",
       ccsTolerance: "2",
       ccsToleranceMode: "PERCENTAGE",
       formulaType: "CHNOPS",
+      deuterium: false,
       bufferGas: "N2",
       ionizationMode: "POSITIVE",
       adducts: ["[M+H]+"],
@@ -42,11 +47,13 @@ const ImMsSearch = () => {
     setFormState({
       mzValues: "",
       ccsValues: "",
+      rtValues: "",
       mzTolerance: "",
       mzToleranceMode: "PPM",
       ccsTolerance: "",
       ccsToleranceMode: "PERCENTAGE",
       formulaType: "CHNOPS",
+      deuterium: false,
       bufferGas: "N2",
       ionizationMode: "POSITIVE",
       adducts: [],
@@ -65,7 +72,7 @@ const ImMsSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      return;
+      setFormState((prev) => ({ ...prev, [name]: checked }));
     } else {
       setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
     }
@@ -77,11 +84,36 @@ const ImMsSearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const parseNumericValues = (rawValue) =>
+      (rawValue || "")
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map((entry) => Number(entry))
+        .filter((entry) => Number.isFinite(entry));
+
+    const mzValues = parseNumericValues(formState.mzValues);
+    const ccsValues = parseNumericValues(formState.ccsValues);
+    const rtValues = parseNumericValues(formState.rtValues);
+
+    if (!mzValues.length || !ccsValues.length || !rtValues.length) {
+      alert("Masses, CCS values, and RT values are all required.");
+      return;
+    }
+
+    if (
+      mzValues.length !== ccsValues.length ||
+      mzValues.length !== rtValues.length
+    ) {
+      alert("Masses, CCS values, and RT values must have the same length.");
+      return;
+    }
+
     setLoading(true);
 
     const formattedData = {
-      mzValues: formState.mzValues.split(/[\s,;]+/).map(parseFloat),
-      ccsValues: formState.ccsValues.split(/[\s,;]+/).map(parseFloat),
+      mzValues,
+      ccsValues,
+      rtValues,
       mzTolerance: parseFloat(formState.mzTolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ccsTolerance: parseFloat(formState.ccsTolerance),
@@ -90,6 +122,7 @@ const ImMsSearch = () => {
       ionizationMode: formState.ionizationMode,
       bufferGas: formState.bufferGas,
       adducts: formState.adducts,
+      deuterium: formState.deuterium,
     };
 
     try {
@@ -113,9 +146,11 @@ const ImMsSearch = () => {
             groupedByAdduct[adduct] = [];
           }
 
-          annotations?.forEach(({ compound }) => {
-            if (compound) {
-              groupedByAdduct[adduct].push(compound);
+          annotations?.forEach((annotation, index) => {
+            if (annotation) {
+              groupedByAdduct[adduct].push(
+                normalizeAnnotation(annotation, `${adduct}-${index}`)
+              );
             }
           });
         });
@@ -125,7 +160,7 @@ const ImMsSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -162,15 +197,35 @@ const ImMsSearch = () => {
               value={formState.mzValues}
               onChange={handleChange}
               className="masses-text-im-ms"
+              required
             />
 
             <TextBoxInput
-              label="CCS Values"
+              label={
+                <>
+                  CCS Values <span style={{ color: "red" }}>*</span>
+                </>
+              }
               name="ccsValues"
               value={formState.ccsValues}
               onChange={handleChange}
               className="ccs-values-im-ms"
               placeholder="Enter CCS values (comma separated)"
+              required
+            />
+
+            <TextBoxInput
+              label={
+                <>
+                  RT Values <span style={{ color: "red" }}>*</span>
+                </>
+              }
+              name="rtValues"
+              value={formState.rtValues}
+              onChange={handleChange}
+              className="rt-values-im-ms"
+              placeholder="Enter RT values (comma separated)"
+              required
             />
 
             <ToleranceRadio
@@ -252,10 +307,22 @@ const ImMsSearch = () => {
               onChange={handleChange}
               className="ionization-im-ms"
             />
+
+            <div className="deuterium-im-ms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>
