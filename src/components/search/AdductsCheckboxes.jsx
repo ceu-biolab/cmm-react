@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 
 const FALLBACK_ADDUCTS = {
@@ -176,12 +176,15 @@ const AdductsCheckboxes = ({
     return adducts?.[modeKey] || [];
   }, [adducts, modeKey]);
 
-  const notifySelectionChange = (nextSelection) => {
-    if (!onSelectionChange) {
-      return;
-    }
-    onSelectionChange(nextSelection);
-  };
+  const notifySelectionChange = useCallback(
+    (nextSelection) => {
+      if (!onSelectionChange) {
+        return;
+      }
+      onSelectionChange(nextSelection);
+    },
+    [onSelectionChange]
+  );
 
   const isAllSelected =
     availableAdducts.length > 0 &&
@@ -242,7 +245,7 @@ const AdductsCheckboxes = ({
     }
 
     previousAvailableRef.current = availableAdducts;
-  }, [availableAdducts, selectedAdducts, onSelectionChange, modeKey]);
+  }, [availableAdducts, selectedAdducts, notifySelectionChange, modeKey]);
 
   const handleToggleAll = (event) => {
     if (event.target.checked) {
