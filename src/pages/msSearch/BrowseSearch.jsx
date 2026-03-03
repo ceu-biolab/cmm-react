@@ -79,7 +79,7 @@ const BrowseSearch = () => {
     setErrors({});
 
     const formattedData = {
-      name: trimmedName || null,
+      compoundName: trimmedName || null,
       formula: trimmedFormula || null,
       metaboliteType: formState.metaboliteType,
       databases: formState.databases,
