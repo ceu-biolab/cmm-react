@@ -140,6 +140,7 @@ const ImMsSearch = () => {
       const features = rawResults.imFeatures || rawResults;
 
       features.forEach((featureObj) => {
+        const featureCcsValue = Number(featureObj.feature?.ccsValue);
         featureObj.annotationsByAdducts?.forEach((adductGroup) => {
           const { adduct, annotations } = adductGroup;
           if (!groupedByAdduct[adduct]) {
@@ -148,8 +149,16 @@ const ImMsSearch = () => {
 
           annotations?.forEach((annotation, index) => {
             if (annotation) {
+              const dbCcs = Number(annotation.compound?.dbCcs);
+              const ccsError =
+                Number.isFinite(featureCcsValue) && Number.isFinite(dbCcs)
+                  ? dbCcs - featureCcsValue
+                  : null;
               groupedByAdduct[adduct].push(
-                normalizeAnnotation(annotation, `${adduct}-${index}`)
+                {
+                  ...normalizeAnnotation(annotation, `${adduct}-${index}`),
+                  ccsError,
+                }
               );
             }
           });

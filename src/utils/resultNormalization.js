@@ -208,6 +208,9 @@ export const normalizeCompound = (rawCompound = {}) => {
     experimentalRI: toMaybeNumber(
       firstMeaningfulValue(rawCompound, ["experimentalRI", "experimentalRi"])
     ),
+    ccsError: toMaybeNumber(
+      firstMeaningfulValue(rawCompound, ["ccsError", "deltaCcs", "ccsDifference"])
+    ),
   };
 };
 
@@ -232,5 +235,6 @@ export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
     riError: normalizedAnnotation.riError ?? normalizedCompound.riError,
     experimentalRI:
       normalizedAnnotation.experimentalRI ?? normalizedCompound.experimentalRI,
+    ccsError: normalizedAnnotation.ccsError ?? normalizedCompound.ccsError,
   };
 };

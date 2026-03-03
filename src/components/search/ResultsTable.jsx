@@ -105,6 +105,9 @@ const getColumns = (normalizedResults) => {
     ...(hasAny("riError")
       ? [{ header: "RI Error", key: "riError", type: "number", digits: 2 }]
       : []),
+    ...(hasAny("ccsError")
+      ? [{ header: "CCS Error", key: "ccsError", type: "number", digits: 3 }]
+      : []),
     { header: "CAS", key: "casID", external: true },
     { header: "KEGG", key: "keggID", external: true },
     { header: "CHEBI", key: "chebiID", external: true },

@@ -8,6 +8,7 @@ import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import MirroredMsmsSpectrum from "../../components/search/MirroredMsmsSpectrum.jsx";
 import { formatApiError } from "../../utils/apiError";
+import { Link, createSearchParams } from "react-router-dom";
 
 const formatNumber = (value, digits = 4) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -106,7 +107,45 @@ const MsmsResultsGroup = ({
                     }
                     style={{ cursor: rowClickable ? "pointer" : "default" }}
                   >
-                    <td>{compoundId ?? "—"}</td>
+                    <td>
+                      {compoundId ? (
+                        <Link
+                          to={{
+                            pathname: `/compound/${compoundId}`,
+                            search: createSearchParams({
+                              compound_name:
+                                compound?.compoundName ?? compound?.name,
+                              formula: compound?.formula,
+                              mass: compound?.mass,
+                              chargeType: compound?.chargeType,
+                              chargeNumber: compound?.chargeNumber,
+                              numCarbons: compound?.numCarbons,
+                              doubleBonds: compound?.doubleBonds,
+                              numChains: compound?.numChains,
+                              inchi: compound?.inchi,
+                              inchiKey: compound?.inchiKey,
+                              smiles: compound?.smiles,
+                              casID: compound?.casID ?? compound?.casId,
+                              keggID: compound?.keggID,
+                              chebiID: compound?.chebiID,
+                              hmdbID: compound?.hmdbID,
+                              lmID: compound?.lmID,
+                              pcID: compound?.pcID,
+                              knapsackID: compound?.knapsackID,
+                              npatlasID:
+                                compound?.npatlasID ?? compound?.npatlasId,
+                            }).toString(),
+                          }}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {compoundId}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td>{compound?.compoundName ?? compound?.name ?? "—"}</td>
                     <td>{compound?.formula ?? "—"}</td>
                     <td>{formatNumber(compound?.mass, 4)}</td>
