@@ -7,6 +7,31 @@ import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
+import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
+
+const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
+  if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
+    return chemicalAlphabet;
+  }
+
+  if (chemicalAlphabet === "CHNOPS") {
+    return "CHNOPSD";
+  }
+
+  if (chemicalAlphabet === "CHNOPSCL") {
+    return "CHNOPSCLD";
+  }
+
+  return chemicalAlphabet;
+};
+
+const toApiPolarity = (polarity) => {
+  if (polarity === "Inverse") {
+    return "Reverse";
+  }
+
+  return polarity;
+};
 
 const CeMsEffMobSearch = () => {
   const [formState, setFormState] = useState({
@@ -20,6 +45,7 @@ const CeMsEffMobSearch = () => {
     temperature: "",
     polarity: "Direct",
     chemical_alphabet: "CHNOPS",
+    deuterium: false,
     ionization_mode: "Positive",
     adducts: [],
   });
@@ -27,9 +53,9 @@ const CeMsEffMobSearch = () => {
   const loadDemoData = () => {
     setFormState({
       mz_values: ["291.1299", "298.098", "308.094", "316.2488", "55.055"].join(
-        ", "
+        "\n"
       ),
-      effective_mobilities: ["1174", "1060", "646", "931", "3192"].join(", "),
+      effective_mobilities: ["1174", "1060", "646", "931", "3192"].join("\n"),
       mz_tolerance: "10",
       mz_tolerance_mode: "mDa",
       eff_mob_tolerance: "10",
@@ -38,6 +64,7 @@ const CeMsEffMobSearch = () => {
       temperature: "20",
       polarity: "Direct",
       chemical_alphabet: "CHNOPS",
+      deuterium: false,
       ionization_mode: "Positive",
       adducts: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+NH4]+"],
     });
@@ -55,6 +82,7 @@ const CeMsEffMobSearch = () => {
       temperature: "",
       polarity: "Direct",
       chemical_alphabet: "CHNOPS",
+      deuterium: false,
       ionization_mode: "Positive",
       adducts: [],
     });
@@ -63,16 +91,29 @@ const CeMsEffMobSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
   }, [formState]);
 
+  useEffect(() => {
+    let mounted = true;
+    getCeMsBuffers().then((buffers) => {
+      if (!mounted) return;
+      setBufferOptions(buffers && buffers.length ? buffers : defaultCeMsBuffers);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      return;
+      setFormState((prev) => ({ ...prev, [name]: checked }));
     } else {
       setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
     }
@@ -103,8 +144,11 @@ const CeMsEffMobSearch = () => {
       temperature: formState.temperature
         ? parseFloat(formState.temperature)
         : null,
-      polarity: formState.polarity,
-      chemical_alphabet: formState.chemical_alphabet,
+      polarity: toApiPolarity(formState.polarity),
+      chemical_alphabet: toDeuteriumAwareAlphabet(
+        formState.chemical_alphabet,
+        formState.deuterium
+      ),
       ionization_mode: formState.ionization_mode,
       adducts: formState.adducts,
     };
@@ -220,10 +264,22 @@ const CeMsEffMobSearch = () => {
               }
               name="chemical_alphabet"
               value={formState.chemical_alphabet}
-              options={["ALL", "CHNOPS", "CHNOPSD", "CHNOPSCL", "CHNOPSCLD"]}
+              options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="formula-type-radio-cems"
             />
+
+            <div className="deuterium-cems">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
 
             <GroupRadio
               label={
@@ -233,7 +289,7 @@ const CeMsEffMobSearch = () => {
               }
               name="buffer_code"
               value={formState.buffer_code}
-              options={["FORMIC_ACID_1M", "N2", "He"]}
+              options={bufferOptions}
               onChange={handleChange}
             />
 
@@ -301,7 +357,7 @@ const CeMsEffMobSearch = () => {
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>

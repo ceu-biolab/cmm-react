@@ -7,6 +7,31 @@ import TextInput from "../../components/search/TextInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
+import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
+
+const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
+  if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
+    return chemicalAlphabet;
+  }
+
+  if (chemicalAlphabet === "CHNOPS") {
+    return "CHNOPSD";
+  }
+
+  if (chemicalAlphabet === "CHNOPSCL") {
+    return "CHNOPSCLD";
+  }
+
+  return chemicalAlphabet;
+};
+
+const toApiPolarity = (polarity) => {
+  if (polarity === "Inverse") {
+    return "Reverse";
+  }
+
+  return polarity;
+};
 
 const CeMsMt2Search = () => {
   const [formState, setFormState] = useState({
@@ -24,6 +49,7 @@ const CeMsMt2Search = () => {
     marker2: "",
     marker2_time: "",
     chemical_alphabet: "CHNOPS",
+    deuterium: false,
     ion_mode: "positive",
     adducts: [],
   });
@@ -31,11 +57,11 @@ const CeMsMt2Search = () => {
   const loadDemoData = () => {
     setFormState({
       masses: ["291.1299", "298.098", "308.094", "316.2488", "55.055"].join(
-        ", "
+        "\n"
       ),
       tolerance: "10",
       tolerance_mode: "PPM",
-      mt: ["11.56", "13.65", "15.62", "12.59", "6.99"].join(", "),
+      mt: ["11.56", "13.65", "15.62", "12.59", "6.99"].join("\n"),
       mt_tolerance: "10",
       mt_tolerance_mode: "percentage",
       buffer: "FORMIC_ACID_1M",
@@ -46,6 +72,7 @@ const CeMsMt2Search = () => {
       marker2: "Hippuric acid",
       marker2_time: "25.29",
       chemical_alphabet: "CHNOPS",
+      deuterium: false,
       ion_mode: "positive",
       adducts: [
         "[M+H]+",
@@ -75,6 +102,7 @@ const CeMsMt2Search = () => {
       marker2: "",
       marker2_time: "",
       chemical_alphabet: "CHNOPS",
+      deuterium: false,
       ion_mode: "positive",
       adducts: [],
     });
@@ -83,16 +111,29 @@ const CeMsMt2Search = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
   }, [formState]);
 
+  useEffect(() => {
+    let mounted = true;
+    getCeMsBuffers().then((buffers) => {
+      if (!mounted) return;
+      setBufferOptions(buffers && buffers.length ? buffers : defaultCeMsBuffers);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      return;
+      setFormState((prev) => ({ ...prev, [name]: checked }));
     } else {
       setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
     }
@@ -123,7 +164,7 @@ const CeMsMt2Search = () => {
       temperature: formState.temperature
         ? parseFloat(formState.temperature)
         : null,
-      polarity: formState.polarity,
+      polarity: toApiPolarity(formState.polarity),
       marker1: formState.marker1,
       marker1_time: formState.marker1_time
         ? parseFloat(formState.marker1_time)
@@ -132,7 +173,10 @@ const CeMsMt2Search = () => {
       marker2_time: formState.marker2_time
         ? parseFloat(formState.marker2_time)
         : null,
-      chemical_alphabet: formState.chemical_alphabet,
+      chemical_alphabet: toDeuteriumAwareAlphabet(
+        formState.chemical_alphabet,
+        formState.deuterium
+      ),
       ion_mode: formState.ion_mode,
       adducts: formState.adducts,
     };
@@ -270,10 +314,22 @@ const CeMsMt2Search = () => {
               }
               name="chemical_alphabet"
               value={formState.chemical_alphabet}
-              options={["ALL", "CHNOPS", "CHNOPSD", "CHNOPSCL", "CHNOPSCLD"]}
+              options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="chem-alph-im-ms"
             />
+
+            <div className="deuterium-im-ms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
 
             <GroupRadio
               label={
@@ -283,7 +339,7 @@ const CeMsMt2Search = () => {
               }
               name="buffer"
               value={formState.buffer}
-              options={["FORMIC_ACID_1M", "N2", "He"]}
+              options={bufferOptions}
               onChange={handleChange}
               className="buffer-group-im-ms"
             />
@@ -373,7 +429,7 @@ const CeMsMt2Search = () => {
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>

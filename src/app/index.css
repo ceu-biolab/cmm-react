@@ -775,6 +775,24 @@ body {
   margin-bottom: 2rem;
 }
 
+.other-buttons .form-buttons-container:nth-child(1) button {
+  background-color: #0f5f7a;
+  color: #f8f9fa;
+}
+
+.other-buttons .form-buttons-container:nth-child(1) button:hover {
+  background-color: #0b4d63;
+}
+
+.other-buttons .form-buttons-container:nth-child(2) button {
+  background-color: #7e3a3a;
+  color: #f8f9fa;
+}
+
+.other-buttons .form-buttons-container:nth-child(2) button:hover {
+  background-color: #6a2f2f;
+}
+
 @media (max-width: 768px) {
   .search-container {
     flex-direction: column;
@@ -1401,6 +1419,19 @@ tbody tr:hover {
 .adducts-checkboxes-cems {
   grid-column: 3 / 4;
   grid-row: 1 / 4;
+}
+
+.deuterium-cems {
+  grid-column: 4 / 5;
+  grid-row: 2 / 3;
+  display: flex;
+  align-items: center;
+}
+
+.deuterium-cems label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Compound Info Card */
