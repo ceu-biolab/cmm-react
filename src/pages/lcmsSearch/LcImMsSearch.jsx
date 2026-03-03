@@ -8,6 +8,22 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 
+const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
+  if (!deuteriumEnabled || formulaType === "ALL") {
+    return formulaType;
+  }
+
+  if (formulaType === "CHNOPS") {
+    return "CHNOPSD";
+  }
+
+  if (formulaType === "CHNOPSCL") {
+    return "CHNOPSCLD";
+  }
+
+  return formulaType;
+};
+
 const LcImMsSearch = () => {
   const [formState, setFormState] = useState({
     mzValues: "",
@@ -30,9 +46,9 @@ const LcImMsSearch = () => {
 
   const loadDemoData = () => {
     setFormState({
-      mzValues: ["400.3432", "281.24765"].join(", "),
-      ccsValues: ["202.881", "178.546"].join(", "),
-      rtValues: ["8.5", "6.2"].join(", "),
+      mzValues: ["400.3432", "281.24765"].join("\n"),
+      ccsValues: ["202.881", "178.546"].join("\n"),
+      rtValues: ["8.5", "6.2"].join("\n"),
       mzTolerance: "10",
       mzToleranceMode: "PPM",
       ccsTolerance: "2",
@@ -114,7 +130,10 @@ const LcImMsSearch = () => {
       mzToleranceMode: formState.mzToleranceMode,
       ccsTolerance: parseFloat(formState.ccsTolerance),
       ccsToleranceMode: formState.ccsToleranceMode,
-      formulaType: formState.formulaType,
+      formulaType: toDeuteriumAwareFormula(
+        formState.formulaType,
+        formState.deuterium
+      ),
       ionizationMode: formState.ionizationMode,
       bufferGas: formState.bufferGas,
       adducts: formState.adducts,
@@ -270,7 +289,7 @@ const LcImMsSearch = () => {
               }
               name="formulaType"
               value={formState.formulaType}
-              options={["ALL", "CHNOPS", "CHNOPSD", "CHNOPSCL", "CHNOPSCLD"]}
+              options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="chem-alph-lc-im-ms"
             />

@@ -14,11 +14,11 @@ import {
 
 const RtPredSearch = () => {
   const [formState, setFormState] = useState({
-    cmmIDs: [],
-    rtKnown: [],
-    mz: [],
-    rt: [],
-    compSpectra: [],
+    cmmIDs: "",
+    rtKnown: "",
+    mz: "",
+    rt: "",
+    compSpectra: "",
     confidenceInterval: "95",
     tolerance: "",
     toleranceMode: "ppm",
@@ -38,8 +38,8 @@ const RtPredSearch = () => {
   const loadDemoData = () => {
     console.log("Loading demo data...");
     setFormState({
-      cmmIDs: ["Working..."],
-      rtKnown: ["Working..."],
+      cmmIDs: "Working...",
+      rtKnown: "Working...",
       mz: [
         "400.3432",
         "422.32336",
@@ -57,9 +57,9 @@ const RtPredSearch = () => {
         "482.324",
         "478.29312",
         "500.27457",
-      ],
-      rt: ["Working..."],
-      compSpectra: ["Working..."],
+      ].join("\n"),
+      rt: "Working...",
+      compSpectra: "Working...",
       confidenceInterval: "99",
       tolerance: "10",
       toleranceMode: "ppm",
@@ -83,11 +83,11 @@ const RtPredSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      cmmIDs: [],
-      rtKnown: [],
-      mz: [],
-      rt: [],
-      compSpectra: [],
+      cmmIDs: "",
+      rtKnown: "",
+      mz: "",
+      rt: "",
+      compSpectra: "",
       tolerance: "",
       confidenceInterval: "95",
       toleranceMode: "ppm",
@@ -108,10 +108,7 @@ const RtPredSearch = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "mz") {
-      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
-      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
-    } else if (type === "checkbox") {
+    if (type === "checkbox") {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
@@ -131,12 +128,19 @@ const RtPredSearch = () => {
     e.preventDefault();
     setLoading(true);
 
+    const parseNumericList = (rawValue) =>
+      String(rawValue || "")
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map((entry) => Number(entry))
+        .filter((entry) => Number.isFinite(entry));
+
     const formattedData = {
-      cmmIDs: formState.mz.map((mass) => parseFloat(mass)),
-      rtKnown: formState.mz.map((mass) => parseFloat(mass)),
-      mz: formState.mz.map((mass) => parseFloat(mass)),
-      rt: formState.rt.map((time) => parseFloat(time)),
-      compSpectra: formState.compSpectra.map((spectra) => parseFloat(spectra)),
+      cmmIDs: parseNumericList(formState.cmmIDs),
+      rtKnown: parseNumericList(formState.rtKnown),
+      mz: parseNumericList(formState.mz),
+      rt: parseNumericList(formState.rt),
+      compSpectra: parseNumericList(formState.compSpectra),
       tolerance: parseFloat(formState.tolerance),
       toleranceMode: formState.toleranceMode,
       chemAlphabet: formState.chemAlphabet,
@@ -359,7 +363,7 @@ const RtPredSearch = () => {
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>

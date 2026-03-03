@@ -92,7 +92,11 @@ const MsmsResultsGroup = ({
                   compound?.score ??
                   compound?.cosineScore;
                 const deltaPpm =
-                  compound?.deltaPpmPrecursorIon ?? compound?.deltaPpm;
+                  compound?.deltaPpmPrecursorIon ??
+                  compound?.deltaPpm ??
+                  compound?.massErrorPpm ??
+                  compound?.ppmError ??
+                  compound?.massError;
                 const collisionEnergy =
                   compound?.collisionEnergy ?? compound?.collision;
                 const rowClickable =
@@ -244,7 +248,7 @@ const MsMsSearch = () => {
 
     const peaksString = demo.fragmentsMZsIntensities.peaks
       .map((p) => `${p.mz}:${p.intensity}`)
-      .join(", ");
+      .join("\n");
 
     setFormState({
       CIDEnergy: demo.CIDEnergy,
@@ -286,7 +290,7 @@ const MsMsSearch = () => {
   }, [formState]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
 
     if (name === "precursorIonMz") {
       setFormState((prev) => ({

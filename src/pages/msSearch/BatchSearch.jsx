@@ -53,7 +53,7 @@ const BatchSearch = () => {
         "482.324",
         "478.29312",
         "500.27457",
-      ].join(", "),
+      ].join("\n"),
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ONLYLIPIDS",

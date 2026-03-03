@@ -14,12 +14,12 @@ import {
 
 const AspergillusSearch = () => {
   const [formState, setFormState] = useState({
-    mz: [],
-    allMz: [],
-    rt: [],
-    allRt: [],
-    compSpectra: [],
-    allCompSpectra: [],
+    mz: "",
+    allMz: "",
+    rt: "",
+    allRt: "",
+    compSpectra: "",
+    allCompSpectra: "",
     tolerance: "",
     toleranceMode: "ppm",
     chemAlphabet: "CHNOPS",
@@ -55,12 +55,12 @@ const AspergillusSearch = () => {
         "482.324",
         "478.29312",
         "500.27457",
-      ],
-      allMz: ["Working..."],
-      rt: ["Working..."],
-      allRt: ["Working..."],
-      compSpectra: ["Working..."],
-      allCompSpectra: ["Working..."],
+      ].join("\n"),
+      allMz: "Working...",
+      rt: "Working...",
+      allRt: "Working...",
+      compSpectra: "Working...",
+      allCompSpectra: "Working...",
       tolerance: "10",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
@@ -83,12 +83,12 @@ const AspergillusSearch = () => {
   const clearInput = () => {
     console.log("Clearing input...");
     setFormState({
-      mz: [],
-      allMz: [],
-      rt: [],
-      allRt: [],
-      compSpectra: [],
-      allCompSpectra: [],
+      mz: "",
+      allMz: "",
+      rt: "",
+      allRt: "",
+      compSpectra: "",
+      allCompSpectra: "",
       tolerance: "",
       toleranceMode: "ppm",
       chemAlphabet: "CHNOPS",
@@ -108,10 +108,7 @@ const AspergillusSearch = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "mz") {
-      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
-      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
-    } else if (type === "checkbox") {
+    if (type === "checkbox") {
       if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
@@ -131,15 +128,20 @@ const AspergillusSearch = () => {
     e.preventDefault();
     setLoading(true);
 
+    const parseNumericList = (rawValue) =>
+      String(rawValue || "")
+        .split(/[\s,;]+/)
+        .filter(Boolean)
+        .map((entry) => Number(entry))
+        .filter((entry) => Number.isFinite(entry));
+
     const formattedData = {
-      mz: formState.mz.map((mass) => parseFloat(mass)),
-      allMz: formState.allMz.map((mass) => parseFloat(mass)),
-      rt: formState.rt.map((time) => parseFloat(time)),
-      allRt: formState.allRt.map((time) => parseFloat(time)),
-      compSpectra: formState.compSpectra.map((spectra) => parseFloat(spectra)),
-      allCompSpectra: formState.allCompSpectra.map((spectra) =>
-        parseFloat(spectra)
-      ),
+      mz: parseNumericList(formState.mz),
+      allMz: parseNumericList(formState.allMz),
+      rt: parseNumericList(formState.rt),
+      allRt: parseNumericList(formState.allRt),
+      compSpectra: parseNumericList(formState.compSpectra),
+      allCompSpectra: parseNumericList(formState.allCompSpectra),
       tolerance: parseFloat(formState.tolerance),
       toleranceMode: formState.toleranceMode,
       chemAlphabet: formState.chemAlphabet,
@@ -356,7 +358,7 @@ const AspergillusSearch = () => {
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>
