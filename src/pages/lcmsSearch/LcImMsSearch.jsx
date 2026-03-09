@@ -313,6 +313,18 @@ const LcImMsSearch = () => {
               className="chem-alph-lc-im-ms"
             />
 
+            <div className="deuterium-lc-im-ms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
+
             <GroupRadio
               label={
                 <>
@@ -351,18 +363,6 @@ const LcImMsSearch = () => {
               onChange={handleChange}
               className="ionization-lc-im-ms"
             />
-
-            <div className="deuterium-lc-im-ms">
-              <label>
-                <input
-                  type="checkbox"
-                  name="deuterium"
-                  checked={formState.deuterium}
-                  onChange={handleChange}
-                />
-                Deuterium
-              </label>
-            </div>
           </div>
 
           <div className="form-buttons-container center-button">

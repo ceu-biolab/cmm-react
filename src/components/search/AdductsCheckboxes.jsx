@@ -182,6 +182,7 @@ const AdductsCheckboxes = ({
       resolveFallbackAdducts(adductsEndpoint)
   );
   const previousAvailableRef = useRef(null);
+  const keepEmptySelectionRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -242,15 +243,17 @@ const AdductsCheckboxes = ({
       );
 
       if (!filtered.length && !selectedAdducts.length && modeKey) {
-        const defaults = getDefaultAdducts(
-          modeKey,
-          availableAdducts,
-          usePresetDefaults
-        );
-        if (defaults.length) {
-          notifySelectionChange(defaults);
-          previousAvailableRef.current = availableAdducts;
-          return;
+        if (!keepEmptySelectionRef.current) {
+          const defaults = getDefaultAdducts(
+            modeKey,
+            availableAdducts,
+            usePresetDefaults
+          );
+          if (defaults.length) {
+            notifySelectionChange(defaults);
+            previousAvailableRef.current = availableAdducts;
+            return;
+          }
         }
       }
 
@@ -274,15 +277,17 @@ const AdductsCheckboxes = ({
       );
 
       if (!filtered.length && modeKey) {
-        const defaults = getDefaultAdducts(
-          modeKey,
-          availableAdducts,
-          usePresetDefaults
-        );
-        if (defaults.length) {
-          notifySelectionChange(defaults);
-          previousAvailableRef.current = availableAdducts;
-          return;
+        if (!keepEmptySelectionRef.current) {
+          const defaults = getDefaultAdducts(
+            modeKey,
+            availableAdducts,
+            usePresetDefaults
+          );
+          if (defaults.length) {
+            notifySelectionChange(defaults);
+            previousAvailableRef.current = availableAdducts;
+            return;
+          }
         }
       }
 
@@ -292,6 +297,10 @@ const AdductsCheckboxes = ({
     }
 
     previousAvailableRef.current = availableAdducts;
+
+    if (selectedAdducts.length > 0) {
+      keepEmptySelectionRef.current = false;
+    }
   }, [
     availableAdducts,
     selectedAdducts,
@@ -302,8 +311,10 @@ const AdductsCheckboxes = ({
 
   const handleToggleAll = (event) => {
     if (event.target.checked) {
+      keepEmptySelectionRef.current = false;
       notifySelectionChange(availableAdducts);
     } else {
+      keepEmptySelectionRef.current = true;
       notifySelectionChange([]);
     }
   };
@@ -312,6 +323,7 @@ const AdductsCheckboxes = ({
     const nextSelection = selectedAdducts.includes(adduct)
       ? selectedAdducts.filter((entry) => entry !== adduct)
       : [...selectedAdducts, adduct];
+    keepEmptySelectionRef.current = nextSelection.length === 0;
     notifySelectionChange(nextSelection);
   };
 

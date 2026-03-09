@@ -1396,6 +1396,24 @@ tbody tr:hover {
   grid-row: 3 / 4;
 }
 
+.chem-alph-msms {
+  grid-column: 2 / 3;
+  grid-row: 3 / 4;
+}
+
+.deuterium-msms {
+  grid-column: 2 / 3;
+  grid-row: 4 / 5;
+  display: flex;
+  align-items: center;
+}
+
+.deuterium-msms label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ionization-volt-div-msms,
 .ion-tolerance-msms,
 .mz-tolerance-msms {
@@ -1916,7 +1934,7 @@ tbody tr:hover {
 
 .modifiers-im-ms {
   grid-column: 3 / 4;
-  grid-row: 3 / 5;
+  grid-row: 4 / 6;
 }
 
 .adducts-im-ms {
@@ -1930,8 +1948,8 @@ tbody tr:hover {
 }
 
 .deuterium-im-ms {
-  grid-column: 2 / 3;
-  grid-row: 4 / 5;
+  grid-column: 3 / 4;
+  grid-row: 3 / 4;
   display: flex;
   align-items: center;
 }
@@ -2726,6 +2744,24 @@ body {
   grid-row: 1 / 2;
 }
 
+.chem-alph-gcms {
+  grid-column: 1 / 2;
+  grid-row: 3 / 4;
+}
+
+.deuterium-gcms {
+  grid-column: 1 / 2;
+  grid-row: 4 / 5;
+  display: flex;
+  align-items: center;
+}
+
+.deuterium-gcms label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ionization-gcms {
   grid-column: 3 / 5;
   grid-row: 2 / 3;
@@ -2908,7 +2944,7 @@ body {
 
 .modifiers-lc-im-ms {
   grid-column: 3 / 4;
-  grid-row: 3 / 5;
+  grid-row: 4 / 6;
 }
 
 .adducts-lc-im-ms {
@@ -2932,8 +2968,8 @@ body {
 }
 
 .deuterium-lc-im-ms {
-  grid-column: 2 / 3;
-  grid-row: 4 / 5;
+  grid-column: 3 / 4;
+  grid-row: 3 / 4;
   display: flex;
   align-items: center;
 }

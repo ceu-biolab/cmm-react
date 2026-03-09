@@ -306,7 +306,7 @@ const ImMsSearch = () => {
             <GroupRadio
               label={
                 <>
-                  Formula Type <span style={{ color: "red" }}>*</span>
+                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
                 </>
               }
               name="formulaType"
@@ -315,6 +315,18 @@ const ImMsSearch = () => {
               onChange={handleChange}
               className="chem-alph-im-ms"
             />
+
+            <div className="deuterium-im-ms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
 
             <GroupRadio
               label={
@@ -355,18 +367,6 @@ const ImMsSearch = () => {
               onChange={handleChange}
               className="ionization-im-ms"
             />
-
-            <div className="deuterium-im-ms">
-              <label>
-                <input
-                  type="checkbox"
-                  name="deuterium"
-                  checked={formState.deuterium}
-                  onChange={handleChange}
-                />
-                Deuterium
-              </label>
-            </div>
           </div>
 
           <div className="form-buttons-container center-button">

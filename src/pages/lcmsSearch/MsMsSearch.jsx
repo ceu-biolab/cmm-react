@@ -10,6 +10,22 @@ import MirroredMsmsSpectrum from "../../components/search/MirroredMsmsSpectrum.j
 import { formatApiError } from "../../utils/apiError";
 import { Link, createSearchParams } from "react-router-dom";
 
+const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
+  if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
+    return chemicalAlphabet;
+  }
+
+  if (chemicalAlphabet === "CHNOPS") {
+    return "CHNOPSD";
+  }
+
+  if (chemicalAlphabet === "CHNOPSCL") {
+    return "CHNOPSCLD";
+  }
+
+  return chemicalAlphabet;
+};
+
 const formatNumber = (value, digits = 4) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return "—";
@@ -177,6 +193,8 @@ const MsMsSearch = () => {
     toleranceModeFragments: "PPM",
     ionizationMode: "POSITIVE",
     adducts: ["[M+H]+"],
+    chemicalAlphabet: "CHNOPS",
+    deuterium: false,
     fragmentsMZsIntensities: {
       precursorMz: "",
       peaks: "",
@@ -259,6 +277,8 @@ const MsMsSearch = () => {
       toleranceModeFragments: demo.toleranceModeFragments,
       ionizationMode: demo.ionizationMode,
       adducts: demo.adducts,
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
       fragmentsMZsIntensities: {
         precursorMz: demo.fragmentsMZsIntensities.precursorMz,
         peaks: peaksString,
@@ -277,6 +297,8 @@ const MsMsSearch = () => {
       toleranceModeFragments: "PPM",
       ionizationMode: "POSITIVE",
       adducts: ["[M+H]+"],
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
       fragmentsMZsIntensities: {
         precursorMz: "",
         peaks: "",
@@ -290,7 +312,7 @@ const MsMsSearch = () => {
   }, [formState]);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target;
 
     if (name === "precursorIonMz") {
       setFormState((prev) => ({
@@ -305,6 +327,7 @@ const MsMsSearch = () => {
     }
 
     if (type === "checkbox") {
+      setFormState((prev) => ({ ...prev, [name]: checked }));
       return;
     }
 
@@ -361,6 +384,11 @@ const MsMsSearch = () => {
       toleranceModeFragments: formState.toleranceModeFragments,
       ionizationMode: formState.ionizationMode,
       adducts: formState.adducts,
+      chemicalAlphabet: toDeuteriumAwareAlphabet(
+        formState.chemicalAlphabet,
+        formState.deuterium
+      ),
+      deuterium: formState.deuterium,
       fragmentsMZsIntensities: {
         precursorMz: parseFloat(formState.precursorIonMz),
         peaks: peaksArray,
@@ -501,6 +529,27 @@ const MsMsSearch = () => {
               onChange={handleChange}
               className="ionization-div-msms"
             />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={["ALL", "CHNOPS", "CHNOPSCL"]}
+              onChange={handleChange}
+              className="chem-alph-msms"
+            />
+
+            <div className="deuterium-msms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
 
             <GroupRadio
               label="Ionization Voltage"

@@ -9,6 +9,22 @@ import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 
+const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
+  if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
+    return chemicalAlphabet;
+  }
+
+  if (chemicalAlphabet === "CHNOPS") {
+    return "CHNOPSD";
+  }
+
+  if (chemicalAlphabet === "CHNOPSCL") {
+    return "CHNOPSCLD";
+  }
+
+  return chemicalAlphabet;
+};
+
 const GcMsSearch = () => {
   const [formState, setFormState] = useState({
     spectrum: "",
@@ -16,6 +32,8 @@ const GcMsSearch = () => {
     retentionIndexTolerance: "10",
     derivatizationMethod: "METHYL_CHLOROFORMATE",
     columnType: "STANDARD_NON_POLAR",
+    chemicalAlphabet: "CHNOPS",
+    deuterium: false,
   });
 
   const [results, setResults] = useState(null);
@@ -30,6 +48,8 @@ const GcMsSearch = () => {
       retentionIndexTolerance: "10",
       derivatizationMethod: "METHYL_CHLOROFORMATE",
       columnType: "STANDARD_NON_POLAR",
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
     });
   };
 
@@ -41,6 +61,8 @@ const GcMsSearch = () => {
       retentionIndexTolerance: "10",
       derivatizationMethod: "METHYL_CHLOROFORMATE",
       columnType: "STANDARD_NON_POLAR",
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
     });
   };
 
@@ -49,9 +71,12 @@ const GcMsSearch = () => {
   }, [formState]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
-    setFormState((prev) => ({ ...prev, [name]: value || null }));
+    setFormState((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value || null,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -74,6 +99,11 @@ const GcMsSearch = () => {
       retentionIndexTolerance: parseFloat(formState.retentionIndexTolerance),
       derivatizationMethod: formState.derivatizationMethod,
       columnType: formState.columnType,
+      chemicalAlphabet: toDeuteriumAwareAlphabet(
+        formState.chemicalAlphabet,
+        formState.deuterium
+      ),
+      deuterium: formState.deuterium,
     };
 
     console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
@@ -150,6 +180,27 @@ const GcMsSearch = () => {
               placeholder="Enter RI tolerance"
               className="input-gcms"
             />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={["ALL", "CHNOPS", "CHNOPSCL"]}
+              onChange={handleChange}
+              className="chem-alph-gcms"
+            />
+
+            <div className="deuterium-gcms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </div>
 
             <GroupRadio
               label="Derivatization Method"
