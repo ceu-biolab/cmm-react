@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import TextInput from "../../components/search/TextInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
+import { groupsToResultMap } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -241,6 +243,17 @@ const CeMsMt1Search = () => {
       setLoading(false);
     }
   };
+
+  const activeFeatureResults = groupsToResultMap(
+    results[activeFeatureIndex]?.annotationsByAdducts,
+    {
+      labelKey: "adduct",
+      compoundsKey: "annotations",
+      fallbackLabel: "Adduct",
+    }
+  );
+
+  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
 
   return (
     <div className="page cemspage">
@@ -487,6 +500,13 @@ const CeMsMt1Search = () => {
                 </div>
 
                 <div className="feature-tab-panel">
+                  <ResultsSummary
+                    results={activeFeatureResults}
+                    matchedAdductCount={activeFeatureMatchedAdducts}
+                    totalAdductCount={formState.adducts.length}
+                    filename={`cems_mt1_feature_${activeFeatureIndex + 1}_export.csv`}
+                  />
+
                   {results[activeFeatureIndex]?.hasResults ? (
                     results[activeFeatureIndex].annotationsByAdducts.map(
                       (adductGroup, adductIndex) => (

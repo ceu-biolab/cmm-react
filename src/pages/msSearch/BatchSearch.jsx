@@ -3,11 +3,13 @@ import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
+import { groupsToResultMap } from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
@@ -175,6 +177,17 @@ const BatchSearch = () => {
     }
   };
 
+  const activeFeatureResults = groupsToResultMap(
+    results[activeFeatureIndex]?.adductGroups,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
+
+  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
+
   return (
     <div className="page">
       {loading && (
@@ -280,6 +293,13 @@ const BatchSearch = () => {
                 </div>
 
                 <div className="feature-tab-panel">
+                  <ResultsSummary
+                    results={activeFeatureResults}
+                    matchedAdductCount={activeFeatureMatchedAdducts}
+                    totalAdductCount={formState.adductsString.length}
+                    filename={`batch_feature_${activeFeatureIndex + 1}_export.csv`}
+                  />
+
                   {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
                     results[activeFeatureIndex].adductGroups.map((group) => (
                       <ResultsDropdownGroup

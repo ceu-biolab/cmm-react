@@ -6,8 +6,10 @@ import GroupRadio from "../../components/search/GroupRadio";
 import { ToastContainer, toast } from "react-toastify";
 import MirroredSpectrum from "../../components/search/MirroredSpectrum";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
+import ResultsSummary from "../../components/search/ResultsSummary";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
+import { singleGroupResultMap } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -241,6 +243,12 @@ const GcMsSearch = () => {
     }
   }, [comparisonOptions, selectedMatchKey]);
 
+  const activeFeature = featureResults[activeFeatureIndex];
+  const activeFeatureResults = singleGroupResultMap(
+    activeFeature?.label || `Feature ${activeFeatureIndex + 1}`,
+    activeFeature?.compounds || []
+  );
+
   return (
     <div className="page">
       {loading && (
@@ -397,6 +405,16 @@ const GcMsSearch = () => {
               </div>
 
               <div className="feature-tab-panel">
+                <ResultsSummary
+                  results={activeFeatureResults}
+                  matchedAdductCount={
+                    (activeFeature?.compounds?.length || 0) > 0 ? 1 : 0
+                  }
+                  totalAdductCount={1}
+                  progressLabel="Feature matches"
+                  filename={`gcms_feature_${activeFeatureIndex + 1}_export.csv`}
+                />
+
                 <ResultsDropdownGroup
                   adduct={featureResults[activeFeatureIndex]?.label}
                   compounds={featureResults[activeFeatureIndex]?.compounds}

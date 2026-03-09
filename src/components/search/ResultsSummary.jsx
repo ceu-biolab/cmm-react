@@ -3,7 +3,18 @@ import ProgressRing from "./ProgressRing";
 import FileDownload from "../effects/FileDownload";
 import { normalizeCompound } from "../../utils/resultNormalization";
 
-const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
+const toFiniteNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const ResultsSummary = ({
+  results = {},
+  matchedAdductCount,
+  totalAdductCount,
+  progressLabel = "Adduct matches",
+  filename = "compounds_export.csv",
+}) => {
   const displayHeaders = [
     "ID",
     "Name",
@@ -52,7 +63,22 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
     "pathway",
   ];
 
-  const allCompounds = Object.values(results).flat().map(normalizeCompound);
+  const groupedResults = Object.entries(results).map(([label, compounds]) => ({
+    label,
+    compounds: Array.isArray(compounds) ? compounds : [],
+  }));
+
+  const allCompounds = groupedResults
+    .flatMap((group) => group.compounds)
+    .map(normalizeCompound);
+
+  const matchedGroups = groupedResults.filter(
+    (group) => group.compounds.length > 0
+  ).length;
+  const resolvedMatchedCount =
+    toFiniteNumber(matchedAdductCount) ?? matchedGroups;
+  const resolvedTotalCount =
+    toFiniteNumber(totalAdductCount) ?? groupedResults.length;
 
   const totalCompounds = allCompounds.length;
 
@@ -66,16 +92,19 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
       </div>
 
       <div className="results-summary-col-2">
-        <ProgressRing matched={matchedAdductCount} total={totalAdductCount} />
-        <div className="results-count-text">Adduct matches</div>
+        <ProgressRing
+          matched={resolvedMatchedCount}
+          total={resolvedTotalCount}
+        />
+        <div className="results-count-text">{progressLabel}</div>
       </div>
 
       <div className="results-summary-col-3">
         <ul>
-          {Object.entries(results).map(([adduct, compounds]) => (
-            <li key={adduct}>
-              {adduct}: {compounds.length} compound
-              {compounds.length !== 1 ? "s" : ""}
+          {groupedResults.map((group) => (
+            <li key={group.label}>
+              {group.label}: {group.compounds.length} compound
+              {group.compounds.length !== 1 ? "s" : ""}
             </li>
           ))}
         </ul>
@@ -86,7 +115,7 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
           data={allCompounds}
           headers={displayHeaders}
           keys={dataKeys}
-          filename={`compounds_export.csv`}
+          filename={filename}
         />
       </div>
     </div>

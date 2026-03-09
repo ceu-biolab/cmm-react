@@ -3,11 +3,13 @@ import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
+import { groupsToResultMap } from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
@@ -373,6 +375,26 @@ const LcMsSearch = () => {
     }
   };
 
+  const activeFeatureAdductGroups = (
+    results[activeFeatureIndex]?.annotationsByAdducts || []
+  ).map((adductGroup, adductIndex) => ({
+    adduct: adductGroup.adduct,
+    compounds: (adductGroup.annotations || []).map((annotation, index) =>
+      normalizeAnnotation(
+        annotation,
+        `${activeFeatureIndex}-${adductIndex}-${index}`
+      )
+    ),
+  }));
+
+  const activeFeatureResults = groupsToResultMap(activeFeatureAdductGroups, {
+    labelKey: "adduct",
+    compoundsKey: "compounds",
+    fallbackLabel: "Adduct",
+  });
+
+  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
+
   return (
     <div className="page cemspage">
       {loading && (
@@ -604,36 +626,30 @@ const LcMsSearch = () => {
                   </div>
 
                   <div className="feature-tab-panel">
-                    {results[activeFeatureIndex]?.hasResults &&
-                    results[activeFeatureIndex]?.annotationsByAdducts?.length >
-                      0 ? (
-                      results[activeFeatureIndex].annotationsByAdducts.map(
-                        (adductGroup, adductIndex) => {
-                          const normalizedCompounds = adductGroup.annotations.map(
-                            (annotation, index) =>
-                              normalizeAnnotation(
-                                annotation,
-                                `${activeFeatureIndex}-${adductIndex}-${index}`
-                              )
-                          );
+                    <ResultsSummary
+                      results={activeFeatureResults}
+                      matchedAdductCount={activeFeatureMatchedAdducts}
+                      totalAdductCount={formState.adductsString.length}
+                      filename={`lcms_feature_${activeFeatureIndex + 1}_export.csv`}
+                    />
 
-                          return (
-                            <ResultsDropdownGroup
-                              key={`${activeFeatureIndex}-${adductIndex}`}
-                              adduct={adductGroup.adduct}
-                              compounds={normalizedCompounds}
-                              tableProps={{
-                                forceColumns: [
-                                  "score",
-                                  "rtScore",
-                                  "adductScore",
-                                  "ionizationScore",
-                                ],
-                              }}
-                            />
-                          );
-                        }
-                      )
+                    {results[activeFeatureIndex]?.hasResults &&
+                    activeFeatureAdductGroups.length > 0 ? (
+                      activeFeatureAdductGroups.map((adductGroup, adductIndex) => (
+                        <ResultsDropdownGroup
+                          key={`${activeFeatureIndex}-${adductIndex}`}
+                          adduct={adductGroup.adduct}
+                          compounds={adductGroup.compounds}
+                          tableProps={{
+                            forceColumns: [
+                              "score",
+                              "rtScore",
+                              "adductScore",
+                              "ionizationScore",
+                            ],
+                          }}
+                        />
+                      ))
                     ) : (
                       <p className="no-results">
                         No results found for this feature.

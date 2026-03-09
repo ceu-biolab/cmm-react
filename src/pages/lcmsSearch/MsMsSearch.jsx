@@ -8,7 +8,9 @@ import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import MirroredSpectrum from "../../components/search/MirroredSpectrum.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import { formatApiError } from "../../utils/apiError";
+import { groupsToResultMap } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -367,6 +369,14 @@ const MsMsSearch = () => {
     }
   }, [allMatches, selectedMatchId]);
 
+  const summaryResults = groupsToResultMap(results?.adductGroups, {
+    labelKey: "adduct",
+    compoundsKey: "compounds",
+    fallbackLabel: "Adduct",
+  });
+
+  const matchedAdductsCount = Object.keys(summaryResults).length;
+
   return (
     <div className="page">
       {loading && (
@@ -496,6 +506,12 @@ const MsMsSearch = () => {
 
         {results?.adductGroups?.length > 0 && (
           <div className="results-div">
+            <ResultsSummary
+              results={summaryResults}
+              matchedAdductCount={matchedAdductsCount}
+              totalAdductCount={formState.adducts.length}
+              filename="msms_export.csv"
+            />
             <p className="compare-hint">Click row to compare spectra.</p>
             {results.adductGroups.map((group) => (
               <ResultsDropdownGroup

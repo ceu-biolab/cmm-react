@@ -4,11 +4,13 @@ import TextInput from "../../components/search/TextInput";
 import GroupRadio from "../../components/search/GroupRadio";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
+import ResultsSummary from "../../components/search/ResultsSummary";
 import { formatApiError } from "../../utils/apiError";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
 } from "../../utils/databaseSelection";
+import { singleGroupResultMap } from "../../utils/resultsSummary";
 
 const BrowseSearch = () => {
   const [formState, setFormState] = useState({
@@ -108,6 +110,8 @@ const BrowseSearch = () => {
     }
   };
 
+  const summaryResults = singleGroupResultMap("Results", results);
+
   return (
     <div className="page">
       {loading && (
@@ -192,6 +196,13 @@ const BrowseSearch = () => {
 
         {showResults && (
           <div className="results-div">
+            <ResultsSummary
+              results={summaryResults}
+              matchedAdductCount={results.length > 0 ? 1 : 0}
+              totalAdductCount={1}
+              progressLabel="Result groups"
+              filename="browse_export.csv"
+            />
             <ResultsDropdownGroup compounds={results} />
           </div>
         )}

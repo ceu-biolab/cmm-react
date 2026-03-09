@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import { getCcsAdductOrder, sortAdductEntries } from "../../utils/ccsAdducts";
+import { groupsToResultMap } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   if (!deuteriumEnabled || formulaType === "ALL") {
@@ -219,6 +221,17 @@ const ImMsSearch = () => {
     }
   };
 
+  const activeFeatureResults = groupsToResultMap(
+    results[activeFeatureIndex]?.adductGroups,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
+
+  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
+
   return (
     <div className="page">
       {loading && (
@@ -405,6 +418,13 @@ const ImMsSearch = () => {
                 </div>
 
                 <div className="feature-tab-panel">
+                  <ResultsSummary
+                    results={activeFeatureResults}
+                    matchedAdductCount={activeFeatureMatchedAdducts}
+                    totalAdductCount={formState.adducts.length}
+                    filename={`imms_feature_${activeFeatureIndex + 1}_export.csv`}
+                  />
+
                   {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
                     results[activeFeatureIndex].adductGroups.map((group) => (
                       <ResultsDropdownGroup
