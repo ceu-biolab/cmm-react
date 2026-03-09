@@ -33,6 +33,11 @@ const toApiPolarity = (polarity) => {
   return polarity;
 };
 
+const formatFeatureNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
+
 const CeMsEffMobSearch = () => {
   const [formState, setFormState] = useState({
     mz_values: "",
@@ -92,6 +97,7 @@ const CeMsEffMobSearch = () => {
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
@@ -187,6 +193,7 @@ const CeMsEffMobSearch = () => {
         }) || [];
 
       setResults(features);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -378,34 +385,50 @@ const CeMsEffMobSearch = () => {
           </div>
         </div>
 
-        <div className="results-div">
-          {showResults &&
-            results.map((featureObj, featureIndex) => (
-              <div key={featureIndex} className="feature-group">
-                <h3>
-                  Feature {featureIndex + 1}: m/z{" "}
-                  {featureObj.mzValue.toFixed(4)} | Effective Mobility:{" "}
-                  {featureObj.effectiveMobility.toFixed(2)}
-                </h3>
+        {showResults && (
+          <div className="results-div">
+            {results.length > 0 ? (
+              <>
+                <div className="feature-tabs" role="tablist">
+                  {results.map((featureObj, featureIndex) => (
+                    <button
+                      key={`cems-eff-feature-tab-${featureIndex}`}
+                      type="button"
+                      className={`feature-tab ${
+                        featureIndex === activeFeatureIndex ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFeatureIndex(featureIndex)}
+                    >
+                      Feature {featureIndex + 1} | m/z{" "}
+                      {formatFeatureNumber(featureObj.mzValue, 4)} | Eff.
+                      Mobility {formatFeatureNumber(featureObj.effectiveMobility, 2)}
+                    </button>
+                  ))}
+                </div>
 
-                {featureObj.hasResults ? (
-                  featureObj.annotationsByAdducts.map(
-                    (adductGroup, adductIndex) => (
-                      <ResultsDropdownGroup
-                        key={`${featureIndex}-${adductIndex}`}
-                        adduct={adductGroup.adduct}
-                        compounds={adductGroup.annotations}
-                      />
+                <div className="feature-tab-panel">
+                  {results[activeFeatureIndex]?.hasResults ? (
+                    results[activeFeatureIndex].annotationsByAdducts.map(
+                      (adductGroup, adductIndex) => (
+                        <ResultsDropdownGroup
+                          key={`${activeFeatureIndex}-${adductIndex}`}
+                          adduct={adductGroup.adduct}
+                          compounds={adductGroup.annotations}
+                        />
+                      )
                     )
-                  )
-                ) : (
-                  <p className="no-results">
-                    No results found for this feature.
-                  </p>
-                )}
-              </div>
-            ))}
-        </div>
+                  ) : (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="no-results">No features returned.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -33,6 +33,11 @@ const toApiPolarity = (polarity) => {
   return polarity;
 };
 
+const formatFeatureNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
+
 const CeMsMt2Search = () => {
   const [formState, setFormState] = useState({
     masses: "",
@@ -112,6 +117,7 @@ const CeMsMt2Search = () => {
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
@@ -224,6 +230,7 @@ const CeMsMt2Search = () => {
       });
 
       setResults(features);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -253,7 +260,7 @@ const CeMsMt2Search = () => {
           Required <span className="red-asterisk">*</span>
         </label>
         <form onSubmit={handleSubmit}>
-          <div className="grid-container-im-ms">
+          <div className="grid-container-ce-ms-markers">
             <TextBoxInput
               label={
                 <>
@@ -450,35 +457,51 @@ const CeMsMt2Search = () => {
           </div>
         </div>
 
-        <div className="results-div">
-          {showResults &&
-            Array.isArray(results) &&
-            results.map((featureObj, featureIndex) => (
-              <div key={featureIndex} className="feature-group">
-                <h3>
-                  Feature {featureIndex + 1}: m/z{" "}
-                  {featureObj.feature?.mzValue?.toFixed(4)} | Mobility:{" "}
-                  {featureObj.feature?.effectiveMobility?.toFixed(2)}
-                </h3>
+        {showResults && (
+          <div className="results-div">
+            {Array.isArray(results) && results.length > 0 ? (
+              <>
+                <div className="feature-tabs" role="tablist">
+                  {results.map((featureObj, featureIndex) => (
+                    <button
+                      key={`cems-mt2-feature-tab-${featureIndex}`}
+                      type="button"
+                      className={`feature-tab ${
+                        featureIndex === activeFeatureIndex ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFeatureIndex(featureIndex)}
+                    >
+                      Feature {featureIndex + 1} | m/z{" "}
+                      {formatFeatureNumber(featureObj.feature?.mzValue, 4)} |
+                      Mobility{" "}
+                      {formatFeatureNumber(featureObj.feature?.effectiveMobility, 2)}
+                    </button>
+                  ))}
+                </div>
 
-                {featureObj.hasResults ? (
-                  featureObj.annotationsByAdducts.map(
-                    (adductGroup, adductIndex) => (
-                      <ResultsDropdownGroup
-                        key={`${featureIndex}-${adductIndex}`}
-                        adduct={adductGroup.adduct}
-                        compounds={adductGroup.annotations}
-                      />
+                <div className="feature-tab-panel">
+                  {results[activeFeatureIndex]?.hasResults ? (
+                    results[activeFeatureIndex].annotationsByAdducts.map(
+                      (adductGroup, adductIndex) => (
+                        <ResultsDropdownGroup
+                          key={`${activeFeatureIndex}-${adductIndex}`}
+                          adduct={adductGroup.adduct}
+                          compounds={adductGroup.annotations}
+                        />
+                      )
                     )
-                  )
-                ) : (
-                  <p className="no-results">
-                    No results found for this feature.
-                  </p>
-                )}
-              </div>
-            ))}
-        </div>
+                  ) : (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="no-results">No features returned.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

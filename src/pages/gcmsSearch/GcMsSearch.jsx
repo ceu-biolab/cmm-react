@@ -40,6 +40,7 @@ const GcMsSearch = () => {
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedMatchKey, setSelectedMatchKey] = useState(null);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -127,6 +128,7 @@ const GcMsSearch = () => {
         position: "middle-left",
       });
       setResults(rawResults);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -377,23 +379,44 @@ const GcMsSearch = () => {
             <p className="compare-hint">Click row to compare spectra.</p>
           )}
 
-          {showResults &&
-            featureResults.map((feature) => (
-              <ResultsDropdownGroup
-                key={feature.label}
-                adduct={feature.label}
-                compounds={feature.compounds}
-                tableProps={{
-                  selectedRowId: selectedMatchKey,
-                  getRowId: (compound) => compound.comparisonKey,
-                  isRowSelectable: (compound) =>
-                    Array.isArray(compound?.compoundPeaks) &&
-                    compound.compoundPeaks.length > 0,
-                  onRowClick: (compound) =>
-                    setSelectedMatchKey(compound?.comparisonKey ?? null),
-                }}
-              />
-            ))}
+          {showResults && featureResults.length > 0 && (
+            <>
+              <div className="feature-tabs" role="tablist">
+                {featureResults.map((feature, featureIndex) => (
+                  <button
+                    key={`gcms-feature-tab-${feature.label}`}
+                    type="button"
+                    className={`feature-tab ${
+                      featureIndex === activeFeatureIndex ? "active" : ""
+                    }`}
+                    onClick={() => setActiveFeatureIndex(featureIndex)}
+                  >
+                    {feature.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="feature-tab-panel">
+                <ResultsDropdownGroup
+                  adduct={featureResults[activeFeatureIndex]?.label}
+                  compounds={featureResults[activeFeatureIndex]?.compounds}
+                  tableProps={{
+                    selectedRowId: selectedMatchKey,
+                    getRowId: (compound) => compound.comparisonKey,
+                    isRowSelectable: (compound) =>
+                      Array.isArray(compound?.compoundPeaks) &&
+                      compound.compoundPeaks.length > 0,
+                    onRowClick: (compound) =>
+                      setSelectedMatchKey(compound?.comparisonKey ?? null),
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {showResults && featureResults.length === 0 && (
+            <p className="no-results">No features returned.</p>
+          )}
         </div>
       </div>
     </div>

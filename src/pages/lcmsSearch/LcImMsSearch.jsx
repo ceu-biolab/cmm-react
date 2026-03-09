@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
@@ -25,6 +25,11 @@ const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   return formulaType;
 };
 
+const formatFeatureNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
+
 const LcImMsSearch = () => {
   const [formState, setFormState] = useState({
     mzValues: "",
@@ -41,10 +46,11 @@ const LcImMsSearch = () => {
     adducts: [],
   });
 
-  const [results, setResults] = useState({});
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [adductOrder, setAdductOrder] = useState([]);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     setFormState({
@@ -95,11 +101,6 @@ const LcImMsSearch = () => {
       mounted = false;
     };
   }, [formState.ionizationMode]);
-
-  const sortedResultEntries = useMemo(
-    () => sortAdductEntries(Object.entries(results), adductOrder),
-    [results, adductOrder]
-  );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -169,37 +170,51 @@ const LcImMsSearch = () => {
       );
 
       const rawResults = response.data;
-      const groupedByAdduct = {};
-      const features = rawResults.imFeatures || rawResults;
+      const features = Array.isArray(rawResults?.imFeatures)
+        ? rawResults.imFeatures
+        : Array.isArray(rawResults)
+        ? rawResults
+        : [];
 
-      features.forEach((feature, featureIndex) => {
-        const featureCcsValue = Number(feature.feature?.ccsValue);
-        feature.annotationsByAdducts?.forEach((adductGroup) => {
-          const { adduct, annotations } = adductGroup;
-          if (!groupedByAdduct[adduct]) {
-            groupedByAdduct[adduct] = [];
-          }
+      const normalizedFeatures = features.map((feature, featureIndex) => {
+        const featureCcsValue = Number(feature?.feature?.ccsValue);
 
-          annotations?.forEach((annotation, annotationIndex) => {
-            const dbCcs = Number(annotation.compound?.dbCcs);
-            const ccsError =
-              Number.isFinite(featureCcsValue) && Number.isFinite(dbCcs)
-                ? dbCcs - featureCcsValue
-                : null;
-            groupedByAdduct[adduct].push(
-              {
-                ...normalizeAnnotation(
-                  annotation,
-                  `${adduct}-${featureIndex}-${annotationIndex}`
-                ),
-                ccsError,
+        const adductEntries = (feature.annotationsByAdducts || []).map(
+          (adductGroup, adductIndex) => {
+            const compounds = (adductGroup.annotations || []).map(
+              (annotation, annotationIndex) => {
+                const dbCcs = Number(annotation.compound?.dbCcs);
+                const ccsError =
+                  Number.isFinite(featureCcsValue) && Number.isFinite(dbCcs)
+                    ? dbCcs - featureCcsValue
+                    : null;
+
+                return {
+                  ...normalizeAnnotation(
+                    annotation,
+                    `${featureIndex}-${adductIndex}-${annotationIndex}`
+                  ),
+                  ccsError,
+                };
               }
             );
-          });
-        });
+
+            return [adductGroup.adduct, compounds];
+          }
+        );
+
+        const sortedGroups = sortAdductEntries(adductEntries, adductOrder)
+          .map(([adduct, compounds]) => ({ adduct, compounds }))
+          .filter((group) => group.compounds.length > 0);
+
+        return {
+          feature: feature.feature,
+          adductGroups: sortedGroups,
+        };
       });
 
-      setResults(groupedByAdduct);
+      setResults(normalizedFeatures);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -387,16 +402,51 @@ const LcImMsSearch = () => {
           </div>
         </div>
 
-        <div className="results-div">
-          {showResults &&
-            sortedResultEntries.map(([adduct, compounds]) => (
-              <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
-              />
-            ))}
-        </div>
+        {showResults && (
+          <div className="results-div">
+            {results.length > 0 ? (
+              <>
+                <div className="feature-tabs" role="tablist">
+                  {results.map((featureObj, featureIndex) => (
+                    <button
+                      key={`lcim-feature-tab-${featureIndex}`}
+                      type="button"
+                      className={`feature-tab ${
+                        featureIndex === activeFeatureIndex ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFeatureIndex(featureIndex)}
+                    >
+                      Feature {featureIndex + 1} | m/z{" "}
+                      {formatFeatureNumber(featureObj.feature?.mzValue, 4)} |
+                      CCS {formatFeatureNumber(featureObj.feature?.ccsValue, 2)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="feature-tab-panel">
+                  {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
+                    results[activeFeatureIndex].adductGroups.map((group) => (
+                      <ResultsDropdownGroup
+                        key={`${activeFeatureIndex}-${group.adduct}`}
+                        adduct={group.adduct}
+                        compounds={group.compounds}
+                        tableProps={{
+                          forceColumns: ["score", "rtScore", "adductScore", "dbCcs"],
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="no-results">No features returned.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

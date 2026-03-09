@@ -53,8 +53,12 @@ const pickScoreValues = (scoreEntry = {}) => {
   );
 
   const adductScore = toMaybeNumber(
-    firstMeaningfulValue(scoreEntry, ["adductScore"]) ??
-      firstMeaningfulValue(nestedScores, ["adduct", "adductScore"])
+    firstMeaningfulValue(scoreEntry, ["adductScore", "adductRelationScore"]) ??
+      firstMeaningfulValue(nestedScores, [
+        "adduct",
+        "adductScore",
+        "adductRelationScore",
+      ])
   );
 
   const ionizationScore = toMaybeNumber(
@@ -304,6 +308,14 @@ export const normalizeCompound = (rawCompound = {}) => {
     ccsError: toMaybeNumber(
       firstMeaningfulValue(rawCompound, ["ccsError", "deltaCcs", "ccsDifference"])
     ),
+    dbCcs: toMaybeNumber(
+      firstMeaningfulValue(rawCompound, [
+        "dbCcs",
+        "dbCCS",
+        "referenceCcs",
+        "databaseCcs",
+      ])
+    ),
   };
 };
 
@@ -329,5 +341,6 @@ export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
     experimentalRI:
       normalizedAnnotation.experimentalRI ?? normalizedCompound.experimentalRI,
     ccsError: normalizedAnnotation.ccsError ?? normalizedCompound.ccsError,
+    dbCcs: normalizedAnnotation.dbCcs ?? normalizedCompound.dbCcs,
   };
 };

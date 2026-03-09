@@ -13,6 +13,11 @@ import {
   toggleDatabaseSelection,
 } from "../../utils/databaseSelection";
 
+const formatFeatureNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
+
 const LcMsSearch = () => {
   const [formState, setFormState] = useState({
     mz: "",
@@ -32,6 +37,7 @@ const LcMsSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     setFormState({
@@ -357,6 +363,7 @@ const LcMsSearch = () => {
       });
 
       setResults(features);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -575,45 +582,70 @@ const LcMsSearch = () => {
             </div>
           </div>
 
-          <div className="results-div">
-            {showResults &&
-              results.map((featureObj, featureIndex) => (
-                <div key={featureIndex} className="feature-group">
-                  <h3>
-                    Feature {featureIndex + 1}: m/z{" "}
-                    {featureObj.mzValue?.toFixed(4) ?? "N/A"} | RT:{" "}
-                    {featureObj.retentionTime?.toFixed(2) ?? "N/A"}
-                  </h3>
+          {showResults && (
+            <div className="results-div">
+              {results.length > 0 ? (
+                <>
+                  <div className="feature-tabs" role="tablist">
+                    {results.map((featureObj, featureIndex) => (
+                      <button
+                        key={`lcms-feature-tab-${featureIndex}`}
+                        type="button"
+                        className={`feature-tab ${
+                          featureIndex === activeFeatureIndex ? "active" : ""
+                        }`}
+                        onClick={() => setActiveFeatureIndex(featureIndex)}
+                      >
+                        Feature {featureIndex + 1} | m/z{" "}
+                        {formatFeatureNumber(featureObj.mzValue, 4)} | RT{" "}
+                        {formatFeatureNumber(featureObj.retentionTime, 2)}
+                      </button>
+                    ))}
+                  </div>
 
-                  {featureObj.hasResults &&
-                  featureObj.annotationsByAdducts.length > 0 ? (
-                    featureObj.annotationsByAdducts.map(
-                      (adductGroup, adductIndex) => {
-                        const normalizedCompounds = adductGroup.annotations.map(
-                          (annotation, index) =>
-                            normalizeAnnotation(
-                              annotation,
-                              `${featureIndex}-${adductIndex}-${index}`
-                            )
-                        );
+                  <div className="feature-tab-panel">
+                    {results[activeFeatureIndex]?.hasResults &&
+                    results[activeFeatureIndex]?.annotationsByAdducts?.length >
+                      0 ? (
+                      results[activeFeatureIndex].annotationsByAdducts.map(
+                        (adductGroup, adductIndex) => {
+                          const normalizedCompounds = adductGroup.annotations.map(
+                            (annotation, index) =>
+                              normalizeAnnotation(
+                                annotation,
+                                `${activeFeatureIndex}-${adductIndex}-${index}`
+                              )
+                          );
 
-                        return (
-                          <ResultsDropdownGroup
-                            key={`${featureIndex}-${adductIndex}`}
-                            adduct={adductGroup.adduct}
-                            compounds={normalizedCompounds}
-                          />
-                        );
-                      }
-                    )
-                  ) : (
-                    <p className="no-results">
-                      No results found for this feature.
-                    </p>
-                  )}
-                </div>
-              ))}
-          </div>
+                          return (
+                            <ResultsDropdownGroup
+                              key={`${activeFeatureIndex}-${adductIndex}`}
+                              adduct={adductGroup.adduct}
+                              compounds={normalizedCompounds}
+                              tableProps={{
+                                forceColumns: [
+                                  "score",
+                                  "rtScore",
+                                  "adductScore",
+                                  "ionizationScore",
+                                ],
+                              }}
+                            />
+                          );
+                        }
+                      )
+                    ) : (
+                      <p className="no-results">
+                        No results found for this feature.
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="no-results">No features returned.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

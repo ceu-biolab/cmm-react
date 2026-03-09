@@ -208,6 +208,9 @@ const getColumns = (normalizedResults, options = {}) => {
     ...(hasAny("riError")
       ? [{ header: "RI Error", key: "riError", type: "number", digits: 2 }]
       : []),
+    ...(hasAny("dbCcs")
+      ? [{ header: "DB CCS", key: "dbCcs", type: "number", digits: 3 }]
+      : []),
     ...(hasAny("ccsError")
       ? [{ header: "CCS Error", key: "ccsError", type: "number", digits: 3 }]
       : []),

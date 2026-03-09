@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
@@ -25,11 +25,15 @@ const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   return formulaType;
 };
 
+const formatFeatureNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
+
 const ImMsSearch = () => {
   const [formState, setFormState] = useState({
     mzValues: "",
     ccsValues: "",
-    rtValues: "",
     mzTolerance: "",
     mzToleranceMode: "PPM",
     ccsTolerance: "",
@@ -46,7 +50,6 @@ const ImMsSearch = () => {
     setFormState({
       mzValues: ["400.3432", "281.24765"].join("\n"),
       ccsValues: ["202.881", "178.546"].join("\n"),
-      rtValues: ["8.5", "6.2"].join("\n"),
       mzTolerance: "10",
       mzToleranceMode: "PPM",
       ccsTolerance: "2",
@@ -64,7 +67,6 @@ const ImMsSearch = () => {
     setFormState({
       mzValues: "",
       ccsValues: "",
-      rtValues: "",
       mzTolerance: "",
       mzToleranceMode: "PPM",
       ccsTolerance: "",
@@ -77,10 +79,11 @@ const ImMsSearch = () => {
     });
   };
 
-  const [results, setResults] = useState({});
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [adductOrder, setAdductOrder] = useState([]);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   useEffect(() => {
     console.log("Updated searchData:", formState);
@@ -97,11 +100,6 @@ const ImMsSearch = () => {
       mounted = false;
     };
   }, [formState.ionizationMode]);
-
-  const sortedResultEntries = useMemo(
-    () => sortAdductEntries(Object.entries(results), adductOrder),
-    [results, adductOrder]
-  );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -128,18 +126,14 @@ const ImMsSearch = () => {
 
     const mzValues = parseNumericValues(formState.mzValues);
     const ccsValues = parseNumericValues(formState.ccsValues);
-    const rtValues = parseNumericValues(formState.rtValues);
 
-    if (!mzValues.length || !ccsValues.length || !rtValues.length) {
-      alert("Masses, CCS values, and RT values are all required.");
+    if (!mzValues.length || !ccsValues.length) {
+      alert("Masses and CCS values are required.");
       return;
     }
 
-    if (
-      mzValues.length !== ccsValues.length ||
-      mzValues.length !== rtValues.length
-    ) {
-      alert("Masses, CCS values, and RT values must have the same length.");
+    if (mzValues.length !== ccsValues.length) {
+      alert("Masses and CCS values must have the same length.");
       return;
     }
 
@@ -148,7 +142,6 @@ const ImMsSearch = () => {
     const formattedData = {
       mzValues,
       ccsValues,
-      rtValues,
       mzTolerance: parseFloat(formState.mzTolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ccsTolerance: parseFloat(formState.ccsTolerance),
@@ -173,37 +166,50 @@ const ImMsSearch = () => {
       const rawResults = response.data;
       console.log(rawResults);
 
-      const groupedByAdduct = {};
+      const features = Array.isArray(rawResults?.imFeatures)
+        ? rawResults.imFeatures
+        : Array.isArray(rawResults)
+        ? rawResults
+        : [];
 
-      const features = rawResults.imFeatures || rawResults;
-
-      features.forEach((featureObj) => {
+      const normalizedFeatures = features.map((featureObj, featureIndex) => {
         const featureCcsValue = Number(featureObj.feature?.ccsValue);
-        featureObj.annotationsByAdducts?.forEach((adductGroup) => {
-          const { adduct, annotations } = adductGroup;
-          if (!groupedByAdduct[adduct]) {
-            groupedByAdduct[adduct] = [];
-          }
+        const adductEntries = (featureObj.annotationsByAdducts || []).map(
+          (adductGroup, adductIndex) => {
+            const compounds = (adductGroup.annotations || []).map(
+              (annotation, annotationIndex) => {
+                const dbCcs = Number(annotation.compound?.dbCcs);
+                const ccsError =
+                  Number.isFinite(featureCcsValue) && Number.isFinite(dbCcs)
+                    ? dbCcs - featureCcsValue
+                    : null;
 
-          annotations?.forEach((annotation, index) => {
-            if (annotation) {
-              const dbCcs = Number(annotation.compound?.dbCcs);
-              const ccsError =
-                Number.isFinite(featureCcsValue) && Number.isFinite(dbCcs)
-                  ? dbCcs - featureCcsValue
-                  : null;
-              groupedByAdduct[adduct].push(
-                {
-                  ...normalizeAnnotation(annotation, `${adduct}-${index}`),
+                return {
+                  ...normalizeAnnotation(
+                    annotation,
+                    `${featureIndex}-${adductIndex}-${annotationIndex}`
+                  ),
                   ccsError,
-                }
-              );
-            }
-          });
-        });
+                };
+              }
+            );
+
+            return [adductGroup.adduct, compounds];
+          }
+        );
+
+        const sortedGroups = sortAdductEntries(adductEntries, adductOrder)
+          .map(([adduct, compounds]) => ({ adduct, compounds }))
+          .filter((group) => group.compounds.length > 0);
+
+        return {
+          feature: featureObj.feature,
+          adductGroups: sortedGroups,
+        };
       });
 
-      setResults(groupedByAdduct);
+      setResults(normalizedFeatures);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -258,20 +264,6 @@ const ImMsSearch = () => {
               onChange={handleChange}
               className="ccs-values-im-ms"
               placeholder="Enter CCS values (comma separated)"
-              required
-            />
-
-            <TextBoxInput
-              label={
-                <>
-                  RT Values <span style={{ color: "red" }}>*</span>
-                </>
-              }
-              name="rtValues"
-              value={formState.rtValues}
-              onChange={handleChange}
-              className="rt-values-im-ms"
-              placeholder="Enter RT values (comma separated)"
               required
             />
 
@@ -391,16 +383,51 @@ const ImMsSearch = () => {
           </div>
         </div>
 
-        <div className="results-div">
-          {showResults &&
-            sortedResultEntries.map(([adduct, compounds]) => (
-              <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
-              />
-            ))}
-        </div>
+        {showResults && (
+          <div className="results-div">
+            {results.length > 0 ? (
+              <>
+                <div className="feature-tabs" role="tablist">
+                  {results.map((featureObj, featureIndex) => (
+                    <button
+                      key={`im-feature-tab-${featureIndex}`}
+                      type="button"
+                      className={`feature-tab ${
+                        featureIndex === activeFeatureIndex ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFeatureIndex(featureIndex)}
+                    >
+                      Feature {featureIndex + 1} | m/z{" "}
+                      {formatFeatureNumber(featureObj.feature?.mzValue, 4)} |
+                      CCS {formatFeatureNumber(featureObj.feature?.ccsValue, 2)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="feature-tab-panel">
+                  {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
+                    results[activeFeatureIndex].adductGroups.map((group) => (
+                      <ResultsDropdownGroup
+                        key={`${activeFeatureIndex}-${group.adduct}`}
+                        adduct={group.adduct}
+                        compounds={group.compounds}
+                        tableProps={{
+                          forceColumns: ["dbCcs", "ccsError"],
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="no-results">No features returned.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
