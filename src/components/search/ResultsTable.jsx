@@ -159,8 +159,16 @@ const externalLinkMap = {
     `https://www.npatlas.org/explore/compounds/${value}`,
 };
 
-const getColumns = (normalizedResults) => {
-  const hasAny = (key) => normalizedResults.some((row) => hasValue(row[key]));
+const getColumns = (normalizedResults, options = {}) => {
+  const { extraColumns = [], forceColumns = [] } = options;
+  const forcedColumns = new Set(forceColumns);
+  const hasAny = (key) =>
+    forcedColumns.has(key) ||
+    normalizedResults.some((row) => hasValue(row[key]));
+
+  const visibleExtraColumns = extraColumns.filter(
+    (column) => column?.always || hasAny(column.key)
+  );
 
   return [
     { header: "ID", key: "compoundId", type: "id" },
@@ -203,20 +211,29 @@ const getColumns = (normalizedResults) => {
     ...(hasAny("ccsError")
       ? [{ header: "CCS Error", key: "ccsError", type: "number", digits: 3 }]
       : []),
+    ...visibleExtraColumns,
     { header: "External IDs", key: "externalIds", type: "identifiers" },
     { header: "Pathways", key: "pathways", type: "pathways" },
   ];
 };
 
-const ResultsTable = ({ results }) => {
+const ResultsTable = ({
+  results,
+  extraColumns = [],
+  forceColumns = [],
+  onRowClick,
+  selectedRowId = null,
+  getRowId,
+  isRowSelectable,
+}) => {
   const normalizedResults = useMemo(
     () => (Array.isArray(results) ? results.map(normalizeCompound) : []),
     [results]
   );
 
   const columns = useMemo(
-    () => getColumns(normalizedResults),
-    [normalizedResults]
+    () => getColumns(normalizedResults, { extraColumns, forceColumns }),
+    [normalizedResults, extraColumns, forceColumns]
   );
 
   const storeCompound = (compound) => {
@@ -249,8 +266,27 @@ const ResultsTable = ({ results }) => {
           <tbody>
             {normalizedResults.map((item, index) => {
               const compoundId = item.compoundId ?? `${index + 1}`;
+              const rowId =
+                typeof getRowId === "function"
+                  ? getRowId(item, index)
+                  : item.compoundId ?? item.id ?? `${index + 1}`;
+              const rowSelectable =
+                typeof onRowClick === "function" &&
+                (typeof isRowSelectable === "function"
+                  ? isRowSelectable(item, index, rowId)
+                  : true);
+              const rowSelected =
+                selectedRowId !== null &&
+                selectedRowId !== undefined &&
+                rowId === selectedRowId;
+
               return (
-                <tr key={`${compoundId}-${index}`}>
+                <tr
+                  key={`${compoundId}-${index}`}
+                  className={rowSelected ? "selected-result-row" : ""}
+                  onClick={rowSelectable ? () => onRowClick(item, rowId) : undefined}
+                  style={{ cursor: rowSelectable ? "pointer" : "default" }}
+                >
                   {columns.map((column) => {
                     const value = item[column.key];
                     const cellClassName = column.className || "";
@@ -289,7 +325,10 @@ const ResultsTable = ({ results }) => {
                             }}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={() => storeCompound(item)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              storeCompound(item);
+                            }}
                           >
                             {compoundId}
                           </Link>

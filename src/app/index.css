@@ -2833,6 +2833,16 @@ body {
   text-align: center;
 }
 
+.compare-hint {
+  color: #35545d;
+  font-size: 0.95rem;
+  background: #e8f2f4;
+  border: 1px dashed #8fb0b6;
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
 .feature-tabs {
   display: flex;
   flex-wrap: wrap;

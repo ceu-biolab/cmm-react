@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import TextInput from "../../components/search/TextInput.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
@@ -6,9 +6,9 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
-import MirroredMsmsSpectrum from "../../components/search/MirroredMsmsSpectrum.jsx";
+import MirroredSpectrum from "../../components/search/MirroredSpectrum.jsx";
+import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import { formatApiError } from "../../utils/apiError";
-import { Link, createSearchParams } from "react-router-dom";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -24,17 +24,6 @@ const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   }
 
   return chemicalAlphabet;
-};
-
-const formatNumber = (value, digits = 4) => {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
-  }
-  const num = Number(value);
-  if (Number.isNaN(num)) {
-    return "—";
-  }
-  return num.toFixed(digits);
 };
 
 const normalizePeaks = (peaks) => {
@@ -59,130 +48,6 @@ const normalizePeaks = (peaks) => {
   }));
 };
 
-const MsmsResultsGroup = ({
-  adduct,
-  compounds,
-  selectedMsmsId,
-  onSelectMatch,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!compounds?.length) {
-    return null;
-  }
-
-  return (
-    <div className="dropdown-container">
-      <div className="dropdown-group">
-        <button
-          type="button"
-          className="dropdown-toggle"
-          onClick={() => setIsOpen((prev) => !prev)}
-        >
-          {adduct} ({compounds.length} compounds) {isOpen ? "▲" : "▼"}
-        </button>
-      </div>
-      {isOpen && (
-        <div className="results-container">
-          <table className="results-table" border="1">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Formula</th>
-                <th>Mass</th>
-                <th>Cosine</th>
-                <th>ΔPPM</th>
-                <th>Collision</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compounds.map((compound, index) => {
-                const compoundId = compound?.compoundId ?? compound?.id;
-                const hasSpectrum = Array.isArray(compound?.spectrum?.peaks);
-                const isSelected =
-                  compound?.msmsId !== undefined &&
-                  compound?.msmsId === selectedMsmsId;
-                const score =
-                  compound?.msmsCosineScore ??
-                  compound?.score ??
-                  compound?.cosineScore;
-                const deltaPpm =
-                  compound?.deltaPpmPrecursorIon ??
-                  compound?.deltaPpm ??
-                  compound?.massErrorPpm ??
-                  compound?.ppmError ??
-                  compound?.massError;
-                const collisionEnergy =
-                  compound?.collisionEnergy ?? compound?.collision;
-                const rowClickable =
-                  hasSpectrum && typeof onSelectMatch === "function";
-
-                return (
-                  <tr
-                    key={`${compoundId ?? "compound"}-${index}`}
-                    className={isSelected ? "selected-result-row" : ""}
-                    onClick={
-                      rowClickable ? () => onSelectMatch(compound) : undefined
-                    }
-                    style={{ cursor: rowClickable ? "pointer" : "default" }}
-                  >
-                    <td>
-                      {compoundId ? (
-                        <Link
-                          to={{
-                            pathname: `/compound/${compoundId}`,
-                            search: createSearchParams({
-                              compound_name:
-                                compound?.compoundName ?? compound?.name,
-                              formula: compound?.formula,
-                              mass: compound?.mass,
-                              chargeType: compound?.chargeType,
-                              chargeNumber: compound?.chargeNumber,
-                              numCarbons: compound?.numCarbons,
-                              doubleBonds: compound?.doubleBonds,
-                              numChains: compound?.numChains,
-                              inchi: compound?.inchi,
-                              inchiKey: compound?.inchiKey,
-                              smiles: compound?.smiles,
-                              casID: compound?.casID ?? compound?.casId,
-                              keggID: compound?.keggID,
-                              chebiID: compound?.chebiID,
-                              hmdbID: compound?.hmdbID,
-                              lmID: compound?.lmID,
-                              pcID: compound?.pcID,
-                              knapsackID: compound?.knapsackID,
-                              npatlasID:
-                                compound?.npatlasID ?? compound?.npatlasId,
-                            }).toString(),
-                          }}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {compoundId}
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td>{compound?.compoundName ?? compound?.name ?? "—"}</td>
-                    <td>{compound?.formula ?? "—"}</td>
-                    <td>{formatNumber(compound?.mass, 4)}</td>
-                    <td>{formatNumber(score, 4)}</td>
-                    <td>{formatNumber(deltaPpm, 2)}</td>
-                    <td>{formatNumber(collisionEnergy, 2)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const MsMsSearch = () => {
   const [formState, setFormState] = useState({
     CIDEnergy: "LOW",
@@ -204,7 +69,7 @@ const MsMsSearch = () => {
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
 
   const loadDemoData = () => {
     const demo = {
@@ -440,7 +305,7 @@ const MsMsSearch = () => {
       const firstAvailableMatch = groupedByAdduct
         .flatMap((group) => group.compounds)
         .find((compound) => Array.isArray(compound?.spectrum?.peaks));
-      setSelectedMatch(firstAvailableMatch || null);
+      setSelectedMatchId(firstAvailableMatch?.msmsId ?? null);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
       alert(formatApiError(error, { action: "submit your search" }));
@@ -461,6 +326,46 @@ const MsMsSearch = () => {
       },
     }));
   };
+
+  const allMatches = useMemo(
+    () =>
+      results?.adductGroups?.flatMap((group) =>
+        (group.compounds || []).filter((compound) =>
+          Array.isArray(compound?.spectrum?.peaks)
+        )
+      ) || [],
+    [results]
+  );
+
+  const selectedMatch = useMemo(
+    () =>
+      allMatches.find((compound) => compound.msmsId === selectedMatchId) ||
+      allMatches[0] ||
+      null,
+    [allMatches, selectedMatchId]
+  );
+
+  const selectedMatchIndex = useMemo(() => {
+    if (!selectedMatch) return 0;
+    const index = allMatches.findIndex(
+      (compound) => compound.msmsId === selectedMatch.msmsId
+    );
+    return index >= 0 ? index : 0;
+  }, [allMatches, selectedMatch]);
+
+  useEffect(() => {
+    if (!allMatches.length) {
+      return;
+    }
+
+    const exists = allMatches.some(
+      (compound) => compound.msmsId === selectedMatchId
+    );
+
+    if (!exists) {
+      setSelectedMatchId(allMatches[0]?.msmsId ?? null);
+    }
+  }, [allMatches, selectedMatchId]);
 
   return (
     <div className="page">
@@ -591,13 +496,39 @@ const MsMsSearch = () => {
 
         {results?.adductGroups?.length > 0 && (
           <div className="results-div">
+            <p className="compare-hint">Click row to compare spectra.</p>
             {results.adductGroups.map((group) => (
-              <MsmsResultsGroup
+              <ResultsDropdownGroup
                 key={group.adduct}
                 adduct={group.adduct}
                 compounds={group.compounds}
-                selectedMsmsId={selectedMatch?.msmsId}
-                onSelectMatch={setSelectedMatch}
+                tableProps={{
+                  extraColumns: [
+                    {
+                      header: "Cosine",
+                      key: "msmsCosineScore",
+                      type: "number",
+                      digits: 4,
+                      always: true,
+                    },
+                    {
+                      header: "Collision",
+                      key: "collisionEnergy",
+                      type: "number",
+                      digits: 2,
+                    },
+                  ],
+                  selectedRowId: selectedMatchId,
+                  getRowId: (compound, index) =>
+                    compound?.msmsId ??
+                    `${compound?.compoundId ?? "compound"}-${index}`,
+                  isRowSelectable: (compound) =>
+                    Array.isArray(compound?.spectrum?.peaks),
+                  onRowClick: (compound) => {
+                    if (!Array.isArray(compound?.spectrum?.peaks)) return;
+                    setSelectedMatchId(compound.msmsId ?? null);
+                  },
+                }}
               />
             ))}
           </div>
@@ -606,7 +537,7 @@ const MsMsSearch = () => {
         {selectedMatch?.spectrum?.peaks?.length > 0 &&
         results?.experimentalSpectrum?.peaks?.length > 0 ? (
           <div className="spectrum-graph-wrapper">
-            <MirroredMsmsSpectrum
+            <MirroredSpectrum
               title={
                 selectedMatch?.compoundName
                   ? `Experimental vs ${selectedMatch.compoundName}`
@@ -616,6 +547,18 @@ const MsMsSearch = () => {
               }
               experimentalPeaks={results.experimentalSpectrum.peaks}
               compoundPeaks={selectedMatch.spectrum.peaks}
+              selectorOptions={allMatches.map((compound, index) => ({
+                value: compound?.msmsId ?? index,
+                label:
+                  compound?.compoundName ||
+                  compound?.compoundId ||
+                  `Match ${index + 1}`,
+              }))}
+              selectedOptionIndex={selectedMatchIndex}
+              onSelectOption={(index) =>
+                setSelectedMatchId(allMatches[index]?.msmsId ?? null)
+              }
+              selectorAriaLabel="Select MS/MS match"
             />
           </div>
         ) : (

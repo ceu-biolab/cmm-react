@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import TextInput from "../../components/search/TextInput";
 import TextBoxInput from "../../components/search/TextBoxInput";
@@ -39,6 +39,7 @@ const GcMsSearch = () => {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [selectedMatchKey, setSelectedMatchKey] = useState(null);
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -135,6 +136,108 @@ const GcMsSearch = () => {
       setLoading(false);
     }
   };
+
+  const featureResults = useMemo(() => {
+    const rawFeatures = results?.gcmsFeatures;
+    if (!Array.isArray(rawFeatures)) {
+      return [];
+    }
+
+    return rawFeatures.map((feature, featureIndex) => {
+      const experimentalPeaks =
+        feature?.gcmsSpectrumExperimental?.spectrum?.map(
+          ({ mzValue, intensity }) => ({
+            mz: mzValue,
+            intensity,
+          })
+        ) || [];
+
+      const compounds = (feature.gcmsAnnotations || [])
+        .slice()
+        .sort(
+          (left, right) =>
+            (right.gcmsCosineScore ?? -Infinity) -
+            (left.gcmsCosineScore ?? -Infinity)
+        )
+        .map((annotation, annotationIndex) => {
+          const compoundPeaks =
+            annotation?.gcmsCompound?.gcmsspectrum?.[0]?.spectrum?.map(
+              ({ mzValue, intensity }) => ({
+                mz: mzValue,
+                intensity,
+              })
+            ) || [];
+
+          return {
+            ...normalizeAnnotation(annotation, `${featureIndex}-${annotationIndex}`),
+            comparisonKey: `f${featureIndex}-a${annotationIndex}`,
+            featureLabel: `Feature ${featureIndex + 1}`,
+            experimentalPeaks,
+            compoundPeaks,
+          };
+        });
+
+      return {
+        label: `Feature ${featureIndex + 1}`,
+        compounds,
+      };
+    });
+  }, [results]);
+
+  const comparisonOptions = useMemo(
+    () =>
+      featureResults.flatMap((feature) =>
+        feature.compounds
+          .filter(
+            (compound) =>
+              Array.isArray(compound?.compoundPeaks) &&
+              compound.compoundPeaks.length > 0
+          )
+          .map((compound, index) => ({
+            key: compound.comparisonKey,
+            label: `${feature.label} - ${
+              compound.compoundName || compound.compoundId || `Match ${index + 1}`
+            }`,
+            experimentalPeaks: compound.experimentalPeaks,
+            compoundPeaks: compound.compoundPeaks,
+            compoundName: compound.compoundName,
+            compoundId: compound.compoundId,
+          }))
+      ),
+    [featureResults]
+  );
+
+  const selectedComparison = useMemo(
+    () =>
+      comparisonOptions.find((option) => option.key === selectedMatchKey) ||
+      comparisonOptions[0] ||
+      null,
+    [comparisonOptions, selectedMatchKey]
+  );
+
+  const selectedComparisonIndex = useMemo(() => {
+    if (!selectedComparison) {
+      return 0;
+    }
+    const index = comparisonOptions.findIndex(
+      (option) => option.key === selectedComparison.key
+    );
+    return index >= 0 ? index : 0;
+  }, [comparisonOptions, selectedComparison]);
+
+  useEffect(() => {
+    if (!comparisonOptions.length) {
+      return;
+    }
+
+    const hasSelection = comparisonOptions.some(
+      (option) => option.key === selectedMatchKey
+    );
+
+    if (!hasSelection) {
+      setSelectedMatchKey(comparisonOptions[0].key);
+    }
+  }, [comparisonOptions, selectedMatchKey]);
 
   return (
     <div className="page">
@@ -247,31 +350,50 @@ const GcMsSearch = () => {
         </div>
 
         <div className="results-div">
-          {showResults && results && results.gcmsFeatures && (
-            <MirroredSpectrum data={results} />
+          {showResults && selectedComparison && (
+            <MirroredSpectrum
+              title={
+                selectedComparison.compoundName
+                  ? `Experimental vs ${selectedComparison.compoundName}`
+                  : selectedComparison.compoundId
+                  ? `Experimental vs ${selectedComparison.compoundId}`
+                  : "Experimental vs Match"
+              }
+              experimentalPeaks={selectedComparison.experimentalPeaks}
+              compoundPeaks={selectedComparison.compoundPeaks}
+              selectorOptions={comparisonOptions.map((option) => ({
+                value: option.key,
+                label: option.label,
+              }))}
+              selectedOptionIndex={selectedComparisonIndex}
+              onSelectOption={(index) =>
+                setSelectedMatchKey(comparisonOptions[index]?.key ?? null)
+              }
+              selectorAriaLabel="Select GC-MS match"
+            />
+          )}
+
+          {showResults && featureResults.length > 0 && (
+            <p className="compare-hint">Click row to compare spectra.</p>
           )}
 
           {showResults &&
-            results?.gcmsFeatures?.map((feature, idx) => {
-              const compounds = (feature.gcmsAnnotations || [])
-                .slice()
-                .sort(
-                  (left, right) =>
-                    (right.gcmsCosineScore ?? -Infinity) -
-                    (left.gcmsCosineScore ?? -Infinity)
-                )
-                .map((annotation, annotationIndex) =>
-                  normalizeAnnotation(annotation, `${idx}-${annotationIndex}`)
-                );
-
-              return (
-                <ResultsDropdownGroup
-                  key={idx}
-                  adduct={`Feature ${idx + 1}`}
-                  compounds={compounds}
-                />
-              );
-            })}
+            featureResults.map((feature) => (
+              <ResultsDropdownGroup
+                key={feature.label}
+                adduct={feature.label}
+                compounds={feature.compounds}
+                tableProps={{
+                  selectedRowId: selectedMatchKey,
+                  getRowId: (compound) => compound.comparisonKey,
+                  isRowSelectable: (compound) =>
+                    Array.isArray(compound?.compoundPeaks) &&
+                    compound.compoundPeaks.length > 0,
+                  onRowClick: (compound) =>
+                    setSelectedMatchKey(compound?.comparisonKey ?? null),
+                }}
+              />
+            ))}
         </div>
       </div>
     </div>

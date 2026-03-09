@@ -1,12 +1,19 @@
 import React, { useState } from "react";
 import ResultsTable from "./ResultsTable";
 
-const ResultsDropdownGroup = ({ adduct, compounds }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ResultsDropdownGroup = ({
+  adduct,
+  compounds,
+  defaultOpen = false,
+  tableProps = {},
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   if (!compounds || compounds.length === 0) {
     return null;
   }
+
+  const title = adduct || "Results";
 
   return (
     <div className="dropdown-container">
@@ -15,10 +22,10 @@ const ResultsDropdownGroup = ({ adduct, compounds }) => {
           className="dropdown-toggle"
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          {adduct} ({compounds.length} compounds) {isOpen ? "▲" : "▼"}
+          {title} ({compounds.length} compounds) {isOpen ? "▲" : "▼"}
         </button>
       </div>
-      {isOpen && <ResultsTable results={compounds} />}
+      {isOpen && <ResultsTable results={compounds} {...tableProps} />}
     </div>
   );
 };
