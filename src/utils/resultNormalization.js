@@ -1,4 +1,5 @@
 const isNil = (value) => value === null || value === undefined;
+const KEGG_PATHWAY_ID_PATTERN = /(map\d{5})/i;
 
 const toMaybeNumber = (value) => {
   if (isNil(value) || value === "") {
@@ -106,46 +107,130 @@ const mergeScores = (raw = {}) => {
 };
 
 export const extractPathwayNames = (pathwaysValue) => {
+  return extractPathwayEntries(pathwaysValue).map((entry) => entry.name);
+};
+
+const extractKeggPathwayId = (value) => {
+  if (isNil(value)) {
+    return null;
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(KEGG_PATHWAY_ID_PATTERN);
+  if (!match) {
+    return null;
+  }
+
+  return match[1].toLowerCase();
+};
+
+const normalizePathwayEntry = (entry) => {
+  if (isNil(entry)) {
+    return null;
+  }
+
+  if (typeof entry === "string") {
+    const raw = entry.trim();
+    if (!raw) {
+      return null;
+    }
+    const keggPathwayId = extractKeggPathwayId(raw);
+    const cleanName = keggPathwayId
+      ? raw.replace(KEGG_PATHWAY_ID_PATTERN, "").replace(/^[-:]\s*/, "").trim()
+      : raw;
+    const name = cleanName || raw;
+
+    return {
+      name,
+      pathwayMap: keggPathwayId,
+      keggPathwayId,
+      keggPathwayUrl: keggPathwayId
+        ? `https://www.kegg.jp/kegg-bin/show_pathway?${keggPathwayId}`
+        : null,
+    };
+  }
+
+  if (typeof entry === "object") {
+    const rawName = firstMeaningfulValue(entry, [
+      "pathwayName",
+      "name",
+      "pathway",
+      "label",
+      "title",
+    ]);
+    const rawMap = firstMeaningfulValue(entry, [
+      "pathwayMap",
+      "pathwayCode",
+      "map",
+      "code",
+      "id",
+    ]);
+
+    const name = !isNil(rawName) ? String(rawName).trim() : "";
+    const mapCandidate = !isNil(rawMap) ? String(rawMap).trim() : "";
+    const keggPathwayId =
+      extractKeggPathwayId(mapCandidate) || extractKeggPathwayId(name);
+
+    if (!name && !mapCandidate) {
+      return null;
+    }
+
+    return {
+      name: name || mapCandidate,
+      pathwayMap: mapCandidate || keggPathwayId,
+      keggPathwayId,
+      keggPathwayUrl: keggPathwayId
+        ? `https://www.kegg.jp/kegg-bin/show_pathway?${keggPathwayId}`
+        : null,
+    };
+  }
+
+  return null;
+};
+
+export const extractPathwayEntries = (pathwaysValue) => {
   if (isNil(pathwaysValue) || pathwaysValue === "") {
     return [];
   }
 
-  if (Array.isArray(pathwaysValue)) {
-    return pathwaysValue
-      .map((entry) => {
-        if (typeof entry === "string") {
-          return entry.trim();
-        }
-        if (entry && typeof entry === "object") {
-          return (
-            entry.pathwayName ||
-            entry.name ||
-            entry.pathway ||
-            entry.label ||
-            ""
-          )
-            .toString()
-            .trim();
-        }
-        return "";
-      })
-      .filter(Boolean);
-  }
+  const sourceEntries = Array.isArray(pathwaysValue)
+    ? pathwaysValue
+    : typeof pathwaysValue === "string"
+    ? pathwaysValue.split(/[\n;]+/).map((entry) => entry.trim())
+    : [pathwaysValue];
 
-  if (typeof pathwaysValue === "string") {
-    return pathwaysValue
-      .split(/[\n;]+/)
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-  }
+  const seen = new Set();
+  const normalized = [];
 
-  return [];
+  sourceEntries.forEach((entry) => {
+    const normalizedEntry = normalizePathwayEntry(entry);
+    if (!normalizedEntry) {
+      return;
+    }
+
+    const dedupeKey = `${normalizedEntry.name}|${
+      normalizedEntry.keggPathwayId || ""
+    }`;
+    if (seen.has(dedupeKey)) {
+      return;
+    }
+
+    seen.add(dedupeKey);
+    normalized.push(normalizedEntry);
+  });
+
+  return normalized;
 };
 
 export const normalizeCompound = (rawCompound = {}) => {
-  const pathways = extractPathwayNames(
+  const pathwayEntries = extractPathwayEntries(
     firstMeaningfulValue(rawCompound, ["pathways", "pathway", "pathwayNames"])
   );
+  const pathways = pathwayEntries.map((entry) => entry.name);
 
   const {
     score,
@@ -203,6 +288,7 @@ export const normalizeCompound = (rawCompound = {}) => {
       firstMeaningfulValue(rawCompound, ["npatlasID", "npatlasId"])
     ),
     pathways,
+    pathwayEntries,
     pathway: pathways.join("; "),
     score,
     rtScore,

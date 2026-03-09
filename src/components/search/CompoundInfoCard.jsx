@@ -5,7 +5,7 @@ import databaseIcon from "../../assets/svgs/database.svg";
 import CompoundViewer3D from "./CompoundViewer3D";
 import CompoundViewer2D from "./CompoundViewer2D";
 import { useLocation } from "react-router-dom";
-import { extractPathwayNames } from "../../utils/resultNormalization";
+import { extractPathwayEntries } from "../../utils/resultNormalization";
 
 const CompoundInfoCard = ({ compound }) => {
   const { search } = useLocation();
@@ -42,7 +42,13 @@ const CompoundInfoCard = ({ compound }) => {
 
   const mol2 = compound?.mol2 ?? queryParams.get("mol2");
   const sdf = compound?.sdf ?? queryParams.get("sdf");
-  const pathways = extractPathwayNames(compound?.pathways ?? compound?.pathway);
+  const queryPathways = queryParams.get("pathways");
+  const pathways = extractPathwayEntries(
+    compound?.pathwayEntries ??
+      compound?.pathways ??
+      compound?.pathway ??
+      queryPathways
+  );
 
   const classifications = Array.isArray(compound?.lipidMapsClassifications)
     ? compound.lipidMapsClassifications
@@ -211,7 +217,27 @@ const CompoundInfoCard = ({ compound }) => {
                 <li>Organisms: N/A</li>
               )}
               {pathways.length > 0 ? (
-                <li>Pathways: {pathways.join(", ")}</li>
+                <li>
+                  Pathways:{" "}
+                  {pathways.map((pathway, index) => (
+                    <React.Fragment
+                      key={`${pathway.name}-${pathway.keggPathwayId || index}`}
+                    >
+                      {pathway.keggPathwayUrl ? (
+                        <a
+                          href={pathway.keggPathwayUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {pathway.name}
+                        </a>
+                      ) : (
+                        pathway.name
+                      )}
+                      {index < pathways.length - 1 ? ", " : ""}
+                    </React.Fragment>
+                  ))}
+                </li>
               ) : (
                 <li>Pathways: N/A</li>
               )}

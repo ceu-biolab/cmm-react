@@ -1,6 +1,9 @@
 import React, { useMemo } from "react";
 import { Link, createSearchParams } from "react-router-dom";
-import { normalizeCompound } from "../../utils/resultNormalization";
+import {
+  extractPathwayEntries,
+  normalizeCompound,
+} from "../../utils/resultNormalization";
 
 const EMPTY_VALUE = "—";
 
@@ -25,26 +28,118 @@ const hasValue = (value) =>
   value !== "undefined";
 
 const PathwaysCell = ({ pathways = [] }) => {
-  if (!Array.isArray(pathways) || pathways.length === 0) {
+  const normalizedPathways = extractPathwayEntries(pathways);
+
+  if (!normalizedPathways.length) {
     return EMPTY_VALUE;
   }
 
-  const visiblePathways = pathways.slice(0, 2);
-  const hiddenCount = pathways.length - visiblePathways.length;
-  const hiddenTitle = hiddenCount > 0 ? pathways.slice(2).join(", ") : "";
-
   return (
     <div className="pathway-cell">
-      {visiblePathways.map((pathway) => (
-        <span key={pathway} className="pathway-pill" title={pathway}>
-          {pathway}
+      {normalizedPathways.map((pathwayEntry, index) => (
+        <span
+          key={`${pathwayEntry.name}-${pathwayEntry.keggPathwayId || index}`}
+          className="pathway-pill"
+          title={pathwayEntry.name}
+        >
+          {pathwayEntry.keggPathwayUrl ? (
+            <a
+              href={pathwayEntry.keggPathwayUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {pathwayEntry.name}
+            </a>
+          ) : (
+            pathwayEntry.name
+          )}
         </span>
       ))}
-      {hiddenCount > 0 && (
-        <span className="pathway-pill pathway-pill-more" title={hiddenTitle}>
-          +{hiddenCount} more
+    </div>
+  );
+};
+
+const identifierConfig = [
+  {
+    label: "CAS",
+    key: "casID",
+    linkBuilder: (value) =>
+      `https://commonchemistry.cas.org/detail?cas_rn=${value}`,
+  },
+  {
+    label: "KEGG",
+    key: "keggID",
+    linkBuilder: (value) => `https://www.kegg.jp/dbget-bin/www_bget?cpd:${value}`,
+  },
+  {
+    label: "CHEBI",
+    key: "chebiID",
+    linkBuilder: (value) =>
+      `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${value}`,
+  },
+  {
+    label: "HMDB",
+    key: "hmdbID",
+    linkBuilder: (value) => `https://hmdb.ca/metabolites/${value}`,
+  },
+  {
+    label: "LipidMaps",
+    key: "lmID",
+    linkBuilder: (value) =>
+      `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${value}`,
+  },
+  {
+    label: "PubChem",
+    key: "pcID",
+    linkBuilder: (value) => `https://pubchem.ncbi.nlm.nih.gov/compound/${value}`,
+  },
+  {
+    label: "KNApSAcK",
+    key: "knapsackID",
+    linkBuilder: (value) =>
+      `https://www.knapsackfamily.com/knapsack_core/information.php?word=${value}`,
+  },
+  {
+    label: "NP Atlas",
+    key: "npatlasID",
+    linkBuilder: (value) => `https://www.npatlas.org/explore/compounds/${value}`,
+  },
+];
+
+const IdentifiersCell = ({ row }) => {
+  const values = identifierConfig
+    .map(({ label, key, linkBuilder }) => {
+      const value = row?.[key];
+      if (!hasValue(value)) {
+        return null;
+      }
+
+      return {
+        label,
+        value,
+        href: linkBuilder ? linkBuilder(value) : null,
+      };
+    })
+    .filter(Boolean);
+
+  if (!values.length) {
+    return EMPTY_VALUE;
+  }
+
+  return (
+    <div className="identifiers-cell">
+      {values.map((item) => (
+        <span key={`${item.label}-${item.value}`} className="identifier-pill">
+          <strong>{item.label}</strong>:{" "}
+          {item.href ? (
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              {item.value}
+            </a>
+          ) : (
+            item.value
+          )}
         </span>
-      )}
+      ))}
     </div>
   );
 };
@@ -108,14 +203,7 @@ const getColumns = (normalizedResults) => {
     ...(hasAny("ccsError")
       ? [{ header: "CCS Error", key: "ccsError", type: "number", digits: 3 }]
       : []),
-    { header: "CAS", key: "casID", external: true },
-    { header: "KEGG", key: "keggID", external: true },
-    { header: "CHEBI", key: "chebiID", external: true },
-    { header: "HMDB", key: "hmdbID", external: true },
-    { header: "LipidMaps", key: "lmID", external: true },
-    { header: "PubChem", key: "pcID", external: true },
-    { header: "KNApSAcK", key: "knapsackID", external: true },
-    { header: "NP Atlas", key: "npatlasID", external: true },
+    { header: "External IDs", key: "externalIds", type: "identifiers" },
     { header: "Pathways", key: "pathways", type: "pathways" },
   ];
 };
@@ -196,6 +284,7 @@ const ResultsTable = ({ results }) => {
                                 pcID: item.pcID,
                                 knapsackID: item.knapsackID,
                                 npatlasID: item.npatlasID,
+                                pathway: item.pathway,
                               }).toString(),
                             }}
                             target="_blank"
@@ -211,7 +300,17 @@ const ResultsTable = ({ results }) => {
                     if (column.type === "pathways") {
                       return (
                         <td key={column.header} className={cellClassName}>
-                          <PathwaysCell pathways={item.pathways} />
+                          <PathwaysCell
+                            pathways={item.pathwayEntries || item.pathways}
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (column.type === "identifiers") {
+                      return (
+                        <td key={column.header} className={cellClassName}>
+                          <IdentifiersCell row={item} />
                         </td>
                       );
                     }

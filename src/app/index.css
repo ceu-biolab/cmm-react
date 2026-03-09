@@ -838,7 +838,7 @@ body {
 
 .results-container table {
   width: 100%;
-  min-width: 1150px;
+  min-width: 980px;
   border-radius: 10px;
   border-collapse: separate;
   border-spacing: 0 1px;
@@ -897,7 +897,7 @@ body {
 .pathway-pill {
   display: inline-flex;
   align-items: center;
-  max-width: 240px;
+  max-width: 100%;
   padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid #9cb5bc;
@@ -905,14 +905,37 @@ body {
   color: #3b5a62;
   font-size: 0.82rem;
   line-height: 1.35;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .pathway-pill-more {
   border-style: dashed;
   background: #f3f7f8;
+}
+
+.pathway-pill a {
+  color: #2f90a3;
+}
+
+.identifiers-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.identifier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #9cb5bc;
+  background: #f1f7f9;
+  color: #35545c;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 table {
