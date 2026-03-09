@@ -37,14 +37,14 @@ const ImMsSearch = () => {
     mzValues: "",
     ccsValues: "",
     mzTolerance: "",
-    mzToleranceMode: "PPM",
+    mzToleranceMode: "",
     ccsTolerance: "",
-    ccsToleranceMode: "PERCENTAGE",
+    ccsToleranceMode: "",
     deuterium: false,
-    ionizationMode: "POSITIVE",
-    bufferGas: "N2",
+    ionizationMode: "",
+    bufferGas: "",
     adducts: [],
-    formulaType: "CHNOPS",
+    formulaType: "",
   });
 
   const loadDemoData = () => {
@@ -70,13 +70,13 @@ const ImMsSearch = () => {
       mzValues: "",
       ccsValues: "",
       mzTolerance: "",
-      mzToleranceMode: "PPM",
+      mzToleranceMode: "",
       ccsTolerance: "",
-      ccsToleranceMode: "PERCENTAGE",
-      formulaType: "CHNOPS",
+      ccsToleranceMode: "",
+      formulaType: "",
       deuterium: false,
-      bufferGas: "N2",
-      ionizationMode: "POSITIVE",
+      bufferGas: "",
+      ionizationMode: "",
       adducts: [],
     });
   };

@@ -17,12 +17,12 @@ import {
 const SimpleSearch = () => {
   const [formState, setFormState] = useState({
     mz: "",
-    mzToleranceMode: "PPM",
+    mzToleranceMode: "",
     tolerance: "",
-    ionizationMode: "POSITIVE",
+    ionizationMode: "",
     adductsString: [],
-    databases: DEFAULT_DATABASES,
-    metaboliteType: "ALL",
+    databases: [],
+    metaboliteType: "",
   });
 
   const [results, setResults] = useState([]);
@@ -55,12 +55,12 @@ const SimpleSearch = () => {
     console.log("Clearing input...");
     setFormState({
       mz: "",
-      tolerance: "10",
-      mzToleranceMode: "PPM",
-      metaboliteType: "ALL",
-      ionizationMode: "POSITIVE",
+      tolerance: "",
+      mzToleranceMode: "",
+      metaboliteType: "",
+      ionizationMode: "",
       adductsString: [],
-      databases: DEFAULT_DATABASES,
+      databases: [],
     });
   };
 

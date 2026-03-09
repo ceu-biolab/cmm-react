@@ -52,21 +52,21 @@ const normalizePeaks = (peaks) => {
 
 const MsMsSearch = () => {
   const [formState, setFormState] = useState({
-    CIDEnergy: "LOW",
+    CIDEnergy: "",
     precursorIonMz: "",
     tolerancePrecursorIon: "",
-    toleranceModePrecursorIon: "PPM",
+    toleranceModePrecursorIon: "",
     toleranceFragments: "",
-    toleranceModeFragments: "PPM",
-    ionizationMode: "POSITIVE",
-    adducts: ["[M+H]+"],
-    chemicalAlphabet: "CHNOPS",
+    toleranceModeFragments: "",
+    ionizationMode: "",
+    adducts: [],
+    chemicalAlphabet: "",
     deuterium: false,
     fragmentsMZsIntensities: {
       precursorMz: "",
       peaks: "",
     },
-    scoreType: "COSINE",
+    scoreType: "",
   });
 
   const [results, setResults] = useState([]);
@@ -156,21 +156,21 @@ const MsMsSearch = () => {
 
   const clearInput = () => {
     setFormState({
-      CIDEnergy: "LOW",
+      CIDEnergy: "",
       precursorIonMz: "",
       tolerancePrecursorIon: "",
-      toleranceModePrecursorIon: "PPM",
+      toleranceModePrecursorIon: "",
       toleranceFragments: "",
-      toleranceModeFragments: "PPM",
-      ionizationMode: "POSITIVE",
-      adducts: ["[M+H]+"],
-      chemicalAlphabet: "CHNOPS",
+      toleranceModeFragments: "",
+      ionizationMode: "",
+      adducts: [],
+      chemicalAlphabet: "",
       deuterium: false,
       fragmentsMZsIntensities: {
         precursorMz: "",
         peaks: "",
       },
-      scoreType: "COSINE",
+      scoreType: "",
     });
   };
 

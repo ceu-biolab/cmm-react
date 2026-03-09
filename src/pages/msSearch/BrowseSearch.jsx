@@ -16,8 +16,8 @@ const BrowseSearch = () => {
   const [formState, setFormState] = useState({
     name: "",
     formula: "",
-    metaboliteType: "ALL",
-    databases: DEFAULT_DATABASES,
+    metaboliteType: "",
+    databases: [],
   });
 
   const [results, setResults] = useState([]);
@@ -40,8 +40,8 @@ const BrowseSearch = () => {
     setFormState({
       name: "",
       formula: "",
-      metaboliteType: "ALL",
-      databases: DEFAULT_DATABASES,
+      metaboliteType: "",
+      databases: [],
     });
   };
 

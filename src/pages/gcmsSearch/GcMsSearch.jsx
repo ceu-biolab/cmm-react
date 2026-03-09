@@ -30,11 +30,11 @@ const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
 const GcMsSearch = () => {
   const [formState, setFormState] = useState({
     spectrum: "",
-    retentionIndex: "10",
-    retentionIndexTolerance: "10",
-    derivatizationMethod: "METHYL_CHLOROFORMATE",
-    columnType: "STANDARD_NON_POLAR",
-    chemicalAlphabet: "CHNOPS",
+    retentionIndex: "",
+    retentionIndexTolerance: "",
+    derivatizationMethod: "",
+    columnType: "",
+    chemicalAlphabet: "",
     deuterium: false,
   });
 
@@ -61,11 +61,11 @@ const GcMsSearch = () => {
     console.log("Clearing input...");
     setFormState({
       spectrum: "",
-      retentionIndex: "1500",
-      retentionIndexTolerance: "10",
-      derivatizationMethod: "METHYL_CHLOROFORMATE",
-      columnType: "STANDARD_NON_POLAR",
-      chemicalAlphabet: "CHNOPS",
+      retentionIndex: "",
+      retentionIndexTolerance: "",
+      derivatizationMethod: "",
+      columnType: "",
+      chemicalAlphabet: "",
       deuterium: false,
     });
   };

@@ -12,8 +12,8 @@ const SpectralQuality = () => {
     noise: "",
     scans: "",
     samples: "",
-    coelution: "No co-elution",
-    crossTalk: "No cross-talk",
+    coelution: "",
+    crossTalk: "",
   });
 
   const [showResults, setShowResults] = useState(false);
@@ -39,8 +39,8 @@ const SpectralQuality = () => {
       noise: "",
       scans: "",
       samples: "",
-      coelution: "No co-elution",
-      crossTalk: "No cross-talk",
+      coelution: "",
+      crossTalk: "",
     });
   };
 

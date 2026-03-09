@@ -24,11 +24,11 @@ const BatchSearch = () => {
   const [formState, setFormState] = useState({
     mzValues: "",
     tolerance: "",
-    mzToleranceMode: "PPM",
-    ionizationMode: "POSITIVE",
-    metaboliteType: "ALL",
+    mzToleranceMode: "",
+    ionizationMode: "",
+    metaboliteType: "",
     adductsString: [],
-    databases: DEFAULT_DATABASES,
+    databases: [],
   });
 
   const [results, setResults] = useState([]);
@@ -76,12 +76,12 @@ const BatchSearch = () => {
     console.log("Clearing input...");
     setFormState({
       mzValues: "",
-      tolerance: "10",
-      mzToleranceMode: "PPM",
-      metaboliteType: "ALL",
-      ionizationMode: "POSITIVE",
+      tolerance: "",
+      mzToleranceMode: "",
+      metaboliteType: "",
+      ionizationMode: "",
       adductsString: [],
-      databases: DEFAULT_DATABASES,
+      databases: [],
     });
   };
 

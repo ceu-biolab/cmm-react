@@ -26,14 +26,14 @@ const LcMsSearch = () => {
     retentionTimes: "",
     compositeSpectrum: "",
     tolerance: "",
-    mzToleranceMode: "PPM",
-    chemicalAlphabet: "CHNOPS",
+    mzToleranceMode: "",
+    chemicalAlphabet: "",
     deuterium: false,
-    modifiersType: "None",
-    ionizationMode: "POSITIVE",
-    metaboliteType: "All",
+    modifiersType: "",
+    ionizationMode: "",
+    metaboliteType: "",
     adductsString: [],
-    databases: DEFAULT_DATABASES,
+    databases: [],
   });
 
   const [results, setResults] = useState([]);
@@ -232,14 +232,14 @@ const LcMsSearch = () => {
       retentionTimes: "",
       compositeSpectrum: "",
       tolerance: "",
-      mzToleranceMode: "PPM",
-      chemicalAlphabet: "CHNOPS",
+      mzToleranceMode: "",
+      chemicalAlphabet: "",
       deuterium: false,
-      modifiersType: "none",
-      ionizationMode: "POSITIVE",
-      metaboliteType: "All",
+      modifiersType: "",
+      ionizationMode: "",
+      metaboliteType: "",
       adductsString: [],
-      databases: DEFAULT_DATABASES,
+      databases: [],
     });
   };
 

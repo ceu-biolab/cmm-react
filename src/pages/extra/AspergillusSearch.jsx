@@ -21,14 +21,14 @@ const AspergillusSearch = () => {
     compSpectra: "",
     allCompSpectra: "",
     tolerance: "",
-    toleranceMode: "ppm",
-    chemAlphabet: "CHNOPS",
+    toleranceMode: "",
+    chemAlphabet: "",
     deuteriumCheck: "",
-    modifiers: "None",
-    ionizationMode: "Positive Mode",
-    metaboliteType: "All",
+    modifiers: "",
+    ionizationMode: "",
+    metaboliteType: "",
     adductsString: [],
-    databases: DEFAULT_DATABASES,
+    databases: [],
   });
 
   const [results, setResults] = useState([]);
@@ -90,14 +90,14 @@ const AspergillusSearch = () => {
       compSpectra: "",
       allCompSpectra: "",
       tolerance: "",
-      toleranceMode: "ppm",
-      chemAlphabet: "CHNOPS",
+      toleranceMode: "",
+      chemAlphabet: "",
       deuteriumCheck: "",
-      modifiers: "None",
-      ionizationMode: "Positive Mode",
-      metaboliteType: "All",
+      modifiers: "",
+      ionizationMode: "",
+      metaboliteType: "",
       adductsString: [],
-      databases: DEFAULT_DATABASES,
+      databases: [],
     });
   };
 
@@ -269,8 +269,11 @@ const AspergillusSearch = () => {
                 </>
               }
               toleranceValue={formState.tolerance}
-              toleranceMode={formState.toleranceMode}
+              mzToleranceMode={formState.toleranceMode}
               onChange={handleChange}
+              unitOptions={["ppm", "da"]}
+              inputName="tolerance"
+              modeName="toleranceMode"
               className="tolerance-adv"
             />
 
