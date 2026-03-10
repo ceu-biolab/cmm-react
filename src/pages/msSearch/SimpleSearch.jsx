@@ -9,6 +9,11 @@ import ToleranceRadio from "../../components/search/ToleranceRadio";
 import { ToastContainer, toast } from "react-toastify";
 import { formatApiError } from "../../utils/apiError";
 import ResultsSummary from "../../components/search/ResultsSummary";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  buildGroupedResultsView,
+  resultMapToGroups,
+} from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
@@ -25,7 +30,7 @@ const SimpleSearch = () => {
     metaboliteType: "",
   });
 
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [matchedAdductCount, setMatchedAdductCount] = useState(0);
   const [totalAdductCount, setTotalAdductCount] = useState(0);
@@ -133,26 +138,27 @@ const SimpleSearch = () => {
 
       const rawResults = response.data;
 
-      const groupedByAdduct = {};
+      const adductGroups = [];
 
       if (Array.isArray(rawResults.msfeatures)) {
-        rawResults.msfeatures.forEach((feature) => {
+        rawResults.msfeatures.forEach((feature, featureIndex) => {
           const annotationsByAdducts = feature.annotationsByAdducts;
 
           if (Array.isArray(annotationsByAdducts)) {
-            annotationsByAdducts.forEach(({ adduct, annotations }) => {
-              if (!groupedByAdduct[adduct]) {
-                groupedByAdduct[adduct] = [];
-              }
+            annotationsByAdducts.forEach(({ adduct, annotations }, adductIndex) => {
+              const compounds = Array.isArray(annotations)
+                ? annotations.map((annotation, annotationIndex) =>
+                    normalizeAnnotation(
+                      annotation,
+                      `${featureIndex}-${adductIndex}-${annotationIndex}`
+                    )
+                  )
+                : [];
 
-              if (Array.isArray(annotations)) {
-                annotations.forEach((annotation) => {
-                  const compound = annotation.compound;
-                  if (compound) {
-                    groupedByAdduct[adduct].push(compound);
-                  }
-                });
-              }
+              adductGroups.push({
+                adduct,
+                compounds,
+              });
             });
           }
         });
@@ -160,15 +166,22 @@ const SimpleSearch = () => {
         console.error("Expected response.data.msfeatures to be an array");
       }
 
-      const adductsWithResults = Object.keys(groupedByAdduct).filter(
-        (adduct) => groupedByAdduct[adduct].length > 0
+      const groupedByAdductView = buildGroupedResultsView(
+        adductGroups,
+        formState.adductsString,
+        {
+          labelKey: "adduct",
+          compoundsKey: "compounds",
+          fallbackLabel: "Adduct",
+        }
       );
-      const totalAdducts = formState.adductsString.length;
-      const matchedAdducts = adductsWithResults.length;
-      setMatchedAdductCount(matchedAdducts);
-      setTotalAdductCount(totalAdducts);
 
-      const allCompounds = Object.values(groupedByAdduct).flat();
+      setMatchedAdductCount(groupedByAdductView.matchedGroupCount);
+      setTotalAdductCount(formState.adductsString.length);
+
+      const allCompounds = groupedByAdductView.displayGroups.flatMap(
+        (group) => group.compounds
+      );
       const duplicateCount = countDuplicates(allCompounds);
       console.log("Duplicate Count: ", duplicateCount);
 
@@ -181,7 +194,7 @@ const SimpleSearch = () => {
         draggable: true,
         position: "middle-left",
       });
-      setResults(groupedByAdduct);
+      setResults(groupedByAdductView.summaryResults);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -191,6 +204,11 @@ const SimpleSearch = () => {
       setLoading(false);
     }
   };
+
+  const resultGroups = resultMapToGroups(results, {
+    labelKey: "adduct",
+    compoundsKey: "compounds",
+  });
 
   return (
     <div className="page">
@@ -286,11 +304,11 @@ const SimpleSearch = () => {
               totalAdductCount={totalAdductCount}
             />
 
-            {Object.entries(results).map(([adduct, compounds]) => (
+            {resultGroups.map((group) => (
               <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
+                key={group.adduct}
+                adduct={group.adduct}
+                compounds={group.compounds}
               />
             ))}
           </div>

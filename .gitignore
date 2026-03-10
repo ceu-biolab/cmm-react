@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 /__*
+/*.zip
 
 # Local dev TLS certs/keys
 *.pem

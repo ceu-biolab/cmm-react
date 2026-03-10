@@ -9,7 +9,9 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import { getCcsAdductOrder, sortAdductEntries } from "../../utils/ccsAdducts";
-import { groupsToResultMap } from "../../utils/resultsSummary";
+import {
+  buildGroupedResultsView,
+} from "../../utils/resultsSummary";
 
 const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   if (!deuteriumEnabled || formulaType === "ALL") {
@@ -200,9 +202,9 @@ const ImMsSearch = () => {
           }
         );
 
-        const sortedGroups = sortAdductEntries(adductEntries, adductOrder)
-          .map(([adduct, compounds]) => ({ adduct, compounds }))
-          .filter((group) => group.compounds.length > 0);
+        const sortedGroups = sortAdductEntries(adductEntries, adductOrder).map(
+          ([adduct, compounds]) => ({ adduct, compounds })
+        );
 
         return {
           feature: featureObj.feature,
@@ -221,16 +223,15 @@ const ImMsSearch = () => {
     }
   };
 
-  const activeFeatureResults = groupsToResultMap(
+  const activeFeatureView = buildGroupedResultsView(
     results[activeFeatureIndex]?.adductGroups,
+    formState.adducts,
     {
       labelKey: "adduct",
       compoundsKey: "compounds",
       fallbackLabel: "Adduct",
     }
   );
-
-  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
 
   return (
     <div className="page">
@@ -419,28 +420,28 @@ const ImMsSearch = () => {
 
                 <div className="feature-tab-panel">
                   <ResultsSummary
-                    results={activeFeatureResults}
-                    matchedAdductCount={activeFeatureMatchedAdducts}
+                    results={activeFeatureView.summaryResults}
+                    matchedAdductCount={activeFeatureView.matchedGroupCount}
                     totalAdductCount={formState.adducts.length}
                     filename={`imms_feature_${activeFeatureIndex + 1}_export.csv`}
                   />
 
-                  {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
-                    results[activeFeatureIndex].adductGroups.map((group) => (
-                      <ResultsDropdownGroup
-                        key={`${activeFeatureIndex}-${group.adduct}`}
-                        adduct={group.adduct}
-                        compounds={group.compounds}
-                        tableProps={{
-                          forceColumns: ["dbCcs", "ccsError"],
-                        }}
-                      />
-                    ))
-                  ) : (
+                  {!activeFeatureView.hasCompounds && (
                     <p className="no-results">
                       No results found for this feature.
                     </p>
                   )}
+
+                  {activeFeatureView.displayGroups.map((group) => (
+                    <ResultsDropdownGroup
+                      key={`${activeFeatureIndex}-${group.adduct}`}
+                      adduct={group.adduct}
+                      compounds={group.compounds}
+                      tableProps={{
+                        forceColumns: ["dbCcs", "ccsError"],
+                      }}
+                    />
+                  ))}
                 </div>
               </>
             ) : (

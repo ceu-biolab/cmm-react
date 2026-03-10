@@ -9,7 +9,10 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
-import { groupsToResultMap } from "../../utils/resultsSummary";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  buildGroupedResultsView,
+} from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -174,23 +177,23 @@ const CeMsEffMobSearch = () => {
       console.log(rawResults);
 
       const features =
-        rawResults.ceFeatures?.map((item) => {
+        rawResults.ceFeatures?.map((item, featureIndex) => {
           const annotationsByAdducts =
-            item.annotationsByAdducts?.map((adductGroup) => ({
+            item.annotationsByAdducts?.map((adductGroup, adductIndex) => ({
               adduct: adductGroup.adduct,
               annotations:
-                adductGroup.annotations?.map((ann) => ann.compound) || [],
+                adductGroup.annotations?.map((annotation, annotationIndex) =>
+                  normalizeAnnotation(
+                    annotation,
+                    `${featureIndex}-${adductIndex}-${annotationIndex}`
+                  )
+                ) || [],
             })) || [];
-
-          const hasResults = annotationsByAdducts.some(
-            (group) => group.annotations.length > 0
-          );
 
           return {
             mzValue: item.feature?.mzValue,
             effectiveMobility: item.feature?.effectiveMobility,
             annotationsByAdducts,
-            hasResults,
           };
         }) || [];
 
@@ -205,16 +208,15 @@ const CeMsEffMobSearch = () => {
     }
   };
 
-  const activeFeatureResults = groupsToResultMap(
+  const activeFeatureView = buildGroupedResultsView(
     results[activeFeatureIndex]?.annotationsByAdducts,
+    formState.adducts,
     {
       labelKey: "adduct",
       compoundsKey: "annotations",
       fallbackLabel: "Adduct",
     }
   );
-
-  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
 
   return (
     <div className="page cemspage">
@@ -421,29 +423,27 @@ const CeMsEffMobSearch = () => {
 
                 <div className="feature-tab-panel">
                   <ResultsSummary
-                    results={activeFeatureResults}
-                    matchedAdductCount={activeFeatureMatchedAdducts}
+                    results={activeFeatureView.summaryResults}
+                    matchedAdductCount={activeFeatureView.matchedGroupCount}
                     totalAdductCount={formState.adducts.length}
                     filename={`cems_effmob_feature_${
                       activeFeatureIndex + 1
                     }_export.csv`}
                   />
 
-                  {results[activeFeatureIndex]?.hasResults ? (
-                    results[activeFeatureIndex].annotationsByAdducts.map(
-                      (adductGroup, adductIndex) => (
-                        <ResultsDropdownGroup
-                          key={`${activeFeatureIndex}-${adductIndex}`}
-                          adduct={adductGroup.adduct}
-                          compounds={adductGroup.annotations}
-                        />
-                      )
-                    )
-                  ) : (
+                  {!activeFeatureView.hasCompounds && (
                     <p className="no-results">
                       No results found for this feature.
                     </p>
                   )}
+
+                  {activeFeatureView.displayGroups.map((group) => (
+                    <ResultsDropdownGroup
+                      key={`${activeFeatureIndex}-${group.adduct}`}
+                      adduct={group.adduct}
+                      compounds={group.compounds}
+                    />
+                  ))}
                 </div>
               </>
             ) : (

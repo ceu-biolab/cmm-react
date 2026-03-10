@@ -8,10 +8,7 @@ const ResultsDropdownGroup = ({
   tableProps = {},
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  if (!compounds || compounds.length === 0) {
-    return null;
-  }
+  const normalizedCompounds = Array.isArray(compounds) ? compounds : [];
 
   const title = adduct || "Results";
 
@@ -22,10 +19,15 @@ const ResultsDropdownGroup = ({
           className="dropdown-toggle"
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          {title} ({compounds.length} compounds) {isOpen ? "▲" : "▼"}
+          {title} ({normalizedCompounds.length} compounds) {isOpen ? "▲" : "▼"}
         </button>
       </div>
-      {isOpen && <ResultsTable results={compounds} {...tableProps} />}
+      {isOpen &&
+        (normalizedCompounds.length > 0 ? (
+          <ResultsTable results={normalizedCompounds} {...tableProps} />
+        ) : (
+          <p className="no-results">No results found for this adduct.</p>
+        ))}
     </div>
   );
 };

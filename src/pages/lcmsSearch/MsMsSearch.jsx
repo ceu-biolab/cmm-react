@@ -10,7 +10,9 @@ import MirroredSpectrum from "../../components/search/MirroredSpectrum.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import { formatApiError } from "../../utils/apiError";
-import { groupsToResultMap } from "../../utils/resultsSummary";
+import {
+  buildGroupedResultsView,
+} from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -69,7 +71,7 @@ const MsMsSearch = () => {
     scoreType: "",
   });
 
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedMatchId, setSelectedMatchId] = useState(null);
 
@@ -369,13 +371,19 @@ const MsMsSearch = () => {
     }
   }, [allMatches, selectedMatchId]);
 
-  const summaryResults = groupsToResultMap(results?.adductGroups, {
-    labelKey: "adduct",
-    compoundsKey: "compounds",
-    fallbackLabel: "Adduct",
-  });
+  const msmsResultsView = buildGroupedResultsView(
+    results?.adductGroups,
+    formState.adducts,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
 
-  const matchedAdductsCount = Object.keys(summaryResults).length;
+  const matchedAdductsCount = msmsResultsView.matchedGroupCount;
+  const hasMsmsCompounds = msmsResultsView.hasCompounds;
+  const hasMsmsResponse = Boolean(results && Array.isArray(results.adductGroups));
 
   return (
     <div className="page">
@@ -504,16 +512,22 @@ const MsMsSearch = () => {
           </div>
         </div>
 
-        {results?.adductGroups?.length > 0 && (
+        {hasMsmsResponse && (
           <div className="results-div">
             <ResultsSummary
-              results={summaryResults}
+              results={msmsResultsView.summaryResults}
               matchedAdductCount={matchedAdductsCount}
               totalAdductCount={formState.adducts.length}
               filename="msms_export.csv"
             />
-            <p className="compare-hint">Click row to compare spectra.</p>
-            {results.adductGroups.map((group) => (
+            {hasMsmsCompounds && (
+              <p className="compare-hint">Click row to compare spectra.</p>
+            )}
+            {!hasMsmsCompounds && (
+              <p className="no-results">No results found for this query.</p>
+            )}
+
+            {msmsResultsView.displayGroups.map((group) => (
               <ResultsDropdownGroup
                 key={group.adduct}
                 adduct={group.adduct}

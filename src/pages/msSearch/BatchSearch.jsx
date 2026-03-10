@@ -9,7 +9,9 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
-import { groupsToResultMap } from "../../utils/resultsSummary";
+import {
+  buildGroupedResultsView,
+} from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
@@ -155,8 +157,7 @@ const BatchSearch = () => {
                   `${featureIndex}-${adductIndex}-${annotationIndex}`
                 )
               ),
-          }))
-          .filter((group) => group.compounds.length > 0);
+          }));
 
         return {
           feature: featureObj.feature,
@@ -177,16 +178,15 @@ const BatchSearch = () => {
     }
   };
 
-  const activeFeatureResults = groupsToResultMap(
+  const activeFeatureView = buildGroupedResultsView(
     results[activeFeatureIndex]?.adductGroups,
+    formState.adductsString,
     {
       labelKey: "adduct",
       compoundsKey: "compounds",
       fallbackLabel: "Adduct",
     }
   );
-
-  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
 
   return (
     <div className="page">
@@ -294,25 +294,25 @@ const BatchSearch = () => {
 
                 <div className="feature-tab-panel">
                   <ResultsSummary
-                    results={activeFeatureResults}
-                    matchedAdductCount={activeFeatureMatchedAdducts}
+                    results={activeFeatureView.summaryResults}
+                    matchedAdductCount={activeFeatureView.matchedGroupCount}
                     totalAdductCount={formState.adductsString.length}
                     filename={`batch_feature_${activeFeatureIndex + 1}_export.csv`}
                   />
 
-                  {results[activeFeatureIndex]?.adductGroups?.length > 0 ? (
-                    results[activeFeatureIndex].adductGroups.map((group) => (
-                      <ResultsDropdownGroup
-                        key={`${activeFeatureIndex}-${group.adduct}`}
-                        adduct={group.adduct}
-                        compounds={group.compounds}
-                      />
-                    ))
-                  ) : (
+                  {!activeFeatureView.hasCompounds && (
                     <p className="no-results">
                       No results found for this feature.
                     </p>
                   )}
+
+                  {activeFeatureView.displayGroups.map((group) => (
+                    <ResultsDropdownGroup
+                      key={`${activeFeatureIndex}-${group.adduct}`}
+                      adduct={group.adduct}
+                      compounds={group.compounds}
+                    />
+                  ))}
                 </div>
               </>
             ) : (

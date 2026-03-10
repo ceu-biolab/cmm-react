@@ -291,6 +291,21 @@ export const normalizeCompound = (rawCompound = {}) => {
     npatlasID: normalizeIdentifier(
       firstMeaningfulValue(rawCompound, ["npatlasID", "npatlasId"])
     ),
+    agilentID: normalizeIdentifier(
+      firstMeaningfulValue(rawCompound, ["agilentID", "agilentId"])
+    ),
+    inHouseID: normalizeIdentifier(
+      firstMeaningfulValue(rawCompound, ["inHouseID", "inHouseId"])
+    ),
+    aspergillusID: normalizeIdentifier(
+      firstMeaningfulValue(rawCompound, ["aspergillusID", "aspergillusId"])
+    ),
+    fahfaID: normalizeIdentifier(
+      firstMeaningfulValue(rawCompound, ["fahfaID", "fahfaId"])
+    ),
+    ohPositionID: normalizeIdentifier(
+      firstMeaningfulValue(rawCompound, ["ohPositionID", "ohPositionId"])
+    ),
     pathways,
     pathwayEntries,
     pathway: pathways.join("; "),

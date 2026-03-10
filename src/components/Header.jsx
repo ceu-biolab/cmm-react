@@ -106,16 +106,6 @@ const Header = () => {
             </div>
           </div>
 
-          {/* 
-          <Link to="/pathway-displayer" className="button">
-            Pathway Displayer
-          </Link>
-
-          <Link to="/spectral-quality" className="button">
-            Spectral Quality
-          </Link>
-          */}
-
           <Link to="/manual" className="button">
             Manual
           </Link>

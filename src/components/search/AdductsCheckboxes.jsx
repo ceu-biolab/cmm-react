@@ -140,17 +140,25 @@ const normalizeMode = (value) => {
 };
 
 const uniqueList = (values) => Array.from(new Set(values));
+const hasSameOrder = (left, right) =>
+  left.length === right.length &&
+  left.every((item, index) => item === right[index]);
+
+const orderSelectionByAvailable = (selection, availableAdducts) => {
+  const availableSet = new Set(availableAdducts);
+  const selectionSet = new Set(selection);
+
+  const orderedKnown = availableAdducts.filter((adduct) =>
+    selectionSet.has(adduct)
+  );
+  const unknown = selection.filter((adduct) => !availableSet.has(adduct));
+
+  return uniqueList([...orderedKnown, ...unknown]);
+};
 
 const DEFAULT_ADDUCTS_BY_MODE = {
   positive: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+H-H2O]+"],
   negative: ["[M-H]-", "[M+Cl]-", "[M+HCOOH-H]-", "[M+FA-H]-", "[M-H-H2O]-"],
-};
-
-const hasSameItems = (left, right) => {
-  if (left.length !== right.length) return false;
-  const leftSet = new Set(left);
-  if (leftSet.size !== left.length) return false;
-  return right.every((item) => leftSet.has(item));
 };
 
 const getDefaultAdducts = (modeKey, availableAdducts, preferPreset = true) => {
@@ -238,8 +246,9 @@ const AdductsCheckboxes = ({
 
     const previousAvailable = previousAvailableRef.current;
     if (!previousAvailable || !previousAvailable.length) {
-      const filtered = selectedAdducts.filter((adduct) =>
-        availableAdducts.includes(adduct)
+      const filtered = orderSelectionByAvailable(
+        selectedAdducts.filter((adduct) => availableAdducts.includes(adduct)),
+        availableAdducts
       );
 
       if (!filtered.length && !selectedAdducts.length && modeKey) {
@@ -250,30 +259,33 @@ const AdductsCheckboxes = ({
             usePresetDefaults
           );
           if (defaults.length) {
-            notifySelectionChange(defaults);
+            notifySelectionChange(
+              orderSelectionByAvailable(defaults, availableAdducts)
+            );
             previousAvailableRef.current = availableAdducts;
             return;
           }
         }
       }
 
-      if (!hasSameItems(filtered, selectedAdducts)) {
+      if (!hasSameOrder(filtered, selectedAdducts)) {
         notifySelectionChange(filtered);
       }
       previousAvailableRef.current = availableAdducts;
       return;
     }
 
-    const wasAllSelected = previousAvailable.every((adduct) =>
-      selectedAdducts.includes(adduct)
-    );
+    const wasAllSelected =
+      previousAvailable.length > 0 &&
+      previousAvailable.every((adduct) => selectedAdducts.includes(adduct));
     if (wasAllSelected) {
-      if (!hasSameItems(availableAdducts, selectedAdducts)) {
+      if (!hasSameOrder(availableAdducts, selectedAdducts)) {
         notifySelectionChange(availableAdducts);
       }
     } else {
-      const filtered = selectedAdducts.filter((adduct) =>
-        availableAdducts.includes(adduct)
+      const filtered = orderSelectionByAvailable(
+        selectedAdducts.filter((adduct) => availableAdducts.includes(adduct)),
+        availableAdducts
       );
 
       if (!filtered.length && modeKey) {
@@ -284,14 +296,16 @@ const AdductsCheckboxes = ({
             usePresetDefaults
           );
           if (defaults.length) {
-            notifySelectionChange(defaults);
+            notifySelectionChange(
+              orderSelectionByAvailable(defaults, availableAdducts)
+            );
             previousAvailableRef.current = availableAdducts;
             return;
           }
         }
       }
 
-      if (!hasSameItems(filtered, selectedAdducts)) {
+      if (!hasSameOrder(filtered, selectedAdducts)) {
         notifySelectionChange(filtered);
       }
     }
@@ -320,9 +334,12 @@ const AdductsCheckboxes = ({
   };
 
   const handleToggleAdduct = (adduct) => {
-    const nextSelection = selectedAdducts.includes(adduct)
-      ? selectedAdducts.filter((entry) => entry !== adduct)
-      : [...selectedAdducts, adduct];
+    const nextSelection = orderSelectionByAvailable(
+      selectedAdducts.includes(adduct)
+        ? selectedAdducts.filter((entry) => entry !== adduct)
+        : [...selectedAdducts, adduct],
+      availableAdducts
+    );
     keepEmptySelectionRef.current = nextSelection.length === 0;
     notifySelectionChange(nextSelection);
   };

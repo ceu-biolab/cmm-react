@@ -9,7 +9,9 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
-import { groupsToResultMap } from "../../utils/resultsSummary";
+import {
+  buildGroupedResultsView,
+} from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
@@ -352,15 +354,10 @@ const LcMsSearch = () => {
             annotations: adductGroup.annotations || [],
           })) || [];
 
-        const hasResults = annotationsByAdducts.some(
-          (group) => group.annotations.length > 0
-        );
-
         return {
           mzValue: item.feature?.mzValue,
           retentionTime: item.feature?.retentionTime,
           annotationsByAdducts,
-          hasResults,
         };
       });
 
@@ -387,13 +384,15 @@ const LcMsSearch = () => {
     ),
   }));
 
-  const activeFeatureResults = groupsToResultMap(activeFeatureAdductGroups, {
-    labelKey: "adduct",
-    compoundsKey: "compounds",
-    fallbackLabel: "Adduct",
-  });
-
-  const activeFeatureMatchedAdducts = Object.keys(activeFeatureResults).length;
+  const activeFeatureView = buildGroupedResultsView(
+    activeFeatureAdductGroups,
+    formState.adductsString,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
 
   return (
     <div className="page cemspage">
@@ -627,34 +626,33 @@ const LcMsSearch = () => {
 
                   <div className="feature-tab-panel">
                     <ResultsSummary
-                      results={activeFeatureResults}
-                      matchedAdductCount={activeFeatureMatchedAdducts}
+                      results={activeFeatureView.summaryResults}
+                      matchedAdductCount={activeFeatureView.matchedGroupCount}
                       totalAdductCount={formState.adductsString.length}
                       filename={`lcms_feature_${activeFeatureIndex + 1}_export.csv`}
                     />
 
-                    {results[activeFeatureIndex]?.hasResults &&
-                    activeFeatureAdductGroups.length > 0 ? (
-                      activeFeatureAdductGroups.map((adductGroup, adductIndex) => (
-                        <ResultsDropdownGroup
-                          key={`${activeFeatureIndex}-${adductIndex}`}
-                          adduct={adductGroup.adduct}
-                          compounds={adductGroup.compounds}
-                          tableProps={{
-                            forceColumns: [
-                              "score",
-                              "rtScore",
-                              "adductScore",
-                              "ionizationScore",
-                            ],
-                          }}
-                        />
-                      ))
-                    ) : (
+                    {!activeFeatureView.hasCompounds && (
                       <p className="no-results">
                         No results found for this feature.
                       </p>
                     )}
+
+                    {activeFeatureView.displayGroups.map((group) => (
+                      <ResultsDropdownGroup
+                        key={`${activeFeatureIndex}-${group.adduct}`}
+                        adduct={group.adduct}
+                        compounds={group.compounds}
+                        tableProps={{
+                          forceColumns: [
+                            "score",
+                            "rtScore",
+                            "adductScore",
+                            "ionizationScore",
+                          ],
+                        }}
+                      />
+                    ))}
                   </div>
                 </>
               ) : (

@@ -28,6 +28,9 @@ const ResultsSummary = ({
     "Cosine",
     "RI Error",
     "CCS Error",
+    "DB CCS",
+    "MS/MS Cosine",
+    "Collision Energy",
     "CAS",
     "KEGG",
     "CHEBI",
@@ -36,6 +39,11 @@ const ResultsSummary = ({
     "PubChem",
     "KNApSAcK",
     "NP Atlas",
+    "Agilent",
+    "InHouse",
+    "Aspergillus",
+    "FAHFA",
+    "OH Position",
     "Pathways",
   ];
 
@@ -52,6 +60,9 @@ const ResultsSummary = ({
     "gcmsCosineScore",
     "riError",
     "ccsError",
+    "dbCcs",
+    "msmsCosineScore",
+    "collisionEnergy",
     "casID",
     "keggID",
     "chebiID",
@@ -60,6 +71,11 @@ const ResultsSummary = ({
     "pcID",
     "knapsackID",
     "npatlasID",
+    "agilentID",
+    "inHouseID",
+    "aspergillusID",
+    "fahfaID",
+    "ohPositionID",
     "pathway",
   ];
 

@@ -104,6 +104,26 @@ const identifierConfig = [
     key: "npatlasID",
     linkBuilder: (value) => `https://www.npatlas.org/explore/compounds/${value}`,
   },
+  {
+    label: "Agilent",
+    key: "agilentID",
+  },
+  {
+    label: "InHouse",
+    key: "inHouseID",
+  },
+  {
+    label: "Aspergillus",
+    key: "aspergillusID",
+  },
+  {
+    label: "FAHFA",
+    key: "fahfaID",
+  },
+  {
+    label: "OH Position",
+    key: "ohPositionID",
+  },
 ];
 
 const IdentifiersCell = ({ row }) => {
@@ -323,6 +343,11 @@ const ResultsTable = ({
                                 pcID: item.pcID,
                                 knapsackID: item.knapsackID,
                                 npatlasID: item.npatlasID,
+                                agilentID: item.agilentID,
+                                inHouseID: item.inHouseID,
+                                aspergillusID: item.aspergillusID,
+                                fahfaID: item.fahfaID,
+                                ohPositionID: item.ohPositionID,
                                 pathway: item.pathway,
                               }).toString(),
                             }}
