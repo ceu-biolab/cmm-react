@@ -289,10 +289,8 @@ const CeMsEffMobSearch = () => {
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="formula-type-radio-cems"
-            />
-
-            <div className="deuterium-cems">
-              <label>
+            >
+              <label className="box group-radio-deuterium">
                 <input
                   type="checkbox"
                   name="deuterium"
@@ -301,7 +299,7 @@ const CeMsEffMobSearch = () => {
                 />
                 Deuterium
               </label>
-            </div>
+            </GroupRadio>
 
             <GroupRadio
               label={

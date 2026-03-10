@@ -340,10 +340,8 @@ const LcImMsSearch = () => {
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="chem-alph-lc-im-ms"
-            />
-
-            <div className="deuterium-lc-im-ms">
-              <label>
+            >
+              <label className="box group-radio-deuterium">
                 <input
                   type="checkbox"
                   name="deuterium"
@@ -352,7 +350,7 @@ const LcImMsSearch = () => {
                 />
                 Deuterium
               </label>
-            </div>
+            </GroupRadio>
 
             <GroupRadio
               label={

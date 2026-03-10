@@ -301,10 +301,8 @@ const GcMsSearch = () => {
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="chem-alph-gcms"
-            />
-
-            <div className="deuterium-gcms">
-              <label>
+            >
+              <label className="box group-radio-deuterium">
                 <input
                   type="checkbox"
                   name="deuterium"
@@ -313,7 +311,7 @@ const GcMsSearch = () => {
                 />
                 Deuterium
               </label>
-            </div>
+            </GroupRadio>
 
             <GroupRadio
               label="Derivatization Method"

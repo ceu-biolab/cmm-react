@@ -320,10 +320,8 @@ const ImMsSearch = () => {
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
               className="chem-alph-im-ms"
-            />
-
-            <div className="deuterium-im-ms">
-              <label>
+            >
+              <label className="box group-radio-deuterium">
                 <input
                   type="checkbox"
                   name="deuterium"
@@ -332,7 +330,7 @@ const ImMsSearch = () => {
                 />
                 Deuterium
               </label>
-            </div>
+            </GroupRadio>
 
             <GroupRadio
               label={

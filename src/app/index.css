@@ -564,6 +564,19 @@ label {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.group-radio-aux {
+  margin-top: 0.35rem;
+}
+
+.group-radio-deuterium {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.group-radio-deuterium input {
+  margin-right: 0.5rem;
+}
+
 input[type="radio"]:checked + label.box,
 label.box:has(input:checked) {
   background-color: #87a9ae5f;

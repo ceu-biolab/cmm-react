@@ -34,10 +34,11 @@ const GroupRadio = ({
   options = [],
   onChange,
   className = "",
+  children = null,
 }) => (
   <div className={`radio-group-div ${className}`}>
     <label className="inner-column-label">{label}</label>
-    <div>
+    <div className="group-radio-options">
       {options.map((option, index) => {
         const normalizedOption = normalizeOption(option);
         const selectedValue = String(value ?? "");
@@ -60,6 +61,7 @@ const GroupRadio = ({
         );
       })}
     </div>
+    {children ? <div className="group-radio-aux">{children}</div> : null}
   </div>
 );
 
