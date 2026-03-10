@@ -565,16 +565,44 @@ label {
 }
 
 .group-radio-aux {
-  margin-top: 0.35rem;
+  margin-top: 0.4rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed #c8d8dc;
+}
+
+.group-radio-aux::before {
+  content: "Extra option";
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #48666c;
+  background-color: #edf4f6;
+  border: 1px solid #b8ccd1;
+  border-radius: 999px;
 }
 
 .group-radio-deuterium {
-  width: 100%;
+  width: fit-content;
   margin-bottom: 0;
+  padding: 0.45rem 0.7rem;
+  letter-spacing: 0.6px;
+  background-color: #f9fcfd;
+  border: 1px dashed #aac1c7;
+}
+
+.group-radio-deuterium:hover {
+  background-color: #f0f7f9;
+  transform: none;
+  box-shadow: none;
 }
 
 .group-radio-deuterium input {
-  margin-right: 0.5rem;
+  margin-right: 0.35rem;
+  accent-color: #557a80;
 }
 
 input[type="radio"]:checked + label.box,

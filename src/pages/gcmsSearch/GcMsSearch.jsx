@@ -244,6 +244,7 @@ const GcMsSearch = () => {
   }, [comparisonOptions, selectedMatchKey]);
 
   const activeFeature = featureResults[activeFeatureIndex];
+  const hasActiveFeatureCompounds = (activeFeature?.compounds?.length || 0) > 0;
   const activeFeatureResults = singleGroupResultMap(
     activeFeature?.label || `Feature ${activeFeatureIndex + 1}`,
     activeFeature?.compounds || []
@@ -405,27 +406,29 @@ const GcMsSearch = () => {
               <div className="feature-tab-panel">
                 <ResultsSummary
                   results={activeFeatureResults}
-                  matchedAdductCount={
-                    (activeFeature?.compounds?.length || 0) > 0 ? 1 : 0
-                  }
+                  matchedAdductCount={hasActiveFeatureCompounds ? 1 : 0}
                   totalAdductCount={1}
                   progressLabel="Feature matches"
                   filename={`gcms_feature_${activeFeatureIndex + 1}_export.csv`}
                 />
 
-                <ResultsDropdownGroup
-                  adduct={featureResults[activeFeatureIndex]?.label}
-                  compounds={featureResults[activeFeatureIndex]?.compounds}
-                  tableProps={{
-                    selectedRowId: selectedMatchKey,
-                    getRowId: (compound) => compound.comparisonKey,
-                    isRowSelectable: (compound) =>
-                      Array.isArray(compound?.compoundPeaks) &&
-                      compound.compoundPeaks.length > 0,
-                    onRowClick: (compound) =>
-                      setSelectedMatchKey(compound?.comparisonKey ?? null),
-                  }}
-                />
+                {hasActiveFeatureCompounds ? (
+                  <ResultsDropdownGroup
+                    adduct={featureResults[activeFeatureIndex]?.label}
+                    compounds={featureResults[activeFeatureIndex]?.compounds}
+                    tableProps={{
+                      selectedRowId: selectedMatchKey,
+                      getRowId: (compound) => compound.comparisonKey,
+                      isRowSelectable: (compound) =>
+                        Array.isArray(compound?.compoundPeaks) &&
+                        compound.compoundPeaks.length > 0,
+                      onRowClick: (compound) =>
+                        setSelectedMatchKey(compound?.comparisonKey ?? null),
+                    }}
+                  />
+                ) : (
+                  <p className="no-results">No results found for this feature.</p>
+                )}
               </div>
             </>
           )}

@@ -9,6 +9,9 @@ const ResultsDropdownGroup = ({
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const normalizedCompounds = Array.isArray(compounds) ? compounds : [];
+  if (normalizedCompounds.length === 0) {
+    return null;
+  }
 
   const title = adduct || "Results";
 
@@ -22,12 +25,7 @@ const ResultsDropdownGroup = ({
           {title} ({normalizedCompounds.length} compounds) {isOpen ? "▲" : "▼"}
         </button>
       </div>
-      {isOpen &&
-        (normalizedCompounds.length > 0 ? (
-          <ResultsTable results={normalizedCompounds} {...tableProps} />
-        ) : (
-          <p className="no-results">No results found for this adduct.</p>
-        ))}
+      {isOpen && <ResultsTable results={normalizedCompounds} {...tableProps} />}
     </div>
   );
 };

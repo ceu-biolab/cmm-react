@@ -111,6 +111,7 @@ const BrowseSearch = () => {
   };
 
   const summaryResults = singleGroupResultMap("Results", results);
+  const hasBrowseResults = results.length > 0;
 
   return (
     <div className="page">
@@ -198,12 +199,16 @@ const BrowseSearch = () => {
           <div className="results-div">
             <ResultsSummary
               results={summaryResults}
-              matchedAdductCount={results.length > 0 ? 1 : 0}
+              matchedAdductCount={hasBrowseResults ? 1 : 0}
               totalAdductCount={1}
               progressLabel="Result groups"
               filename="browse_export.csv"
             />
-            <ResultsDropdownGroup compounds={results} />
+            {hasBrowseResults ? (
+              <ResultsDropdownGroup compounds={results} />
+            ) : (
+              <p className="no-results">No results found for this query.</p>
+            )}
           </div>
         )}
       </div>

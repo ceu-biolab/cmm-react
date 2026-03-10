@@ -90,10 +90,19 @@ export const buildGroupedResultsView = (
       fallbackLabel,
     }
   );
+  const populatedSummaryResults = normalizeResultEntries(summaryResults).reduce(
+    (acc, [label, compounds]) => {
+      if (compounds.length > 0) {
+        acc[label] = compounds;
+      }
+      return acc;
+    },
+    {}
+  );
 
   return {
     summaryResults,
-    displayGroups: resultMapToGroups(summaryResults, {
+    displayGroups: resultMapToGroups(populatedSummaryResults, {
       labelKey: outputLabelKey,
       compoundsKey: outputCompoundsKey,
     }),

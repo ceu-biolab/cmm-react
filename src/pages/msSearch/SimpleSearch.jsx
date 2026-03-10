@@ -208,7 +208,10 @@ const SimpleSearch = () => {
   const resultGroups = resultMapToGroups(results, {
     labelKey: "adduct",
     compoundsKey: "compounds",
-  });
+  }).filter(
+    (group) => Array.isArray(group.compounds) && group.compounds.length > 0
+  );
+  const hasResultCompounds = resultGroups.length > 0;
 
   return (
     <div className="page">
@@ -303,6 +306,10 @@ const SimpleSearch = () => {
               matchedAdductCount={matchedAdductCount}
               totalAdductCount={totalAdductCount}
             />
+
+            {!hasResultCompounds && (
+              <p className="no-results">No results found for this query.</p>
+            )}
 
             {resultGroups.map((group) => (
               <ResultsDropdownGroup
