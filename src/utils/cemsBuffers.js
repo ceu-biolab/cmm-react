@@ -1,24 +1,61 @@
 import axios from "axios";
 
-const FALLBACK_BUFFERS = ["FORMIC_ACID_1M", "N2", "He"];
+const createBufferOption = (value, label = value) => ({
+  value: String(value),
+  label: String(label),
+});
+
+const FALLBACK_BUFFERS = [
+  createBufferOption("FORMIC_ACID_1M"),
+  createBufferOption("N2"),
+  createBufferOption("He"),
+];
 
 let cachedBuffers = null;
 let buffersPromise = null;
 
-const normalizeBufferCode = (value) => {
-  if (typeof value === "string") {
-    return value;
+const firstNonEmpty = (...values) =>
+  values.find((value) => typeof value === "string" && value.trim() !== "") || null;
+
+const normalizeBufferOption = (value) => {
+  if (typeof value === "string" && value.trim() !== "") {
+    return createBufferOption(value.trim());
   }
 
   if (value && typeof value === "object") {
-    return value.code || value.bufferCode || value.name || null;
+    const code = firstNonEmpty(
+      value.code,
+      value.bufferCode,
+      value.value,
+      value.name
+    );
+    const description = firstNonEmpty(
+      value.description,
+      value.label,
+      value.displayName,
+      value.name
+    );
+
+    if (!code) {
+      return null;
+    }
+
+    return createBufferOption(code, description || code);
   }
 
   return null;
 };
 
 const normalizeBufferArray = (value) =>
-  Array.isArray(value) ? value.map(normalizeBufferCode).filter(Boolean) : null;
+  Array.isArray(value)
+    ? value
+        .map(normalizeBufferOption)
+        .filter(Boolean)
+        .filter(
+          (option, index, array) =>
+            array.findIndex((entry) => entry.value === option.value) === index
+        )
+    : null;
 
 const normalizeBuffers = (data) => {
   const directList = normalizeBufferArray(data);
