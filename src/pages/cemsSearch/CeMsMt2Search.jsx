@@ -356,7 +356,7 @@ const CeMsMt2Search = () => {
               value={formState.buffer}
               options={bufferOptions}
               onChange={handleChange}
-              className="buffer-group-im-ms"
+              className="buffer-group-cems"
             />
 
             <GroupRadio

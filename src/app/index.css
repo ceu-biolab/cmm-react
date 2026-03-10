@@ -1503,6 +1503,14 @@ tbody tr:hover {
   grid-row: 1 / 4;
 }
 
+.buffer-group-cems .group-radio-options {
+  max-height: 18.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 0.25rem;
+}
+
 .deuterium-cems {
   grid-column: 4 / 5;
   grid-row: 2 / 3;

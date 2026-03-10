@@ -311,6 +311,7 @@ const CeMsEffMobSearch = () => {
               value={formState.buffer_code}
               options={bufferOptions}
               onChange={handleChange}
+              className="buffer-group-cems"
             />
 
             <GroupRadio
