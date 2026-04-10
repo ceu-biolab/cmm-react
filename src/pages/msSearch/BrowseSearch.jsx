@@ -13,12 +13,14 @@ import {
 import { singleGroupResultMap } from "../../utils/resultsSummary";
 
 const BrowseSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     name: "",
     formula: "",
-    metaboliteType: "",
-    databases: [],
+    metaboliteType: "ALL",
+    databases: DEFAULT_DATABASES,
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -37,12 +39,7 @@ const BrowseSearch = () => {
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      name: "",
-      formula: "",
-      metaboliteType: "",
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {

@@ -54,22 +54,24 @@ const parseNumericList = (rawValue) =>
     .filter((entry) => Number.isFinite(entry));
 
 const CeMsRmtSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     masses: "",
     rmt: "",
     tolerance: "",
-    tolerance_mode: "",
+    tolerance_mode: "PPM",
     rmt_tolerance: "",
-    rmt_tolerance_mode: "",
+    rmt_tolerance_mode: "percentage",
     buffer: "",
     temperature: "",
     polarity: "",
     rmt_reference: "",
     chemical_alphabet: "",
     deuterium: false,
-    ion_mode: "",
+    ion_mode: "positive",
     adducts: [],
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -106,22 +108,7 @@ const CeMsRmtSearch = () => {
   };
 
   const clearInput = () => {
-    setFormState({
-      masses: "",
-      rmt: "",
-      tolerance: "",
-      tolerance_mode: "",
-      rmt_tolerance: "",
-      rmt_tolerance_mode: "",
-      buffer: "",
-      temperature: "",
-      polarity: "",
-      rmt_reference: "",
-      chemical_alphabet: "",
-      deuterium: false,
-      ion_mode: "",
-      adducts: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {

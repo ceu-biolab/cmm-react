@@ -53,14 +53,14 @@ const normalizePeaks = (peaks) => {
 };
 
 const MsMsSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     CIDEnergy: "",
     precursorIonMz: "",
     tolerancePrecursorIon: "",
-    toleranceModePrecursorIon: "",
+    toleranceModePrecursorIon: "PPM",
     toleranceFragments: "",
-    toleranceModeFragments: "",
-    ionizationMode: "",
+    toleranceModeFragments: "PPM",
+    ionizationMode: "POSITIVE",
     adducts: [],
     chemicalAlphabet: "",
     deuterium: false,
@@ -70,6 +70,8 @@ const MsMsSearch = () => {
     },
     scoreType: "",
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -157,23 +159,7 @@ const MsMsSearch = () => {
   };
 
   const clearInput = () => {
-    setFormState({
-      CIDEnergy: "",
-      precursorIonMz: "",
-      tolerancePrecursorIon: "",
-      toleranceModePrecursorIon: "",
-      toleranceFragments: "",
-      toleranceModeFragments: "",
-      ionizationMode: "",
-      adducts: [],
-      chemicalAlphabet: "",
-      deuterium: false,
-      fragmentsMZsIntensities: {
-        precursorMz: "",
-        peaks: "",
-      },
-      scoreType: "",
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {

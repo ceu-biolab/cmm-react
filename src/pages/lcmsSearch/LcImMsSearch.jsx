@@ -38,20 +38,22 @@ const formatFeatureNumber = (value, digits = 4) => {
 };
 
 const LcImMsSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mzValues: "",
     ccsValues: "",
     rtValues: "",
     mzTolerance: "",
-    mzToleranceMode: "",
+    mzToleranceMode: "PPM",
     ccsTolerance: "",
-    ccsToleranceMode: "",
+    ccsToleranceMode: "PERCENTAGE",
     formulaType: "",
     deuterium: false,
     bufferGas: "",
-    ionizationMode: "",
+    ionizationMode: "POSITIVE",
     adducts: [],
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -77,20 +79,7 @@ const LcImMsSearch = () => {
   };
 
   const clearInput = () => {
-    setFormState({
-      mzValues: "",
-      ccsValues: "",
-      rtValues: "",
-      mzTolerance: "",
-      mzToleranceMode: "",
-      ccsTolerance: "",
-      ccsToleranceMode: "",
-      formulaType: "",
-      deuterium: false,
-      bufferGas: "",
-      ionizationMode: "",
-      adducts: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {

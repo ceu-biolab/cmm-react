@@ -26,15 +26,17 @@ const formatNumber = (value, digits = 4) => {
 };
 
 const BatchSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mzValues: "",
     tolerance: "",
-    mzToleranceMode: "",
-    ionizationMode: "",
-    metaboliteType: "",
+    mzToleranceMode: "PPM",
+    ionizationMode: "POSITIVE",
+    metaboliteType: "ALL",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -79,15 +81,7 @@ const BatchSearch = () => {
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      mzValues: "",
-      tolerance: "",
-      mzToleranceMode: "",
-      metaboliteType: "",
-      ionizationMode: "",
-      adductsString: [],
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {

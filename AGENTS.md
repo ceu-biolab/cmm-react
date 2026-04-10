@@ -12,7 +12,7 @@
 - In CE-MS forms, render buffer options in a limited-height scrollable list (same UX pattern as adduct lists).
 - Keep pathway rendering consistent across all result tables: preserve KEGG pathway hyperlinks via shared normalization (no page-specific divergence).
 - Remove unused legacy pages/routes instead of maintaining parallel deprecated result UIs.
-- Forms must start blank by default; only `Load Demo Data` should populate default/demo values.
+- Search forms should preselect the baseline default options where those controls exist: `PPM` tolerance mode, positive ionization mode, `ALL` metabolites, and the default databases (`HMDB`, `LIPIDMAPS`, `KEGG`, `INHOUSE`, `FAHFA`). `Clear Input` should reset back to those defaults.
 - Keep form behavior consistent across searches (naming, tolerance mode wiring, and reset behavior).
 - Keep `Deuterium` bundled with `Chemical Alphabet` in forms (rendered directly under/with that control, not detached in a separate section).
 - In Codex non-interactive shells, `~/.bashrc` returns early so `nvm` is not auto-loaded; run `export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 22` before `node`/`npm` commands.

@@ -26,20 +26,22 @@ const formatFeatureNumber = (value, digits = 4) => {
 };
 
 const LcMsSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mz: "",
     retentionTimes: "",
     compositeSpectrum: "",
     tolerance: "",
-    mzToleranceMode: "",
+    mzToleranceMode: "PPM",
     chemicalAlphabet: "",
     deuterium: false,
     modifiersType: "",
-    ionizationMode: "",
-    metaboliteType: "",
+    ionizationMode: "POSITIVE",
+    metaboliteType: "ALL",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -232,20 +234,7 @@ const LcMsSearch = () => {
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      mz: "",
-      retentionTimes: "",
-      compositeSpectrum: "",
-      tolerance: "",
-      mzToleranceMode: "",
-      chemicalAlphabet: "",
-      deuterium: false,
-      modifiersType: "",
-      ionizationMode: "",
-      metaboliteType: "",
-      adductsString: [],
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {

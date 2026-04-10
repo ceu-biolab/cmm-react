@@ -20,15 +20,17 @@ import {
 } from "../../utils/databaseSelection";
 
 const SimpleSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mz: "",
-    mzToleranceMode: "",
+    mzToleranceMode: "PPM",
     tolerance: "",
-    ionizationMode: "",
+    ionizationMode: "POSITIVE",
     adductsString: [],
-    databases: [],
-    metaboliteType: "",
+    databases: DEFAULT_DATABASES,
+    metaboliteType: "ALL",
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState({});
   const [showResults, setShowResults] = useState(false);
@@ -58,15 +60,7 @@ const SimpleSearch = () => {
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      mz: "",
-      tolerance: "",
-      mzToleranceMode: "",
-      metaboliteType: "",
-      ionizationMode: "",
-      adductsString: [],
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   const countDuplicates = (compounds) => {

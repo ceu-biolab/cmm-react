@@ -47,21 +47,23 @@ const formatFeatureNumber = (value, digits = 4) => {
 };
 
 const CeMsEffMobSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mz_values: "",
     effective_mobilities: "",
     mz_tolerance: "",
-    mz_tolerance_mode: "",
+    mz_tolerance_mode: "PPM",
     eff_mob_tolerance: "",
-    eff_mob_tolerance_mode: "",
+    eff_mob_tolerance_mode: "percentage",
     buffer_code: "",
     temperature: "",
     polarity: "",
     chemical_alphabet: "",
     deuterium: false,
-    ionization_mode: "",
+    ionization_mode: "Positive",
     adducts: [],
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const loadDemoData = () => {
     setFormState({
@@ -84,21 +86,7 @@ const CeMsEffMobSearch = () => {
   };
 
   const clearInput = () => {
-    setFormState({
-      mz_values: "",
-      effective_mobilities: "",
-      mz_tolerance: "",
-      mz_tolerance_mode: "",
-      eff_mob_tolerance: "",
-      eff_mob_tolerance_mode: "",
-      buffer_code: "",
-      temperature: "",
-      polarity: "",
-      chemical_alphabet: "",
-      deuterium: false,
-      ionization_mode: "",
-      adducts: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   const [results, setResults] = useState([]);

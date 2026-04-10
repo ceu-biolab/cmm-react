@@ -47,13 +47,13 @@ const formatFeatureNumber = (value, digits = 4) => {
 };
 
 const CeMsMt2Search = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     masses: "",
     mt: "",
     tolerance: "",
-    tolerance_mode: "",
+    tolerance_mode: "PPM",
     mt_tolerance: "",
-    mt_tolerance_mode: "",
+    mt_tolerance_mode: "percentage",
     buffer: "",
     temperature: "",
     polarity: "",
@@ -63,9 +63,11 @@ const CeMsMt2Search = () => {
     marker2_time: "",
     chemical_alphabet: "",
     deuterium: false,
-    ion_mode: "",
+    ion_mode: "positive",
     adducts: [],
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const loadDemoData = () => {
     setFormState({
@@ -100,25 +102,7 @@ const CeMsMt2Search = () => {
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      masses: "",
-      mt: "",
-      tolerance: "",
-      tolerance_mode: "",
-      mt_tolerance: "",
-      mt_tolerance_mode: "",
-      buffer: "",
-      temperature: "",
-      polarity: "",
-      marker1: "",
-      marker1_time: "",
-      marker2: "",
-      marker2_time: "",
-      chemical_alphabet: "",
-      deuterium: false,
-      ion_mode: "",
-      adducts: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   const [results, setResults] = useState([]);

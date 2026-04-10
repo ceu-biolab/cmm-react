@@ -24,12 +24,12 @@ describe("MsMsSearch", () => {
 
     const adductNa = screen.getByRole("checkbox", { name: "[M+Na]+" });
 
-    expect(adductNa).not.toBeChecked();
-
-    await user.click(adductNa);
     expect(adductNa).toBeChecked();
 
     await user.click(adductNa);
     expect(adductNa).not.toBeChecked();
+
+    await user.click(adductNa);
+    expect(adductNa).toBeChecked();
   });
 });
