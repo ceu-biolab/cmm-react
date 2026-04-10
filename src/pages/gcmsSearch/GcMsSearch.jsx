@@ -9,7 +9,11 @@ import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 import ResultsSummary from "../../components/search/ResultsSummary";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
-import { singleGroupResultMap } from "../../utils/resultsSummary";
+import {
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  singleGroupResultMap,
+} from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -25,6 +29,44 @@ const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   }
 
   return chemicalAlphabet;
+};
+
+const parseSpectrumPairs = (input) => {
+  const trimmed = input?.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const tokens = trimmed.split(/[\s,;]+/).filter(Boolean);
+  const pairs = [];
+  const numericBuffer = [];
+
+  tokens.forEach((token) => {
+    if (token.includes(":")) {
+      const [mzStr, intensityStr] = token.split(":");
+      const mzValue = Number(mzStr);
+      const intensity = Number(intensityStr);
+
+      if (Number.isFinite(mzValue) && Number.isFinite(intensity)) {
+        pairs.push({ mzValue, intensity });
+      }
+      return;
+    }
+
+    const value = Number(token);
+    if (Number.isFinite(value)) {
+      numericBuffer.push(value);
+    }
+  });
+
+  for (let index = 0; index + 1 < numericBuffer.length; index += 2) {
+    pairs.push({
+      mzValue: numericBuffer[index],
+      intensity: numericBuffer[index + 1],
+    });
+  }
+
+  return pairs;
 };
 
 const GcMsSearch = () => {
@@ -87,15 +129,7 @@ const GcMsSearch = () => {
     e.preventDefault();
     setLoading(true);
 
-    const spectrumPairs = formState.spectrum
-      .split(",")
-      .map((val) => parseFloat(val.trim()))
-      .reduce((acc, curr, idx, arr) => {
-        if (idx % 2 === 0) {
-          acc.push({ mzValue: curr, intensity: arr[idx + 1] });
-        }
-        return acc;
-      }, []);
+    const spectrumPairs = parseSpectrumPairs(formState.spectrum);
 
     const formattedData = {
       gcmsSpectrumExperimental: { spectrum: spectrumPairs },
@@ -249,6 +283,12 @@ const GcMsSearch = () => {
     activeFeature?.label || `Feature ${activeFeatureIndex + 1}`,
     activeFeature?.compounds || []
   );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(featureResults, {
+    getFeatureLabel: (feature, featureIndex) =>
+      feature?.label || `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (feature) => feature?.compounds || [],
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page">
@@ -274,7 +314,7 @@ const GcMsSearch = () => {
               value={formState.spectrum}
               onChange={handleChange}
               className="box-input-gcms"
-              placeholder="Enter spectrum in CSV format"
+              validationMode="mzIntensityPairs"
             />
 
             <TextInput
@@ -388,6 +428,15 @@ const GcMsSearch = () => {
 
           {showResults && featureResults.length > 0 && (
             <>
+              <ResultsSummary
+                results={allFeaturesSummaryResults}
+                matchedAdductCount={matchedFeatureCount}
+                totalAdductCount={featureResults.length}
+                progressLabel="Features with matches"
+                filename="gcms_all_features_export.csv"
+                hiddenExportKeys={["score", "massErrorPpm"]}
+              />
+
               <div className="feature-tabs" role="tablist">
                 {featureResults.map((feature, featureIndex) => (
                   <button
@@ -410,6 +459,7 @@ const GcMsSearch = () => {
                   totalAdductCount={1}
                   progressLabel="Feature matches"
                   filename={`gcms_feature_${activeFeatureIndex + 1}_export.csv`}
+                  hiddenExportKeys={["score", "massErrorPpm"]}
                 />
 
                 {hasActiveFeatureCompounds ? (
@@ -417,6 +467,7 @@ const GcMsSearch = () => {
                     adduct={featureResults[activeFeatureIndex]?.label}
                     compounds={featureResults[activeFeatureIndex]?.compounds}
                     tableProps={{
+                      hiddenColumns: ["score", "massErrorPpm"],
                       selectedRowId: selectedMatchKey,
                       getRowId: (compound) => compound.comparisonKey,
                       isRowSelectable: (compound) =>

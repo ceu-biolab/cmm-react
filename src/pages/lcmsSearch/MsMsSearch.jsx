@@ -418,7 +418,6 @@ const MsMsSearch = () => {
               value={formState.fragmentsMZsIntensities.peaks}
               onChange={handleNestedChange}
               className="box-input-msms"
-              placeholder="Enter MS/MS peaks (comma separated)"
               validationMode="mzIntensityPairs"
             />
 
@@ -517,6 +516,7 @@ const MsMsSearch = () => {
               matchedAdductCount={matchedAdductsCount}
               totalAdductCount={formState.adducts.length}
               filename="msms_export.csv"
+              hiddenExportKeys={["score"]}
             />
             {hasMsmsCompounds && (
               <p className="compare-hint">Click row to compare spectra.</p>
@@ -533,19 +533,20 @@ const MsMsSearch = () => {
                 tableProps={{
                   extraColumns: [
                     {
-                      header: "Cosine",
+                      header: "Cosine Score",
                       key: "msmsCosineScore",
                       type: "number",
                       digits: 4,
                       always: true,
                     },
                     {
-                      header: "Collision",
+                      header: "Collision Energy",
                       key: "collisionEnergy",
                       type: "number",
                       digits: 2,
                     },
                   ],
+                  hiddenColumns: ["score"],
                   selectedRowId: selectedMatchId,
                   getRowId: (compound, index) =>
                     compound?.msmsId ??

@@ -12,6 +12,9 @@ import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import {
   buildGroupedResultsView,
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  flattenGroupCompounds,
 } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
@@ -251,6 +254,12 @@ const CeMsMt1Search = () => {
       fallbackLabel: "Adduct",
     }
   );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(results, {
+    getFeatureLabel: (_, featureIndex) => `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (feature) =>
+      flattenGroupCompounds(feature.annotationsByAdducts, "annotations"),
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page cemspage">
@@ -268,22 +277,14 @@ const CeMsMt1Search = () => {
         className="page outer-container row"
         style={{ cursor: loading ? "wait" : "default" }}
       >
-        <label className="required-label">
-          Required <span className="red-asterisk">*</span>
-        </label>
         <form onSubmit={handleSubmit}>
           <div className="grid-container-ce-ms-markers">
             <TextBoxInput
-              label={
-                <>
-                  Experimental Masses <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Experimental Masses"
               name="masses"
               value={formState.masses}
               onChange={handleChange}
               className="masses-text-im-ms"
-              placeholder="Enter experimental masses (comma separated)"
             />
 
             <TextBoxInput
@@ -292,15 +293,10 @@ const CeMsMt1Search = () => {
               value={formState.mt}
               onChange={handleChange}
               className="ccs-values-im-ms"
-              placeholder="Enter migration times (comma separated)"
             />
 
             <ToleranceRadio
-              label={
-                <>
-                  Tolerance <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Tolerance"
               toleranceValue={formState.tolerance}
               mzToleranceMode={formState.tolerance_mode}
               onChange={handleChange}
@@ -311,11 +307,7 @@ const CeMsMt1Search = () => {
             />
 
             <ToleranceRadio
-              label={
-                <>
-                  MT / CCS Tolerance <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="MT / CCS Tolerance"
               toleranceValue={formState.mt_tolerance}
               mzToleranceMode={formState.mt_tolerance_mode}
               onChange={handleChange}
@@ -326,11 +318,7 @@ const CeMsMt1Search = () => {
             />
 
             <GroupRadio
-              label={
-                <>
-                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Chemical Alphabet"
               name="chemical_alphabet"
               value={formState.chemical_alphabet}
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
@@ -349,11 +337,7 @@ const CeMsMt1Search = () => {
             </GroupRadio>
 
             <GroupRadio
-              label={
-                <>
-                  Buffer <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Buffer"
               name="buffer"
               value={formState.buffer}
               options={bufferOptions}
@@ -362,11 +346,7 @@ const CeMsMt1Search = () => {
             />
 
             <GroupRadio
-              label={
-                <>
-                  Polarity <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Polarity"
               name="polarity"
               value={formState.polarity}
               options={["Direct", "Inverse"]}
@@ -375,11 +355,7 @@ const CeMsMt1Search = () => {
             />
 
             <GroupRadio
-              label={
-                <>
-                  Ionization Mode <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Ionization Mode"
               name="ion_mode"
               value={formState.ion_mode}
               options={["positive", "negative"]}
@@ -437,11 +413,7 @@ const CeMsMt1Search = () => {
             />
 
             <AdductsCheckboxes
-              label={
-                <>
-                  Adducts <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Adducts"
               selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
               ionizationMode={formState.ion_mode}
@@ -476,6 +448,14 @@ const CeMsMt1Search = () => {
           <div className="results-div">
             {Array.isArray(results) && results.length > 0 ? (
               <>
+                <ResultsSummary
+                  results={allFeaturesSummaryResults}
+                  matchedAdductCount={matchedFeatureCount}
+                  totalAdductCount={results.length}
+                  progressLabel="Features with matches"
+                  filename="cems_mt1_all_features_export.csv"
+                />
+
                 <div className="feature-tabs" role="tablist">
                   {results.map((featureObj, featureIndex) => (
                     <button
@@ -513,6 +493,16 @@ const CeMsMt1Search = () => {
                       key={`${activeFeatureIndex}-${group.adduct}`}
                       adduct={group.adduct}
                       compounds={group.compounds}
+                      tableProps={{
+                        extraColumns: [
+                          {
+                            header: "Mobility Error (%)",
+                            key: "mobilityErrorPct",
+                            type: "number",
+                            digits: 4,
+                          },
+                        ],
+                      }}
                     />
                   ))}
                 </div>

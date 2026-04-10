@@ -132,7 +132,7 @@ const BrowseSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container-browse">
             <TextInput
-              label="Name"
+              label="Name (optional)"
               name="name"
               value={formState.name}
               onChange={handleChange}
@@ -146,7 +146,7 @@ const BrowseSearch = () => {
             )}
 
             <TextInput
-              label="Formula"
+              label="Formula (optional)"
               name="formula"
               value={formState.formula}
               onChange={handleChange}

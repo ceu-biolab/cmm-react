@@ -11,6 +11,9 @@ import { normalizeAnnotation } from "../../utils/resultNormalization";
 import { getCcsAdductOrder, sortAdductEntries } from "../../utils/ccsAdducts";
 import {
   buildGroupedResultsView,
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  flattenGroupCompounds,
 } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
@@ -232,6 +235,12 @@ const ImMsSearch = () => {
       fallbackLabel: "Adduct",
     }
   );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(results, {
+    getFeatureLabel: (_, featureIndex) => `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (feature) =>
+      flattenGroupCompounds(feature.adductGroups, "compounds"),
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page">
@@ -249,17 +258,10 @@ const ImMsSearch = () => {
         className="page outer-container row"
         style={{ cursor: loading ? "wait" : "default" }}
       >
-        <label className="required-label">
-          Required <span className="red-asterisk">*</span>
-        </label>
         <form onSubmit={handleSubmit}>
           <div className="grid-container-im-ms">
             <TextBoxInput
-              label={
-                <>
-                  Experimental Masses <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Experimental Masses"
               name="mzValues"
               value={formState.mzValues}
               onChange={handleChange}
@@ -268,25 +270,16 @@ const ImMsSearch = () => {
             />
 
             <TextBoxInput
-              label={
-                <>
-                  CCS Values <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="CCS Values"
               name="ccsValues"
               value={formState.ccsValues}
               onChange={handleChange}
               className="ccs-values-im-ms"
-              placeholder="Enter CCS values (comma separated)"
               required
             />
 
             <ToleranceRadio
-              label={
-                <>
-                  Tolerance <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Tolerance"
               toleranceValue={formState.mzTolerance}
               mzToleranceMode={formState.mzToleranceMode}
               onChange={handleChange}
@@ -295,11 +288,7 @@ const ImMsSearch = () => {
             />
 
             <ToleranceRadio
-              label={
-                <>
-                  CCS Tolerance <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="CCS Tolerance"
               toleranceValue={formState.ccsTolerance}
               mzToleranceMode={formState.ccsToleranceMode}
               onChange={handleChange}
@@ -310,11 +299,7 @@ const ImMsSearch = () => {
             />
 
             <GroupRadio
-              label={
-                <>
-                  Chemical Alphabet <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Chemical Alphabet"
               name="formulaType"
               value={formState.formulaType}
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
@@ -333,11 +318,7 @@ const ImMsSearch = () => {
             </GroupRadio>
 
             <GroupRadio
-              label={
-                <>
-                  Buffer Gas <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Buffer Gas"
               name="bufferGas"
               value={formState.bufferGas}
               options={["N2", "He"]}
@@ -346,11 +327,7 @@ const ImMsSearch = () => {
             />
 
             <AdductsCheckboxes
-              label={
-                <>
-                  Adducts <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Adducts"
               selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
               ionizationMode={formState.ionizationMode}
@@ -360,11 +337,7 @@ const ImMsSearch = () => {
             />
 
             <GroupRadio
-              label={
-                <>
-                  Ionization Mode <span style={{ color: "red" }}>*</span>
-                </>
-              }
+              label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
               options={["POSITIVE", "NEGATIVE"]}
@@ -399,6 +372,14 @@ const ImMsSearch = () => {
           <div className="results-div">
             {results.length > 0 ? (
               <>
+                <ResultsSummary
+                  results={allFeaturesSummaryResults}
+                  matchedAdductCount={matchedFeatureCount}
+                  totalAdductCount={results.length}
+                  progressLabel="Features with matches"
+                  filename="imms_all_features_export.csv"
+                />
+
                 <div className="feature-tabs" role="tablist">
                   {results.map((featureObj, featureIndex) => (
                     <button

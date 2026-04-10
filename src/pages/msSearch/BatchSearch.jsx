@@ -11,6 +11,9 @@ import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import {
   buildGroupedResultsView,
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  flattenGroupCompounds,
 } from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
@@ -187,6 +190,12 @@ const BatchSearch = () => {
       fallbackLabel: "Adduct",
     }
   );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(results, {
+    getFeatureLabel: (_, featureIndex) => `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (featureObj) =>
+      flattenGroupCompounds(featureObj.adductGroups, "compounds"),
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page">
@@ -276,6 +285,14 @@ const BatchSearch = () => {
           <div className="results-div">
             {results.length > 0 ? (
               <>
+                <ResultsSummary
+                  results={allFeaturesSummaryResults}
+                  matchedAdductCount={matchedFeatureCount}
+                  totalAdductCount={results.length}
+                  progressLabel="Features with matches"
+                  filename="batch_all_features_export.csv"
+                />
+
                 <div className="feature-tabs" role="tablist">
                   {results.map((featureObj, featureIndex) => (
                     <button

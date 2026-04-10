@@ -1,18 +1,18 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import ResultsSummary from "../../components/search/ResultsSummary.jsx";
-import TextInput from "../../components/search/TextInput.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
+import TextInput from "../../components/search/TextInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import {
-  buildGroupedResultsView,
   buildFeatureSummaryResults,
+  buildGroupedResultsView,
   countMatchedGroups,
   flattenGroupCompounds,
 } from "../../utils/resultsSummary";
@@ -46,60 +46,30 @@ const formatFeatureNumber = (value, digits = 4) => {
   return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
 };
 
-const CeMsEffMobSearch = () => {
+const parseNumericList = (rawValue) =>
+  (rawValue || "")
+    .split(/[\s,;]+/)
+    .filter(Boolean)
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry));
+
+const CeMsRmtSearch = () => {
   const [formState, setFormState] = useState({
-    mz_values: "",
-    effective_mobilities: "",
-    mz_tolerance: "",
-    mz_tolerance_mode: "",
-    eff_mob_tolerance: "",
-    eff_mob_tolerance_mode: "",
-    buffer_code: "",
+    masses: "",
+    rmt: "",
+    tolerance: "",
+    tolerance_mode: "",
+    rmt_tolerance: "",
+    rmt_tolerance_mode: "",
+    buffer: "",
     temperature: "",
     polarity: "",
+    rmt_reference: "",
     chemical_alphabet: "",
     deuterium: false,
-    ionization_mode: "",
+    ion_mode: "",
     adducts: [],
   });
-
-  const loadDemoData = () => {
-    setFormState({
-      mz_values: ["291.1299", "298.098", "308.094", "316.2488", "55.055"].join(
-        "\n"
-      ),
-      effective_mobilities: ["1174", "1060", "646", "931", "3192"].join("\n"),
-      mz_tolerance: "10",
-      mz_tolerance_mode: "mDa",
-      eff_mob_tolerance: "10",
-      eff_mob_tolerance_mode: "percentage",
-      buffer_code: "FORMIC_ACID_1M",
-      temperature: "20",
-      polarity: "Direct",
-      chemical_alphabet: "CHNOPS",
-      deuterium: false,
-      ionization_mode: "Positive",
-      adducts: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+NH4]+"],
-    });
-  };
-
-  const clearInput = () => {
-    setFormState({
-      mz_values: "",
-      effective_mobilities: "",
-      mz_tolerance: "",
-      mz_tolerance_mode: "",
-      eff_mob_tolerance: "",
-      eff_mob_tolerance_mode: "",
-      buffer_code: "",
-      temperature: "",
-      polarity: "",
-      chemical_alphabet: "",
-      deuterium: false,
-      ionization_mode: "",
-      adducts: [],
-    });
-  };
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -107,9 +77,52 @@ const CeMsEffMobSearch = () => {
   const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
-  useEffect(() => {
-    console.log("Updated searchData:", formState);
-  }, [formState]);
+  const loadDemoData = () => {
+    setFormState({
+      masses: ["291.1299", "298.098", "308.094", "316.2488", "55.055"].join(
+        "\n"
+      ),
+      rmt: ["0.85", "0.86", "1.07", "0.93", "0.42"].join("\n"),
+      tolerance: "10",
+      tolerance_mode: "PPM",
+      rmt_tolerance: "10",
+      rmt_tolerance_mode: "percentage",
+      buffer: "FORMIC_ACID_1M",
+      temperature: "20",
+      polarity: "Direct",
+      rmt_reference: "L-Methionine sulfone",
+      chemical_alphabet: "CHNOPS",
+      deuterium: false,
+      ion_mode: "positive",
+      adducts: [
+        "[M+H]+",
+        "[M+2H]2+",
+        "[M+Na]+",
+        "[M+K]+",
+        "[M+NH4]+",
+        "[M+H-H2O]+",
+      ],
+    });
+  };
+
+  const clearInput = () => {
+    setFormState({
+      masses: "",
+      rmt: "",
+      tolerance: "",
+      tolerance_mode: "",
+      rmt_tolerance: "",
+      rmt_tolerance_mode: "",
+      buffer: "",
+      temperature: "",
+      polarity: "",
+      rmt_reference: "",
+      chemical_alphabet: "",
+      deuterium: false,
+      ion_mode: "",
+      adducts: [],
+    });
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -123,62 +136,68 @@ const CeMsEffMobSearch = () => {
     };
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
 
     if (type === "checkbox") {
       setFormState((prev) => ({ ...prev, [name]: checked }));
-    } else {
-      setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
+      return;
     }
+
+    setFormState((prev) => ({ ...prev, [name]: value ?? "" }));
   };
 
   const handleAdductsChange = (adducts) => {
     setFormState((prev) => ({ ...prev, adducts }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const masses = parseNumericList(formState.masses);
+    const rmtValues = parseNumericList(formState.rmt);
+
+    if (!masses.length || !rmtValues.length) {
+      alert("Experimental masses and RMT values are required.");
+      return;
+    }
+
+    if (masses.length !== rmtValues.length) {
+      alert("Experimental masses and RMT values must have the same length.");
+      return;
+    }
+
     setLoading(true);
 
     const formattedData = {
-      mz_values: formState.mz_values
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(parseFloat),
-      effective_mobilities: formState.effective_mobilities
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(parseFloat),
-      mz_tolerance: parseFloat(formState.mz_tolerance),
-      mz_tolerance_mode: formState.mz_tolerance_mode,
-      eff_mob_tolerance: parseFloat(formState.eff_mob_tolerance),
-      eff_mob_tolerance_mode: formState.eff_mob_tolerance_mode,
-      buffer_code: formState.buffer_code,
+      masses,
+      tolerance: parseFloat(formState.tolerance),
+      tolerance_mode: formState.tolerance_mode,
+      rmt: rmtValues,
+      rmt_tolerance: parseFloat(formState.rmt_tolerance),
+      rmt_tolerance_mode: formState.rmt_tolerance_mode,
+      buffer: formState.buffer,
       temperature: formState.temperature
         ? parseFloat(formState.temperature)
         : null,
       polarity: toApiPolarity(formState.polarity),
+      rmt_reference: formState.rmt_reference,
       chemical_alphabet: toDeuteriumAwareAlphabet(
         formState.chemical_alphabet,
         formState.deuterium
       ),
-      ionization_mode: formState.ionization_mode,
+      ion_mode: formState.ion_mode,
       adducts: formState.adducts,
     };
 
-    console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
-
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}CEMSSearch`,
+        `${import.meta.env.VITE_API_URL}cems-rmt-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
 
       const rawResults = response.data;
-      console.log(rawResults);
-
       const features =
         rawResults.ceFeatures?.map((item, featureIndex) => {
           const annotationsByAdducts =
@@ -194,8 +213,8 @@ const CeMsEffMobSearch = () => {
             })) || [];
 
           return {
-            mzValue: item.feature?.mzValue,
-            effectiveMobility: item.feature?.effectiveMobility,
+            feature: item.feature,
+            submittedRmt: rmtValues[featureIndex] ?? null,
             annotationsByAdducts,
           };
         }) || [];
@@ -236,7 +255,7 @@ const CeMsEffMobSearch = () => {
       )}
 
       <header className="title-header">
-        <span className="title-text">CE-MS Effective Mobility Search</span>
+        <span className="title-text">CE-MS RMT Search</span>
       </header>
 
       <div
@@ -244,30 +263,43 @@ const CeMsEffMobSearch = () => {
         style={{ cursor: loading ? "wait" : "default" }}
       >
         <form onSubmit={handleSubmit}>
-          <div className="grid-container-ce-ms-search">
+          <div className="grid-container-ce-ms-markers">
             <TextBoxInput
-              label="m/z Values"
-              name="mz_values"
-              value={formState.mz_values}
+              label="Experimental Masses"
+              name="masses"
+              value={formState.masses}
               onChange={handleChange}
+              className="masses-text-im-ms"
+            />
+
+            <TextBoxInput
+              label="Relative Migration Times"
+              name="rmt"
+              value={formState.rmt}
+              onChange={handleChange}
+              className="ccs-values-im-ms"
             />
 
             <ToleranceRadio
-              label="m/z Tolerance"
-              toleranceValue={formState.mz_tolerance}
-              mzToleranceMode={formState.mz_tolerance_mode}
+              label="Tolerance"
+              toleranceValue={formState.tolerance}
+              mzToleranceMode={formState.tolerance_mode}
               onChange={handleChange}
-              unitOptions={["mDa", "PPM"]}
-              inputName="mz_tolerance"
-              modeName="mz_tolerance_mode"
-              className="mz-tolerance-radio-cems"
+              unitOptions={["PPM", "DA"]}
+              inputName="tolerance"
+              modeName="tolerance_mode"
+              className="tolerance-im-ms"
             />
 
-            <TextBoxInput
-              label="Effective Mobilities"
-              name="effective_mobilities"
-              value={formState.effective_mobilities}
+            <ToleranceRadio
+              label="RMT Tolerance"
+              toleranceValue={formState.rmt_tolerance}
+              mzToleranceMode={formState.rmt_tolerance_mode}
               onChange={handleChange}
+              unitOptions={["percentage", "absolute"]}
+              inputName="rmt_tolerance"
+              modeName="rmt_tolerance_mode"
+              className="ccs-tolerance-im-ms"
             />
 
             <GroupRadio
@@ -276,7 +308,7 @@ const CeMsEffMobSearch = () => {
               value={formState.chemical_alphabet}
               options={["ALL", "CHNOPS", "CHNOPSCL"]}
               onChange={handleChange}
-              className="formula-type-radio-cems"
+              className="chem-alph-im-ms"
             >
               <label className="box group-radio-deuterium">
                 <input
@@ -291,8 +323,8 @@ const CeMsEffMobSearch = () => {
 
             <GroupRadio
               label="Buffer"
-              name="buffer_code"
-              value={formState.buffer_code}
+              name="buffer"
+              value={formState.buffer}
               options={bufferOptions}
               onChange={handleChange}
               className="buffer-group-cems"
@@ -304,14 +336,16 @@ const CeMsEffMobSearch = () => {
               value={formState.polarity}
               options={["Direct", "Inverse"]}
               onChange={handleChange}
+              className="polarity-group-im-ms"
             />
 
             <GroupRadio
               label="Ionization Mode"
-              name="ionization_mode"
-              value={formState.ionization_mode}
-              options={["Positive", "Negative"]}
+              name="ion_mode"
+              value={formState.ion_mode}
+              options={["positive", "negative"]}
               onChange={handleChange}
+              className="ion-mode-group-im-ms"
             />
 
             <TextInput
@@ -321,33 +355,29 @@ const CeMsEffMobSearch = () => {
               value={formState.temperature}
               onChange={handleChange}
               placeholder="e.g. 20"
+              className="temperature-input-im-ms"
             />
 
-            <ToleranceRadio
-              label="Effective Mobility Tolerance"
-              toleranceValue={formState.eff_mob_tolerance}
-              mzToleranceMode={formState.eff_mob_tolerance_mode}
+            <TextInput
+              label="RMT Reference Compound"
+              name="rmt_reference"
+              value={formState.rmt_reference}
               onChange={handleChange}
-              unitOptions={["percentage", "absolute"]}
-              inputName="eff_mob_tolerance"
-              modeName="eff_mob_tolerance_mode"
-              className="tolerance-radio-cems"
+              placeholder="e.g. L-Methionine sulfone"
             />
 
             <AdductsCheckboxes
               label="Adducts"
               selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
-              ionizationMode={formState.ionization_mode}
+              ionizationMode={formState.ion_mode}
               name="adducts"
-              className="adducts-checkboxes-cems"
+              className="adducts-im-ms"
             />
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit">
-              Submit
-            </button>
+            <button type="submit">Submit</button>
           </div>
         </form>
 
@@ -358,6 +388,7 @@ const CeMsEffMobSearch = () => {
                 Load Demo Data
               </button>
             </div>
+
             <div className="form-buttons-container">
               <button type="button" onClick={clearInput}>
                 Clear Input
@@ -375,13 +406,13 @@ const CeMsEffMobSearch = () => {
                   matchedAdductCount={matchedFeatureCount}
                   totalAdductCount={results.length}
                   progressLabel="Features with matches"
-                  filename="cems_effmob_all_features_export.csv"
+                  filename="cems_rmt_all_features_export.csv"
                 />
 
                 <div className="feature-tabs" role="tablist">
                   {results.map((featureObj, featureIndex) => (
                     <button
-                      key={`cems-eff-feature-tab-${featureIndex}`}
+                      key={`cems-rmt-feature-tab-${featureIndex}`}
                       type="button"
                       className={`feature-tab ${
                         featureIndex === activeFeatureIndex ? "active" : ""
@@ -389,8 +420,8 @@ const CeMsEffMobSearch = () => {
                       onClick={() => setActiveFeatureIndex(featureIndex)}
                     >
                       Feature {featureIndex + 1} | m/z{" "}
-                      {formatFeatureNumber(featureObj.mzValue, 4)} | Eff.
-                      Mobility {formatFeatureNumber(featureObj.effectiveMobility, 2)}
+                      {formatFeatureNumber(featureObj.feature?.mzValue, 4)} | RMT{" "}
+                      {formatFeatureNumber(featureObj.submittedRmt, 3)}
                     </button>
                   ))}
                 </div>
@@ -400,9 +431,7 @@ const CeMsEffMobSearch = () => {
                     results={activeFeatureView.summaryResults}
                     matchedAdductCount={activeFeatureView.matchedGroupCount}
                     totalAdductCount={formState.adducts.length}
-                    filename={`cems_effmob_feature_${
-                      activeFeatureIndex + 1
-                    }_export.csv`}
+                    filename={`cems_rmt_feature_${activeFeatureIndex + 1}_export.csv`}
                   />
 
                   {!activeFeatureView.hasCompounds && (
@@ -419,8 +448,20 @@ const CeMsEffMobSearch = () => {
                       tableProps={{
                         extraColumns: [
                           {
-                            header: "Mobility Error (%)",
-                            key: "mobilityErrorPct",
+                            header: "Relative MT",
+                            key: "relativeMt",
+                            type: "number",
+                            digits: 4,
+                          },
+                          {
+                            header: "Absolute MT",
+                            key: "absoluteMt",
+                            type: "number",
+                            digits: 4,
+                          },
+                          {
+                            header: "RMT Error (%)",
+                            key: "rmtErrorPct",
                             type: "number",
                             digits: 4,
                           },
@@ -440,4 +481,4 @@ const CeMsEffMobSearch = () => {
   );
 };
 
-export default CeMsEffMobSearch;
+export default CeMsRmtSearch;

@@ -11,6 +11,9 @@ import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import {
   buildGroupedResultsView,
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  flattenGroupCompounds,
 } from "../../utils/resultsSummary";
 import {
   DEFAULT_DATABASES,
@@ -347,11 +350,17 @@ const LcMsSearch = () => {
       const rawResults = response.data;
       console.log("Raw results:", rawResults);
 
-      const features = rawResults.map((item) => {
+      const features = rawResults.map((item, featureIndex) => {
         const annotationsByAdducts =
-          item.annotationsByAdducts?.map((adductGroup) => ({
+          item.annotationsByAdducts?.map((adductGroup, adductIndex) => ({
             adduct: adductGroup.adduct,
-            annotations: adductGroup.annotations || [],
+            annotations: (adductGroup.annotations || []).map(
+              (annotation, annotationIndex) =>
+                normalizeAnnotation(
+                  annotation,
+                  `${featureIndex}-${adductIndex}-${annotationIndex}`
+                )
+            ),
           })) || [];
 
         return {
@@ -374,14 +383,9 @@ const LcMsSearch = () => {
 
   const activeFeatureAdductGroups = (
     results[activeFeatureIndex]?.annotationsByAdducts || []
-  ).map((adductGroup, adductIndex) => ({
+  ).map((adductGroup) => ({
     adduct: adductGroup.adduct,
-    compounds: (adductGroup.annotations || []).map((annotation, index) =>
-      normalizeAnnotation(
-        annotation,
-        `${activeFeatureIndex}-${adductIndex}-${index}`
-      )
-    ),
+    compounds: adductGroup.annotations || [],
   }));
 
   const activeFeatureView = buildGroupedResultsView(
@@ -393,6 +397,12 @@ const LcMsSearch = () => {
       fallbackLabel: "Adduct",
     }
   );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(results, {
+    getFeatureLabel: (_, featureIndex) => `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (feature) =>
+      flattenGroupCompounds(feature.annotationsByAdducts, "annotations"),
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page cemspage">
@@ -408,17 +418,10 @@ const LcMsSearch = () => {
 
       <div className="page outer-container row">
         <div className="form-container" style={{ position: "relative" }}>
-          <label className="required-label">
-            Required <span className="red-asterisk">*</span>
-          </label>
           <form onSubmit={handleSubmit}>
             <div className="grid-container-batch-adv">
               <TextBoxInput
-                label={
-                  <>
-                    Experimental Masses <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Experimental Masses"
                 name="mz"
                 value={formState.mz}
                 onChange={handleChange}
@@ -441,7 +444,6 @@ const LcMsSearch = () => {
                 value={formState.retentionTimes}
                 onChange={handleChange}
                 className="rt-text-adv"
-                placeholder="Enter retention times (comma separated)"
               />
 
               {/*
@@ -460,7 +462,6 @@ const LcMsSearch = () => {
                 value={formState.compositeSpectrum}
                 onChange={handleChange}
                 className="spec-text-adv"
-                placeholder="Enter composite spectra (JSON array)"
                 validationMode="json"
               />
 
@@ -475,11 +476,7 @@ const LcMsSearch = () => {
             */}
 
               <ToleranceRadio
-                label={
-                  <>
-                    Tolerance <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Tolerance"
                 toleranceValue={formState.tolerance}
                 mzToleranceMode={formState.mzToleranceMode}
                 onChange={handleChange}
@@ -490,11 +487,7 @@ const LcMsSearch = () => {
               />
 
               <GroupRadio
-                label={
-                  <>
-                    Chemical Alphabet <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Chemical Alphabet"
                 name="chemicalAlphabet"
                 value={formState.chemicalAlphabet}
                 options={["All", "CHNOPS", "CHNOPS + Cl"]}
@@ -513,11 +506,7 @@ const LcMsSearch = () => {
               </GroupRadio>
 
               <GroupRadio
-                label={
-                  <>
-                    Modifiers <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Modifiers"
                 name="modifiersType"
                 value={formState.modifiersType}
                 options={[
@@ -533,22 +522,14 @@ const LcMsSearch = () => {
               />
 
               <DatabasesCheckboxes
-                label={
-                  <>
-                    Databases <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Databases"
                 selectedDatabases={formState.databases}
                 onChange={handleChange}
                 className="databases-adv"
               />
 
               <GroupRadio
-                label={
-                  <>
-                    Metabolites <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Metabolites"
                 name="metaboliteType"
                 value={formState.metaboliteType}
                 options={["All", "ONLYLIPIDS"]}
@@ -557,11 +538,7 @@ const LcMsSearch = () => {
               />
 
               <AdductsCheckboxes
-                label={
-                  <>
-                    Adducts <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Adducts"
                 selectedAdducts={formState.adductsString}
                 onSelectionChange={handleAdductsChange}
                 ionizationMode={formState.ionizationMode}
@@ -569,11 +546,7 @@ const LcMsSearch = () => {
               />
 
               <GroupRadio
-                label={
-                  <>
-                    Ionization Mode <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Ionization Mode"
                 name="ionizationMode"
                 value={formState.ionizationMode}
                 options={["POSITIVE", "NEGATIVE"]}
@@ -605,6 +578,14 @@ const LcMsSearch = () => {
             <div className="results-div">
               {results.length > 0 ? (
                 <>
+                  <ResultsSummary
+                    results={allFeaturesSummaryResults}
+                    matchedAdductCount={matchedFeatureCount}
+                    totalAdductCount={results.length}
+                    progressLabel="Features with matches"
+                    filename="lcms_all_features_export.csv"
+                  />
+
                   <div className="feature-tabs" role="tablist">
                     {results.map((featureObj, featureIndex) => (
                       <button

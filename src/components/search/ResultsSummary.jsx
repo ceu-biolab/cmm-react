@@ -16,10 +16,10 @@ const toFiniteNumber = (value) => {
 };
 
 const DEFAULT_EXPORT_COLUMNS = [
-  { header: "ID", key: "compoundId" },
-  { header: "Name", key: "compoundName" },
-  { header: "Formula", key: "formula" },
-  { header: "Mass", key: "mass" },
+  { header: "ID", key: "compoundId", always: true },
+  { header: "Name", key: "compoundName", always: true },
+  { header: "Formula", key: "formula", always: true },
+  { header: "Mass", key: "mass", always: true },
   { header: "m/z Error (ppm)", key: "massErrorPpm" },
   { header: "Score", key: "score" },
   { header: "RT Score", key: "rtScore" },
@@ -81,7 +81,9 @@ const ResultsSummary = ({
   const hiddenExportKeySet = new Set(hiddenExportKeys);
   const exportColumns = [
     ...DEFAULT_EXPORT_COLUMNS.filter(
-      (column) => !hiddenExportKeySet.has(column.key)
+      (column) =>
+        !hiddenExportKeySet.has(column.key) &&
+        (column?.always || allCompounds.some((compound) => hasValue(compound[column.key])))
     ),
     ...extraExportColumns.filter(
       (column) =>
