@@ -180,14 +180,22 @@ const externalLinkMap = {
 };
 
 const getColumns = (normalizedResults, options = {}) => {
-  const { extraColumns = [], forceColumns = [] } = options;
+  const {
+    extraColumns = [],
+    forceColumns = [],
+    hiddenColumns = [],
+  } = options;
   const forcedColumns = new Set(forceColumns);
+  const hiddenColumnKeys = new Set(hiddenColumns);
   const hasAny = (key) =>
     forcedColumns.has(key) ||
     normalizedResults.some((row) => hasValue(row[key]));
 
   const visibleExtraColumns = extraColumns.filter(
-    (column) => column?.always || hasAny(column.key)
+    (column) =>
+      column?.key &&
+      !hiddenColumnKeys.has(column.key) &&
+      (column?.always || hasAny(column.key))
   );
 
   return [
@@ -195,7 +203,12 @@ const getColumns = (normalizedResults, options = {}) => {
     { header: "Name", key: "compoundName" },
     { header: "Formula", key: "formula", className: "formula-column" },
     { header: "Mass", key: "mass", type: "number", digits: 4 },
-    { header: "Error", key: "massErrorPpm", type: "number", digits: 4 },
+    {
+      header: "m/z Error (ppm)",
+      key: "massErrorPpm",
+      type: "number",
+      digits: 4,
+    },
     ...(hasAny("score")
       ? [{ header: "Score", key: "score", type: "number", digits: 4 }]
       : []),
@@ -218,7 +231,7 @@ const getColumns = (normalizedResults, options = {}) => {
     ...(hasAny("gcmsCosineScore")
       ? [
           {
-            header: "Cosine",
+            header: "Cosine Score",
             key: "gcmsCosineScore",
             type: "number",
             digits: 4,
@@ -237,13 +250,14 @@ const getColumns = (normalizedResults, options = {}) => {
     ...visibleExtraColumns,
     { header: "External IDs", key: "externalIds", type: "identifiers" },
     { header: "Pathways", key: "pathways", type: "pathways" },
-  ];
+  ].filter((column) => column?.key && !hiddenColumnKeys.has(column.key));
 };
 
 const ResultsTable = ({
   results,
   extraColumns = [],
   forceColumns = [],
+  hiddenColumns = [],
   onRowClick,
   selectedRowId = null,
   getRowId,
@@ -255,8 +269,13 @@ const ResultsTable = ({
   );
 
   const columns = useMemo(
-    () => getColumns(normalizedResults, { extraColumns, forceColumns }),
-    [normalizedResults, extraColumns, forceColumns]
+    () =>
+      getColumns(normalizedResults, {
+        extraColumns,
+        forceColumns,
+        hiddenColumns,
+      }),
+    [normalizedResults, extraColumns, forceColumns, hiddenColumns]
   );
 
   const storeCompound = (compound) => {

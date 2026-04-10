@@ -114,3 +114,31 @@ export const buildGroupedResultsView = (
 export const singleGroupResultMap = (label = "Results", compounds = []) => ({
   [label]: ensureArray(compounds),
 });
+
+export const flattenGroupCompounds = (
+  groups = [],
+  compoundsKey = "compounds"
+) =>
+  ensureArray(groups).flatMap((group) => ensureArray(group?.[compoundsKey]));
+
+export const buildFeatureSummaryResults = (
+  features = [],
+  {
+    getFeatureLabel,
+    getFeatureCompounds,
+    fallbackLabel = "Feature",
+  } = {}
+) =>
+  ensureArray(features).reduce((acc, feature, index) => {
+    const label =
+      typeof getFeatureLabel === "function"
+        ? getFeatureLabel(feature, index)
+        : `${fallbackLabel} ${index + 1}`;
+    const compounds =
+      typeof getFeatureCompounds === "function"
+        ? ensureArray(getFeatureCompounds(feature, index))
+        : [];
+
+    acc[label || `${fallbackLabel} ${index + 1}`] = compounds;
+    return acc;
+  }, {});

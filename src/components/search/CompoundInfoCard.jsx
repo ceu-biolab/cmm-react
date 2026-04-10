@@ -7,6 +7,23 @@ import CompoundViewer2D from "./CompoundViewer2D";
 import { useLocation } from "react-router-dom";
 import { extractPathwayEntries } from "../../utils/resultNormalization";
 
+const isMeaningfulValue = (value) =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  value !== "0" &&
+  value !== "null" &&
+  value !== "undefined";
+
+const displayValue = (value) =>
+  value === null ||
+  value === undefined ||
+  value === "" ||
+  value === "null" ||
+  value === "undefined"
+    ? "N/A"
+    : value;
+
 const CompoundInfoCard = ({ compound }) => {
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
@@ -20,7 +37,8 @@ const CompoundInfoCard = ({ compound }) => {
   console.log("Compound Name:", compoundName);
 
   const compoundFormula = compound?.formula ?? getParam("formula");
-  const mass = parseFloat(compound?.mass ?? getParam("mass", "0"));
+  const massValue = compound?.mass ?? queryParams.get("mass");
+  const mass = Number(massValue);
   const chargeType = compound?.chargeType ?? getParam("chargeType");
   const chargeNumber = compound?.chargeNumber ?? getParam("chargeNumber");
   const numCarbons = compound?.numCarbons ?? getParam("numCarbons");
@@ -49,6 +67,9 @@ const CompoundInfoCard = ({ compound }) => {
       compound?.pathway ??
       queryPathways
   );
+  const has3DViewer =
+    (mol2 && mol2 !== "undefined" && mol2 !== "null") ||
+    (sdf && sdf !== "undefined" && sdf !== "null");
 
   const classifications = Array.isArray(compound?.lipidMapsClassifications)
     ? compound.lipidMapsClassifications
@@ -65,133 +86,177 @@ const CompoundInfoCard = ({ compound }) => {
     : referencesRaw
     ? [referencesRaw]
     : [];
+  const databaseReferences = [
+    {
+      label: "CAS",
+      value: casID ?? compound?.casId,
+      url: `https://commonchemistry.cas.org/detail?cas_rn=${
+        casID ?? compound?.casId
+      }`,
+    },
+    {
+      label: "KEGG",
+      value: keggID,
+      url: `https://www.kegg.jp/dbget-bin/www_bget?cpd:${keggID}`,
+    },
+    {
+      label: "CHEBI",
+      value: chebiID,
+      url: `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${chebiID}`,
+    },
+    {
+      label: "HMDB",
+      value: hmdbID,
+      url: `https://hmdb.ca/metabolites/${hmdbID}`,
+    },
+    {
+      label: "Lipid Maps",
+      value: lmID,
+      url: `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${lmID}`,
+    },
+    {
+      label: "PubChem",
+      value: pcID,
+      url: `https://pubchem.ncbi.nlm.nih.gov/compound/${pcID}`,
+    },
+    {
+      label: "Knapsack",
+      value: knapsackID,
+      url: `https://www.knapsackfamily.com/knapsack_core/information.php?word=${knapsackID}`,
+    },
+    {
+      label: "NP Atlas",
+      value: npatlasID,
+      url: `https://www.npatlas.org/explore/compounds/${npatlasID}`,
+    },
+  ].filter((item) => isMeaningfulValue(item.value));
 
   console.log("Smiles: " + smiles);
 
   return (
     <div className="page">
-      <div className="compound-info-grid-container page">
-        <div className="compound-info-col-2">
-          <div className="compounds-page-search-icon">
-            <img
-              src={searchIcon}
-              alt="Search Icon"
-              className="compounds-search-icon"
-            />
+      <div className="compound-layout-grid page">
+        <section className="compound-layout-card compound-layout-overview">
+          <div className="compound-layout-header">
+            <div className="compound-layout-icon">
+              <img src={searchIcon} alt="Overview Icon" className="compounds-search-icon" />
+            </div>
+            <strong>Compound Overview</strong>
           </div>
-          <div className="compound-name-info-card">{compoundName}</div>
-          <ul>
+          <div className="compound-name-info-card">{compoundName || "N/A"}</div>
+          <ul className="compound-overview-list">
             <li>
-              <strong>Formula: </strong>
-              {compoundFormula}
+              <strong>Formula:</strong> {displayValue(compoundFormula)}
             </li>
             <li>
-              <strong>Mass: </strong> {mass ? mass.toFixed(4) : "N/A"}
+              <strong>Mass:</strong> {Number.isFinite(mass) ? mass.toFixed(4) : "N/A"}
             </li>
             <li>
-              <strong>Charge Type: </strong> {chargeType}
+              <strong>Charge Type:</strong> {displayValue(chargeType)}
             </li>
             <li>
-              <strong>Charge Number: </strong> {chargeNumber}
+              <strong>Charge Number:</strong> {displayValue(chargeNumber)}
             </li>
             <li>
-              <strong>Number of Carbons: </strong> {numCarbons}
+              <strong>Number of Carbons:</strong> {displayValue(numCarbons)}
             </li>
             <li>
-              <strong>Double Bonds: </strong> {doubleBonds}
+              <strong>Double Bonds:</strong> {displayValue(doubleBonds)}
             </li>
             <li>
-              <strong>Number of Chains: </strong> {numChains}
+              <strong>Number of Chains:</strong> {displayValue(numChains)}
             </li>
           </ul>
-          <div className="identifiers-box">
+        </section>
+
+        <section className="compound-layout-card compound-layout-visual">
+          <div className="compound-layout-header">
+            <div className="compound-layout-icon">
+              <img src={clickIcon} alt="Viewer Icon" className="compounds-search-icon" />
+            </div>
+            <strong>Structure Viewers</strong>
+          </div>
+          <div
+            className={`compound-viewers-grid ${
+              has3DViewer ? "compound-viewers-grid--dual" : "compound-viewers-grid--single"
+            }`}
+          >
+            {has3DViewer && (
+              <div className="compound-viewer-block">
+                <CompoundViewer3D
+                  mol2Data={mol2}
+                  sdfData={sdf}
+                  className="custom-molecule-viewer"
+                />
+                <div className="click-and-drag">
+                  <img
+                    src={clickIcon}
+                    alt="Click and Drag Icon"
+                    className="click-icon"
+                  />
+                  Click and drag to move
+                </div>
+              </div>
+            )}
+            <div className="compound-viewer-block">
+              <CompoundViewer2D smiles={smiles} />
+            </div>
+          </div>
+        </section>
+
+        <section className="compound-layout-card compound-layout-identifiers">
+          <div className="compound-layout-header">
+            <div className="compound-layout-icon">
+              <img
+                src={databaseIcon}
+                alt="Identifiers Icon"
+                className="compounds-search-icon"
+              />
+            </div>
             <strong>Identifiers</strong>
+          </div>
+          <div className="compound-identifiers-grid">
+            <div className="identifiers-box">
+              <strong>Structural Identifiers</strong>
+              <ul>
+                <li>
+                  <i>InChI</i>
+                  <div>{inchi || "N/A"}</div>
+                </li>
+                <li>
+                  <i>InChIKey</i>
+                  <div>{inchiKey || "N/A"}</div>
+                </li>
+                <li>
+                  <i>SMILES</i>
+                  <div>{smiles || "N/A"}</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="compound-layout-card compound-layout-context">
+          <div className="compound-layout-header">
+            <strong>Database & References</strong>
+          </div>
+          <div className="identifiers-box">
+            <strong>Database References</strong>
             <ul>
-              <li>
-                <i>InChI</i>
-                <div>{inchi}</div>
-              </li>
-              <li>
-                <i>InChIKey</i>
-                <div>{inchiKey}</div>
-              </li>
-              <li>
-                <i>SMILES</i>
-                <div>{smiles}</div>
-              </li>
+              {databaseReferences.length > 0 ? (
+                databaseReferences.map((item) => (
+                  <li key={item.label}>
+                    {item.label}:{" "}
+                    <a href={item.url} target="_blank" rel="noopener noreferrer">
+                      {item.value}
+                    </a>
+                  </li>
+                ))
+              ) : (
+                <li>No database references available.</li>
+              )}
             </ul>
           </div>
-        </div>
-        <div className="compound-info-col-3">
-          <div className="compounds-page-search-icon">
-            <img
-              src={databaseIcon}
-              alt="Database Icon"
-              className="compounds-search-icon"
-            />
-          </div>
-          <strong>Database References</strong>
-          <ul>
-            {[
-              {
-                label: "CAS",
-                value: casID ?? compound?.casId,
-                url: `https://commonchemistry.cas.org/detail?cas_rn=${
-                  casID ?? compound?.casId
-                }`,
-              },
-              {
-                label: "KEGG",
-                value: keggID,
-                url: `https://www.kegg.jp/dbget-bin/www_bget?cpd:${keggID}`,
-              },
-              {
-                label: "CHEBI",
-                value: chebiID,
-                url: `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${chebiID}`,
-              },
-              {
-                label: "HMDB",
-                value: hmdbID,
-                url: `https://hmdb.ca/metabolites/${hmdbID}`,
-              },
-              {
-                label: "Lipid Maps",
-                value: lmID,
-                url: `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${lmID}`,
-              },
-              {
-                label: "PubChem",
-                value: pcID,
-                url: `https://pubchem.ncbi.nlm.nih.gov/compound/${pcID}`,
-              },
-              {
-                label: "Knapsack",
-                value: knapsackID,
-                url: `https://www.knapsackfamily.com/knapsack_core/information.php?word=${knapsackID}`,
-              },
-              {
-                label: "NP Atlas",
-                value: npatlasID,
-                url: `https://www.npatlas.org/explore/compounds/${npatlasID}`,
-              },
-            ]
-              .filter(
-                (item) =>
-                  item.value &&
-                  item.value !== "0" &&
-                  item.value !== "null" &&
-                  item.value !== "undefined"
-              )
-              .map((item) => (
-                <li key={item.label}>
-                  {item.label}:{" "}
-                  <a href={item.url} target="_blank" rel="noopener noreferrer">
-                    {item.value}
-                  </a>
-                </li>
-              ))}
-          </ul>
           <div className="identifiers-box">
             <strong>Classification & Context</strong>
             <ul>
@@ -248,28 +313,7 @@ const CompoundInfoCard = ({ compound }) => {
               )}
             </ul>
           </div>
-        </div>
-        {(mol2 && mol2 !== "undefined" && mol2 !== "null") ||
-        (sdf && sdf !== "undefined" && sdf !== "null") ? (
-          <div className="compound-info-col-1">
-            <CompoundViewer3D
-              mol2Data={mol2}
-              sdfData={sdf}
-              className="custom-molecule-viewer"
-            />
-            <div className="click-and-drag">
-              <img
-                src={clickIcon}
-                alt="Click and Drag Icon"
-                className="click-icon"
-              />
-              Click and drag to move
-            </div>
-          </div>
-        ) : null}
-        <div className="compound-info-col-4">
-          <CompoundViewer2D smiles={smiles} />
-        </div>
+        </section>
       </div>
     </div>
   );

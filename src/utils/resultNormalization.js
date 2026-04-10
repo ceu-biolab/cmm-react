@@ -1,5 +1,5 @@
 const isNil = (value) => value === null || value === undefined;
-const KEGG_PATHWAY_ID_PATTERN = /(map\d{5})/i;
+const KEGG_PATHWAY_ID_PATTERN = /\b(?:path:)?((?:map|ko|nt|[a-z]{2,4})\d{5})\b/i;
 
 const toMaybeNumber = (value) => {
   if (isNil(value) || value === "") {
@@ -165,21 +165,40 @@ const normalizePathwayEntry = (entry) => {
       "pathway",
       "label",
       "title",
+      "keggPathwayName",
+      "description",
     ]);
     const rawMap = firstMeaningfulValue(entry, [
       "pathwayMap",
       "pathwayCode",
+      "keggPathwayMap",
+      "keggPathwayId",
+      "keggPathway",
+      "keggMap",
       "map",
       "code",
       "id",
     ]);
+    const rawUrl = firstMeaningfulValue(entry, [
+      "keggPathwayUrl",
+      "pathwayUrl",
+      "url",
+      "href",
+      "link",
+    ]);
 
     const name = !isNil(rawName) ? String(rawName).trim() : "";
     const mapCandidate = !isNil(rawMap) ? String(rawMap).trim() : "";
+    const urlCandidate = !isNil(rawUrl) ? String(rawUrl).trim() : "";
     const keggPathwayId =
-      extractKeggPathwayId(mapCandidate) || extractKeggPathwayId(name);
+      extractKeggPathwayId(mapCandidate) ||
+      extractKeggPathwayId(name) ||
+      extractKeggPathwayId(urlCandidate);
+    const keggPathwayUrl = keggPathwayId
+      ? `https://www.kegg.jp/kegg-bin/show_pathway?${keggPathwayId}`
+      : urlCandidate || null;
 
-    if (!name && !mapCandidate) {
+    if (!name && !mapCandidate && !urlCandidate) {
       return null;
     }
 
@@ -187,9 +206,7 @@ const normalizePathwayEntry = (entry) => {
       name: name || mapCandidate,
       pathwayMap: mapCandidate || keggPathwayId,
       keggPathwayId,
-      keggPathwayUrl: keggPathwayId
-        ? `https://www.kegg.jp/kegg-bin/show_pathway?${keggPathwayId}`
-        : null,
+      keggPathwayUrl,
     };
   }
 
@@ -232,7 +249,12 @@ export const extractPathwayEntries = (pathwaysValue) => {
 
 export const normalizeCompound = (rawCompound = {}) => {
   const pathwayEntries = extractPathwayEntries(
-    firstMeaningfulValue(rawCompound, ["pathways", "pathway", "pathwayNames"])
+    firstMeaningfulValue(rawCompound, [
+      "pathwayEntries",
+      "pathways",
+      "pathway",
+      "pathwayNames",
+    ])
   );
   const pathways = pathwayEntries.map((entry) => entry.name);
 
@@ -320,6 +342,21 @@ export const normalizeCompound = (rawCompound = {}) => {
     experimentalRI: toMaybeNumber(
       firstMeaningfulValue(rawCompound, ["experimentalRI", "experimentalRi"])
     ),
+    mobilityErrorPct: toMaybeNumber(
+      firstMeaningfulValue(rawCompound, [
+        "mobilityErrorPct",
+        "effectiveMobilityErrorPct",
+      ])
+    ),
+    rmtErrorPct: toMaybeNumber(
+      firstMeaningfulValue(rawCompound, ["rmtErrorPct"])
+    ),
+    relativeMt: toMaybeNumber(
+      firstMeaningfulValue(rawCompound, ["relativeMt"])
+    ),
+    absoluteMt: toMaybeNumber(
+      firstMeaningfulValue(rawCompound, ["absoluteMt"])
+    ),
     ccsError: toMaybeNumber(
       firstMeaningfulValue(rawCompound, ["ccsError", "deltaCcs", "ccsDifference"])
     ),
@@ -355,6 +392,11 @@ export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
     riError: normalizedAnnotation.riError ?? normalizedCompound.riError,
     experimentalRI:
       normalizedAnnotation.experimentalRI ?? normalizedCompound.experimentalRI,
+    mobilityErrorPct:
+      normalizedAnnotation.mobilityErrorPct ?? normalizedCompound.mobilityErrorPct,
+    rmtErrorPct: normalizedAnnotation.rmtErrorPct ?? normalizedCompound.rmtErrorPct,
+    relativeMt: normalizedAnnotation.relativeMt ?? normalizedCompound.relativeMt,
+    absoluteMt: normalizedAnnotation.absoluteMt ?? normalizedCompound.absoluteMt,
     ccsError: normalizedAnnotation.ccsError ?? normalizedCompound.ccsError,
     dbCcs: normalizedAnnotation.dbCcs ?? normalizedCompound.dbCcs,
   };

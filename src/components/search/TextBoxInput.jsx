@@ -1,5 +1,61 @@
 import { useState, useRef } from "react";
 
+const DEFAULT_PLACEHOLDERS = {
+  mz: "e.g. 400.3432\n422.3234\n316.2495",
+  mzValues: "e.g. 400.3432\n422.3234\n316.2495",
+  masses: "e.g. 291.1299\n298.0980\n308.0940",
+  mz_values: "e.g. 291.1299\n298.0980\n308.0940",
+  retentionTimes: "e.g. 18.8425\n18.8425\n8.1449",
+  rtValues: "e.g. 8.50\n6.20\n17.40",
+  mt: "e.g. 11.56\n13.65\n15.62",
+  ccsValues: "e.g. 202.881\n178.546\n190.314",
+  effective_mobilities: "e.g. 1174\n1060\n646",
+  rmt: "e.g. 0.85\n0.86\n1.07",
+  spectrum: "e.g. 115.0376:100\n55.0177:40.3126\n59.0128:18.1033",
+  "fragmentsMZsIntensities.peaks":
+    "e.g. 55.301:12.753\n67.237:14.611\n69.204:39.189",
+  compositeSpectrum:
+    'e.g. [\n  { "400.3432": 307034.88 },\n  { "422.32336": 1562.73 }\n]',
+};
+
+const getDefaultPlaceholder = (name, label, validationMode) => {
+  if (DEFAULT_PLACEHOLDERS[name]) {
+    return DEFAULT_PLACEHOLDERS[name];
+  }
+
+  if (validationMode === "json") {
+    return DEFAULT_PLACEHOLDERS.compositeSpectrum;
+  }
+
+  if (validationMode === "mzIntensityPairs") {
+    return DEFAULT_PLACEHOLDERS["fragmentsMZsIntensities.peaks"];
+  }
+
+  const normalizedLabel = String(label || "").toLowerCase();
+
+  if (normalizedLabel.includes("spectrum")) {
+    return DEFAULT_PLACEHOLDERS.spectrum;
+  }
+
+  if (normalizedLabel.includes("retention")) {
+    return DEFAULT_PLACEHOLDERS.retentionTimes;
+  }
+
+  if (normalizedLabel.includes("migration")) {
+    return DEFAULT_PLACEHOLDERS.mt;
+  }
+
+  if (normalizedLabel.includes("ccs")) {
+    return DEFAULT_PLACEHOLDERS.ccsValues;
+  }
+
+  if (normalizedLabel.includes("mobility")) {
+    return DEFAULT_PLACEHOLDERS.effective_mobilities;
+  }
+
+  return "e.g. 400.3432\n422.3234\n316.2495";
+};
+
 const TextBoxInput = ({
   value,
   onChange,
@@ -115,9 +171,7 @@ const TextBoxInput = ({
 
   return (
     <div className={`inner-column ${customClassName}`}>
-      <label className="inner-column-label">
-        {label} {required && <span style={{ color: "red" }}>*</span>}
-      </label>
+      <label className="inner-column-label">{label}</label>
 
       <textarea
         name={name}
@@ -127,7 +181,7 @@ const TextBoxInput = ({
         onBlur={handleBlur}
         placeholder={
           customPlaceholder ||
-          "Enter mass values separated by commas, spaces, or semicolons"
+          getDefaultPlaceholder(name, label, validationMode)
         }
         rows="6"
         required={required}
