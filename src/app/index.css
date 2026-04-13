@@ -1362,6 +1362,11 @@ tbody tr:hover {
   grid-row: 1 / 2;
 }
 
+.chemical-alphabet-div {
+  grid-column: 1 / 3;
+  grid-row: 3 / 4;
+}
+
 /* Browse Search Grid Container */
 .grid-container-browse {
   display: grid;
@@ -1427,6 +1432,11 @@ tbody tr:hover {
 .chem-alph-msms {
   grid-column: 2 / 3;
   grid-row: 3 / 4;
+}
+
+.spectrum-source-msms {
+  grid-column: 1 / 2;
+  grid-row: 4 / 5;
 }
 
 .deuterium-msms {

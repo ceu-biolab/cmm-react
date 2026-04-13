@@ -33,6 +33,7 @@ const DEFAULT_EXPORT_COLUMNS = [
   { header: "Absolute MT", key: "absoluteMt" },
   { header: "CCS Error", key: "ccsError" },
   { header: "DB CCS", key: "dbCcs" },
+  { header: "Spectrum Source", key: "spectrumSource" },
   { header: "MS/MS Cosine Score", key: "msmsCosineScore" },
   { header: "Collision Energy", key: "collisionEnergy" },
   { header: "CAS", key: "casID" },

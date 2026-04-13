@@ -13,22 +13,16 @@ import { formatApiError } from "../../utils/apiError";
 import {
   buildGroupedResultsView,
 } from "../../utils/resultsSummary";
+import {
+  CHEMICAL_ALPHABET_OPTIONS,
+  toDeuteriumAwareAlphabet,
+} from "../../utils/chemicalAlphabet";
 
-const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
-  if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
-    return chemicalAlphabet;
-  }
-
-  if (chemicalAlphabet === "CHNOPS") {
-    return "CHNOPSD";
-  }
-
-  if (chemicalAlphabet === "CHNOPSCL") {
-    return "CHNOPSCLD";
-  }
-
-  return chemicalAlphabet;
-};
+const SPECTRUM_SOURCE_OPTIONS = [
+  { value: "ALL", label: "ALL" },
+  { value: "experimental", label: "Experimental" },
+  { value: "predicted", label: "Predicted" },
+];
 
 const normalizePeaks = (peaks) => {
   if (!Array.isArray(peaks) || peaks.length === 0) {
@@ -69,6 +63,7 @@ const MsMsSearch = () => {
       peaks: "",
     },
     scoreType: "",
+    spectrumSource: "ALL",
   });
 
   const [formState, setFormState] = useState(createInitialFormState);
@@ -133,6 +128,7 @@ const MsMsSearch = () => {
         ],
       },
       scoreType: "COSINE",
+      spectrumSource: "ALL",
     };
 
     const peaksString = demo.fragmentsMZsIntensities.peaks
@@ -155,6 +151,7 @@ const MsMsSearch = () => {
         peaks: peaksString,
       },
       scoreType: demo.scoreType,
+      spectrumSource: demo.spectrumSource,
     });
   };
 
@@ -249,6 +246,7 @@ const MsMsSearch = () => {
         peaks: peaksArray,
       },
       scoreType: formState.scoreType,
+      spectrumSource: formState.spectrumSource,
     };
 
     console.log("Sending to backend:", formattedData);
@@ -279,6 +277,7 @@ const MsMsSearch = () => {
             msmsCosineScore: hit.msmsCosineScore,
             deltaPpmPrecursorIon: hit.deltaPpmPrecursorIon,
             collisionEnergy: hit.collisionEnergy,
+            spectrumSource: hit.spectrumSource,
             spectrum: hit.spectrum,
             msmsId: hit.msmsId,
           });
@@ -442,7 +441,7 @@ const MsMsSearch = () => {
               label="Chemical Alphabet"
               name="chemicalAlphabet"
               value={formState.chemicalAlphabet}
-              options={["ALL", "CHNOPS", "CHNOPSCL"]}
+              options={CHEMICAL_ALPHABET_OPTIONS}
               onChange={handleChange}
               className="chem-alph-msms"
             >
@@ -464,6 +463,15 @@ const MsMsSearch = () => {
               options={["LOW", "MED", "HIGH", "ALL"]}
               onChange={handleChange}
               className="ionization-volt-div-msms"
+            />
+
+            <GroupRadio
+              label="Spectrum Source"
+              name="spectrumSource"
+              value={formState.spectrumSource}
+              options={SPECTRUM_SOURCE_OPTIONS}
+              onChange={handleChange}
+              className="spectrum-source-msms"
             />
 
             <AdductsCheckboxes
@@ -519,6 +527,11 @@ const MsMsSearch = () => {
                 tableProps={{
                   extraColumns: [
                     {
+                      header: "Spectrum Source",
+                      key: "spectrumSource",
+                      always: true,
+                    },
+                    {
                       header: "Cosine Score",
                       key: "msmsCosineScore",
                       type: "number",
@@ -564,10 +577,14 @@ const MsMsSearch = () => {
               compoundPeaks={selectedMatch.spectrum.peaks}
               selectorOptions={allMatches.map((compound, index) => ({
                 value: compound?.msmsId ?? index,
-                label:
+                label: [
                   compound?.compoundName ||
-                  compound?.compoundId ||
-                  `Match ${index + 1}`,
+                    compound?.compoundId ||
+                    `Match ${index + 1}`,
+                  compound?.spectrumSource,
+                ]
+                  .filter(Boolean)
+                  .join(" | "),
               }))}
               selectedOptionIndex={selectedMatchIndex}
               onSelectOption={(index) =>

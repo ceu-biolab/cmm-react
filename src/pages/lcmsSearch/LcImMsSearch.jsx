@@ -420,7 +420,12 @@ const LcImMsSearch = () => {
                       adduct={group.adduct}
                       compounds={group.compounds}
                       tableProps={{
-                        forceColumns: ["score", "rtScore", "adductScore", "dbCcs"],
+                        forceColumns: [
+                          "rtScore",
+                          "adductScore",
+                          "ionizationScore",
+                          "dbCcs",
+                        ],
                       }}
                     />
                   ))}

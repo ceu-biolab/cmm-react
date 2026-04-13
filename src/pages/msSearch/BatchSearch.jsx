@@ -19,6 +19,10 @@ import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
 } from "../../utils/databaseSelection";
+import {
+  CHEMICAL_ALPHABET_OPTIONS,
+  toDeuteriumAwareAlphabet,
+} from "../../utils/chemicalAlphabet";
 
 const formatNumber = (value, digits = 4) => {
   const parsed = Number(value);
@@ -34,6 +38,8 @@ const BatchSearch = () => {
     metaboliteType: "ALL",
     adductsString: [],
     databases: DEFAULT_DATABASES,
+    chemicalAlphabet: "",
+    deuterium: false,
   });
 
   const [formState, setFormState] = useState(createInitialFormState);
@@ -76,6 +82,8 @@ const BatchSearch = () => {
         "[M+H-H2O]+",
       ],
       databases: DEFAULT_DATABASES,
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
     });
   };
 
@@ -102,6 +110,8 @@ const BatchSearch = () => {
           ...prev,
           databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
+      } else if (name === "deuterium") {
+        setFormState((prev) => ({ ...prev, deuterium: checked }));
       }
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
@@ -129,6 +139,11 @@ const BatchSearch = () => {
       metaboliteType: formState.metaboliteType,
       adductsString: formState.adductsString,
       databases: formState.databases,
+      chemicalAlphabet: toDeuteriumAwareAlphabet(
+        formState.chemicalAlphabet,
+        formState.deuterium
+      ),
+      deuterium: formState.deuterium,
     };
 
     console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
@@ -251,6 +266,25 @@ const BatchSearch = () => {
               onChange={handleChange}
               className="metabolites-div"
             />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={CHEMICAL_ALPHABET_OPTIONS}
+              onChange={handleChange}
+              className="chemical-alphabet-div"
+            >
+              <label className="box group-radio-deuterium">
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </GroupRadio>
           </div>
 
           <div className="form-buttons-container center-button">

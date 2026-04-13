@@ -368,6 +368,12 @@ export const normalizeCompound = (rawCompound = {}) => {
         "databaseCcs",
       ])
     ),
+    spectrumSource: firstMeaningfulValue(rawCompound, [
+      "spectrumSource",
+      "spectraSource",
+      "librarySpectrumSource",
+      "sourceType",
+    ]),
   };
 };
 
@@ -399,5 +405,7 @@ export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
     absoluteMt: normalizedAnnotation.absoluteMt ?? normalizedCompound.absoluteMt,
     ccsError: normalizedAnnotation.ccsError ?? normalizedCompound.ccsError,
     dbCcs: normalizedAnnotation.dbCcs ?? normalizedCompound.dbCcs,
+    spectrumSource:
+      normalizedAnnotation.spectrumSource ?? normalizedCompound.spectrumSource,
   };
 };

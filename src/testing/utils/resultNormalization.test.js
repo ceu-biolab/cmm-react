@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extractPathwayEntries,
+  normalizeAnnotation,
   normalizeCompound,
 } from "../../utils/resultNormalization";
 
@@ -54,5 +55,37 @@ describe("resultNormalization pathways", () => {
     expect(entries[0].keggPathwayUrl).toBe(
       "https://www.kegg.jp/kegg-bin/show_pathway?nt06210"
     );
+  });
+});
+
+describe("resultNormalization search metadata", () => {
+  it("maps LC score entries to component score columns", () => {
+    const normalized = normalizeAnnotation({
+      compound: {
+        compoundId: 123,
+        compoundName: "L-palmitoylcarnitine",
+      },
+      scores: [
+        {
+          ionizationScore: 1,
+          adductRelationScore: 1,
+          rtScore: 0.75,
+        },
+      ],
+    });
+
+    expect(normalized.ionizationScore).toBe(1);
+    expect(normalized.adductScore).toBe(1);
+    expect(normalized.rtScore).toBe(0.75);
+  });
+
+  it("keeps MS/MS spectrum source on normalized rows", () => {
+    const normalized = normalizeCompound({
+      compoundId: 520,
+      compoundName: "Retinol",
+      spectrumSource: "experimental",
+    });
+
+    expect(normalized.spectrumSource).toBe("experimental");
   });
 });

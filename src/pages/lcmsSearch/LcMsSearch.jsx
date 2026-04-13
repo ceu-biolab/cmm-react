@@ -613,7 +613,6 @@ const LcMsSearch = () => {
                         compounds={group.compounds}
                         tableProps={{
                           forceColumns: [
-                            "score",
                             "rtScore",
                             "adductScore",
                             "ionizationScore",
