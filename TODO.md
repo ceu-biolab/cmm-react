@@ -4,7 +4,6 @@ Remove items that are finished.
 If "BE Block" is specified in an item, it means that at the moment of writing the backend still needed an updated before the item can be implemented in the frontend. Check first if they are ready before attempting the implementation on the frontend.
 
 ## To implement
-- MS/MS demo data follow-up: the frontend can now switch comparisons and shows spectrum source, but the live `msmsSearch/request1.json` payload with `spectrumSource: "ALL"` currently returns only one experimental match. Replace the demo data when a backend-provided multi-experiment/multi-source request is available.
 - Review inconsistent spacing for most forms: a lot of empty space, missaligned boxes, inconsistent sizes... (only implement if you're sure of what you're doing).
 
 
