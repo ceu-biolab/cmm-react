@@ -83,6 +83,15 @@ const mergeScores = (raw = {}) => {
       "gcmsCosineScore",
     ])
   );
+  const directRtScore = toMaybeNumber(
+    firstMeaningfulValue(raw, ["rtScore", "retentionTimeScore"])
+  );
+  const directAdductScore = toMaybeNumber(
+    firstMeaningfulValue(raw, ["adductScore", "adductRelationScore"])
+  );
+  const directIonizationScore = toMaybeNumber(
+    firstMeaningfulValue(raw, ["ionizationScore"])
+  );
 
   const scoreEntries = Array.isArray(raw.scores) ? raw.scores : [];
   const fromEntries = scoreEntries
@@ -104,9 +113,9 @@ const mergeScores = (raw = {}) => {
 
   return {
     score: directScore ?? fromEntries.score,
-    rtScore: fromEntries.rtScore,
-    adductScore: fromEntries.adductScore,
-    ionizationScore: fromEntries.ionizationScore,
+    rtScore: directRtScore ?? fromEntries.rtScore,
+    adductScore: directAdductScore ?? fromEntries.adductScore,
+    ionizationScore: directIonizationScore ?? fromEntries.ionizationScore,
   };
 };
 

@@ -63,18 +63,20 @@ const LcImMsSearch = () => {
 
   const loadDemoData = () => {
     setFormState({
-      mzValues: ["400.3432", "281.24765"].join("\n"),
-      ccsValues: ["202.881", "178.546"].join("\n"),
-      rtValues: ["8.5", "6.2"].join("\n"),
-      mzTolerance: "10",
+      mzValues: ["790.63203", "812.61397", "782.56943", "804.55137"].join(
+        "\n"
+      ),
+      ccsValues: ["291.175", "299.553", "294.385", "300.53"].join("\n"),
+      rtValues: ["6.0", "6.0", "5.0", "5.0"].join("\n"),
+      mzTolerance: "5",
       mzToleranceMode: "PPM",
-      ccsTolerance: "2",
+      ccsTolerance: "1.5",
       ccsToleranceMode: "PERCENTAGE",
       formulaType: "CHNOPS",
       deuterium: false,
       bufferGas: "N2",
       ionizationMode: "POSITIVE",
-      adducts: ["[M+H]+"],
+      adducts: ["[M+H]+", "[M+Na]+"],
     });
   };
 
@@ -154,6 +156,10 @@ const LcImMsSearch = () => {
       bufferGas: formState.bufferGas,
       adducts: formState.adducts,
       deuterium: formState.deuterium,
+      experimentParameters: {
+        ionMode: formState.ionizationMode,
+        modifierType: "NONE",
+      },
     };
 
     setLoading(true);

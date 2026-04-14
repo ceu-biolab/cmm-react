@@ -79,6 +79,20 @@ describe("resultNormalization search metadata", () => {
     expect(normalized.rtScore).toBe(0.75);
   });
 
+  it("preserves direct LC component scores during repeated normalization", () => {
+    const normalized = normalizeCompound({
+      compoundId: 123,
+      compoundName: "L-palmitoylcarnitine",
+      ionizationScore: 1,
+      adductScore: 1,
+      rtScore: 0.75,
+    });
+
+    expect(normalized.ionizationScore).toBe(1);
+    expect(normalized.adductScore).toBe(1);
+    expect(normalized.rtScore).toBe(0.75);
+  });
+
   it("keeps MS/MS spectrum source on normalized rows", () => {
     const normalized = normalizeCompound({
       compoundId: 520,
