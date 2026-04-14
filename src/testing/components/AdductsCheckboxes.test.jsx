@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import axios from "axios";
@@ -90,5 +90,28 @@ describe("AdductsCheckboxes", () => {
 
     expect(onSelectionChange).toHaveBeenCalledTimes(2);
   });
-});
 
+  it("defaults to the first six available adducts for the selected ionization mode", async () => {
+    const onSelectionChange = vi.fn();
+    render(
+      <StatefulAdductsCheckboxes
+        ionizationMode="POSITIVE"
+        onSelectionChange={onSelectionChange}
+      />
+    );
+
+    await waitFor(() =>
+      expect(onSelectionChange).toHaveBeenCalledWith([
+        "[M+Na]+",
+        "[M+2H]2+",
+        "[M+H]+",
+        "[M+K]+",
+        "[M+NH4]+",
+        "[M+H-H2O]+",
+      ])
+    );
+
+    expect(screen.getByRole("checkbox", { name: /\[M\+Na\]\+/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /\[M\+Li\]\+/ })).not.toBeChecked();
+  });
+});

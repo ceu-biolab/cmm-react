@@ -156,24 +156,7 @@ const orderSelectionByAvailable = (selection, availableAdducts) => {
   return uniqueList([...orderedKnown, ...unknown]);
 };
 
-const DEFAULT_ADDUCTS_BY_MODE = {
-  positive: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+NH4]+", "[M+H-H2O]+"],
-  negative: ["[M-H]-", "[M+Cl]-", "[M+HCOOH-H]-", "[M+FA-H]-", "[M-H-H2O]-"],
-};
-
-const getDefaultAdducts = (modeKey, availableAdducts, preferPreset = true) => {
-  if (preferPreset) {
-    const preferred = DEFAULT_ADDUCTS_BY_MODE[modeKey] || [];
-    const defaults = preferred.filter((adduct) =>
-      availableAdducts.includes(adduct)
-    );
-    if (defaults.length) {
-      return defaults;
-    }
-  }
-
-  return availableAdducts.slice(0, 6);
-};
+const getDefaultAdducts = (availableAdducts) => availableAdducts.slice(0, 6);
 
 const AdductsCheckboxes = ({
   selectedAdducts = [],
@@ -184,13 +167,13 @@ const AdductsCheckboxes = ({
   ionizationMode,
   adductsEndpoint = "get/adducts",
 }) => {
-  const usePresetDefaults = adductsEndpoint !== "get/ccs-adducts";
   const [adducts, setAdducts] = useState(
     cachedAdductsByEndpoint[adductsEndpoint] ||
       resolveFallbackAdducts(adductsEndpoint)
   );
   const previousAvailableRef = useRef(null);
   const keepEmptySelectionRef = useRef(false);
+  const autoDefaultSelectionRef = useRef([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -253,14 +236,15 @@ const AdductsCheckboxes = ({
 
       if (!filtered.length && !selectedAdducts.length && modeKey) {
         if (!keepEmptySelectionRef.current) {
-          const defaults = getDefaultAdducts(
-            modeKey,
-            availableAdducts,
-            usePresetDefaults
-          );
+          const defaults = getDefaultAdducts(availableAdducts);
           if (defaults.length) {
+            const orderedDefaults = orderSelectionByAvailable(
+              defaults,
+              availableAdducts
+            );
+            autoDefaultSelectionRef.current = orderedDefaults;
             notifySelectionChange(
-              orderSelectionByAvailable(defaults, availableAdducts)
+              orderedDefaults
             );
             previousAvailableRef.current = availableAdducts;
             return;
@@ -282,22 +266,42 @@ const AdductsCheckboxes = ({
       if (!hasSameOrder(availableAdducts, selectedAdducts)) {
         notifySelectionChange(availableAdducts);
       }
+      autoDefaultSelectionRef.current = [];
     } else {
       const filtered = orderSelectionByAvailable(
         selectedAdducts.filter((adduct) => availableAdducts.includes(adduct)),
         availableAdducts
       );
+      const previousAutoDefaults = autoDefaultSelectionRef.current;
+      const wasAutoDefaulted =
+        previousAutoDefaults.length > 0 &&
+        hasSameOrder(previousAutoDefaults, selectedAdducts);
 
-      if (!filtered.length && modeKey) {
-        if (!keepEmptySelectionRef.current) {
-          const defaults = getDefaultAdducts(
-            modeKey,
-            availableAdducts,
-            usePresetDefaults
+      if (wasAutoDefaulted) {
+        const defaults = getDefaultAdducts(availableAdducts);
+        if (defaults.length) {
+          const orderedDefaults = orderSelectionByAvailable(
+            defaults,
+            availableAdducts
           );
+          autoDefaultSelectionRef.current = orderedDefaults;
+          if (!hasSameOrder(orderedDefaults, selectedAdducts)) {
+            notifySelectionChange(orderedDefaults);
+            previousAvailableRef.current = availableAdducts;
+            return;
+          }
+        }
+      } else if (!filtered.length && modeKey) {
+        if (!keepEmptySelectionRef.current) {
+          const defaults = getDefaultAdducts(availableAdducts);
           if (defaults.length) {
+            const orderedDefaults = orderSelectionByAvailable(
+              defaults,
+              availableAdducts
+            );
+            autoDefaultSelectionRef.current = orderedDefaults;
             notifySelectionChange(
-              orderSelectionByAvailable(defaults, availableAdducts)
+              orderedDefaults
             );
             previousAvailableRef.current = availableAdducts;
             return;
@@ -320,10 +324,10 @@ const AdductsCheckboxes = ({
     selectedAdducts,
     notifySelectionChange,
     modeKey,
-    usePresetDefaults,
   ]);
 
   const handleToggleAll = (event) => {
+    autoDefaultSelectionRef.current = [];
     if (event.target.checked) {
       keepEmptySelectionRef.current = false;
       notifySelectionChange(availableAdducts);
@@ -334,6 +338,7 @@ const AdductsCheckboxes = ({
   };
 
   const handleToggleAdduct = (adduct) => {
+    autoDefaultSelectionRef.current = [];
     const nextSelection = orderSelectionByAvailable(
       selectedAdducts.includes(adduct)
         ? selectedAdducts.filter((entry) => entry !== adduct)

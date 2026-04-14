@@ -408,6 +408,14 @@ const MsMsSearch = () => {
               className="ionization-div-msms"
             />
 
+            <AdductsCheckboxes
+              selectedAdducts={formState.adducts}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
+              name="adducts"
+              className="adducts-container-msms"
+            />
+
             <GroupRadio
               label="Chemical Alphabet"
               name="chemicalAlphabet"
@@ -443,14 +451,6 @@ const MsMsSearch = () => {
               options={SPECTRUM_SOURCE_OPTIONS}
               onChange={handleChange}
               className="spectrum-source-msms"
-            />
-
-            <AdductsCheckboxes
-              selectedAdducts={formState.adducts}
-              onSelectionChange={handleAdductsChange}
-              ionizationMode={formState.ionizationMode}
-              name="adducts"
-              className="adducts-container-msms"
             />
           </div>
 

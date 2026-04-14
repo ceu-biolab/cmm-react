@@ -8,6 +8,8 @@
 - In tabbed feature results, compute matched adducts per active feature and only count adducts with `> 0` compounds.
 - In results tables, hide adduct sections with `0` compounds; show a single empty-state message only when total matches are `0`.
 - Keep adduct group ordering in results aligned with the adduct order shown in each form.
+- Default adduct preselection should use the first six currently available options for the active ionization mode, not a hardcoded preferred list.
+- Keep the `Ionization Mode` section visually adjacent to the `Adducts` section because the controls are related.
 - In CE-MS forms, display buffer `description` labels from the backend, but keep submitting buffer `code` values.
 - In CE-MS forms, render buffer options in a limited-height scrollable list (same UX pattern as adduct lists).
 - Keep pathway rendering consistent across all result tables: preserve KEGG pathway hyperlinks via shared normalization (no page-specific divergence).

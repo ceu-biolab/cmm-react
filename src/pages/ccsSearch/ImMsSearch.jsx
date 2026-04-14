@@ -316,6 +316,15 @@ const ImMsSearch = () => {
               className="modifiers-im-ms"
             />
 
+            <GroupRadio
+              label="Ionization Mode"
+              name="ionizationMode"
+              value={formState.ionizationMode}
+              options={["POSITIVE", "NEGATIVE"]}
+              onChange={handleChange}
+              className="ionization-im-ms"
+            />
+
             <AdductsCheckboxes
               label="Adducts"
               selectedAdducts={formState.adducts}
@@ -324,15 +333,6 @@ const ImMsSearch = () => {
               adductsEndpoint="get/ccs-adducts"
               name="adducts"
               className="adducts-im-ms"
-            />
-
-            <GroupRadio
-              label="Ionization Mode"
-              name="ionizationMode"
-              value={formState.ionizationMode}
-              options={["POSITIVE", "NEGATIVE"]}
-              onChange={handleChange}
-              className="ionization-im-ms"
             />
           </div>
 

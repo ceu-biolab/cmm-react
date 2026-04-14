@@ -300,6 +300,16 @@ const CeMsEffMobSearch = () => {
               value={formState.ionization_mode}
               options={["Positive", "Negative"]}
               onChange={handleChange}
+              className="ionization-mode-cems"
+            />
+
+            <AdductsCheckboxes
+              label="Adducts"
+              selectedAdducts={formState.adducts}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionization_mode}
+              name="adducts"
+              className="adducts-checkboxes-cems"
             />
 
             <TextInput
@@ -320,15 +330,6 @@ const CeMsEffMobSearch = () => {
               inputName="eff_mob_tolerance"
               modeName="eff_mob_tolerance_mode"
               className="tolerance-radio-cems"
-            />
-
-            <AdductsCheckboxes
-              label="Adducts"
-              selectedAdducts={formState.adducts}
-              onSelectionChange={handleAdductsChange}
-              ionizationMode={formState.ionization_mode}
-              name="adducts"
-              className="adducts-checkboxes-cems"
             />
           </div>
 

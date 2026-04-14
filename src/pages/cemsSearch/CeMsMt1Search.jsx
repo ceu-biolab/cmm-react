@@ -347,6 +347,15 @@ const CeMsMt1Search = () => {
               className="ion-mode-group-im-ms"
             />
 
+            <AdductsCheckboxes
+              label="Adducts"
+              selectedAdducts={formState.adducts}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ion_mode}
+              name="adducts"
+              className="adducts-im-ms"
+            />
+
             <TextInput
               label="Temperature (°C)"
               name="temperature"
@@ -394,15 +403,6 @@ const CeMsMt1Search = () => {
               onChange={handleChange}
               placeholder="e.g. 30"
               className="capillary-voltage-input-im-ms"
-            />
-
-            <AdductsCheckboxes
-              label="Adducts"
-              selectedAdducts={formState.adducts}
-              onSelectionChange={handleAdductsChange}
-              ionizationMode={formState.ion_mode}
-              name="adducts"
-              className="adducts-im-ms"
             />
           </div>
 

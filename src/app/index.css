@@ -1425,12 +1425,12 @@ tbody tr:hover {
 }
 
 .ionization-div-msms {
-  grid-column: 1 / 2;
+  grid-column: 2 / 3;
   grid-row: 3 / 4;
 }
 
 .chem-alph-msms {
-  grid-column: 2 / 3;
+  grid-column: 1 / 2;
   grid-row: 3 / 4;
 }
 
@@ -1462,9 +1462,10 @@ tbody tr:hover {
   grid-column: 2 / 3;
 }
 
-.adducts-container {
+.adducts-container,
+.adducts-container-msms {
   grid-column: 3;
-  grid-row: span 4;
+  grid-row: 1 / 5;
   background: #f8f8f8;
   padding: 15px;
   border-radius: 8px;
@@ -1498,6 +1499,11 @@ tbody tr:hover {
 .adducts-checkboxes-cems {
   grid-column: 3 / 4;
   grid-row: 1 / 4;
+}
+
+.ionization-mode-cems {
+  grid-column: 4 / 5;
+  grid-row: 2 / 3;
 }
 
 .buffer-group-cems .group-radio-options {
@@ -1939,7 +1945,7 @@ tbody tr:hover {
 }
 
 .ionization-im-ms {
-  grid-column: 2 / 3;
+  grid-column: 3 / 4;
   grid-row: 3 / 4;
 }
 
@@ -2917,7 +2923,7 @@ body {
 }
 
 .ionization-lc-im-ms {
-  grid-column: 2 / 3;
+  grid-column: 3 / 4;
   grid-row: 3 / 4;
 }
 

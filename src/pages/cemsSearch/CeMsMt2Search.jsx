@@ -345,6 +345,15 @@ const CeMsMt2Search = () => {
               className="ion-mode-group-im-ms"
             />
 
+            <AdductsCheckboxes
+              label="Adducts"
+              selectedAdducts={formState.adducts}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ion_mode}
+              name="adducts"
+              className="adducts-im-ms"
+            />
+
             <TextInput
               label="Temperature (°C)"
               name="temperature"
@@ -387,15 +396,6 @@ const CeMsMt2Search = () => {
               value={formState.marker2_time}
               onChange={handleChange}
               placeholder="e.g. 25.29"
-            />
-
-            <AdductsCheckboxes
-              label="Adducts"
-              selectedAdducts={formState.adducts}
-              onSelectionChange={handleAdductsChange}
-              ionizationMode={formState.ion_mode}
-              name="adducts"
-              className="adducts-im-ms"
             />
           </div>
 
