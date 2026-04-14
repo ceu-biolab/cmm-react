@@ -166,7 +166,7 @@ const LcImMsSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}ccs`,
+        `${import.meta.env.VITE_API_URL}lcimms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
