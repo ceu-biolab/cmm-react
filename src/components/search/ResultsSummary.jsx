@@ -60,17 +60,23 @@ const ResultsSummary = ({
   filename = "compounds_export.csv",
   extraExportColumns = [],
   hiddenExportKeys = [],
+  compact = false,
+  groupedExport = false,
 }) => {
   const groupedResults = Object.entries(results).map(([label, compounds]) => ({
     label,
     compounds: Array.isArray(compounds) ? compounds : [],
   }));
+  const normalizedGroupedResults = groupedResults.map((group) => ({
+    ...group,
+    compounds: group.compounds.map(normalizeCompound),
+  }));
 
-  const allCompounds = groupedResults
-    .flatMap((group) => group.compounds)
-    .map(normalizeCompound);
+  const allCompounds = normalizedGroupedResults.flatMap(
+    (group) => group.compounds
+  );
 
-  const matchedGroups = groupedResults.filter(
+  const matchedGroups = normalizedGroupedResults.filter(
     (group) => group.compounds.length > 0
   ).length;
   const resolvedMatchedCount =
@@ -93,6 +99,40 @@ const ResultsSummary = ({
         (column?.always || allCompounds.some((compound) => hasValue(compound[column.key])))
     ),
   ];
+  const isFeatureSummary = progressLabel === "Features with matches";
+  const useCompactLayout = compact || isFeatureSummary;
+  const exportGroups =
+    groupedExport || isFeatureSummary ? normalizedGroupedResults : null;
+
+  if (useCompactLayout) {
+    return (
+      <div className="drop-down-results-summary results-summary-compact">
+        <div className="compact-summary-stat">
+          <span className="compact-summary-value">{totalCompounds}</span>
+          <span className="compact-summary-label">
+            Compound{totalCompounds !== 1 ? "s" : ""} found
+          </span>
+        </div>
+
+        <div className="compact-summary-stat">
+          <span className="compact-summary-value">
+            {resolvedMatchedCount}/{resolvedTotalCount}
+          </span>
+          <span className="compact-summary-label">{progressLabel}</span>
+        </div>
+
+        <div className="compact-summary-downloads">
+          <FileDownload
+            data={allCompounds}
+            groups={exportGroups}
+            headers={exportColumns.map((column) => column.header)}
+            keys={exportColumns.map((column) => column.key)}
+            filename={filename}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="drop-down-results-summary">
@@ -125,6 +165,7 @@ const ResultsSummary = ({
       <div className="results-summary-col-4">
         <FileDownload
           data={allCompounds}
+          groups={exportGroups}
           headers={exportColumns.map((column) => column.header)}
           keys={exportColumns.map((column) => column.key)}
           filename={filename}

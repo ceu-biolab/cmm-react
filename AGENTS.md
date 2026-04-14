@@ -4,6 +4,7 @@
 - Self update this file for future sessions when new general guidelines are given or can be inferred.
 - You can find a symlink to examples backend requests in __backend_request_examples/. Make sure to never modify anything in there.
 - For result pages that split output by feature tabs, include a top results summary viewer per active tab.
+- Multi-feature top summaries should stay compact and preserve feature boundaries in downloads: CSV with feature columns, JSON with a `features` array level, and Excel with one sheet per feature.
 - Keep one unified `External IDs` column across all results tables (include all available DB identifiers there).
 - In tabbed feature results, compute matched adducts per active feature and only count adducts with `> 0` compounds.
 - In results tables, hide adduct sections with `0` compounds; show a single empty-state message only when total matches are `0`.
