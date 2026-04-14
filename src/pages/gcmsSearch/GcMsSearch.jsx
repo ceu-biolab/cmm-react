@@ -9,11 +9,7 @@ import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 import ResultsSummary from "../../components/search/ResultsSummary";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
-import {
-  buildFeatureSummaryResults,
-  countMatchedGroups,
-  singleGroupResultMap,
-} from "../../utils/resultsSummary";
+import { singleGroupResultMap } from "../../utils/resultsSummary";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -69,6 +65,22 @@ const parseSpectrumPairs = (input) => {
   return pairs;
 };
 
+const toSpectrumPeaks = (spectrum = []) =>
+  Array.isArray(spectrum)
+    ? spectrum.map(({ mzValue, intensity }) => ({
+        mz: mzValue,
+        intensity,
+      }))
+    : [];
+
+const getGcmsResultSource = (rawResults) => {
+  if (Array.isArray(rawResults?.gcmsFeatures)) {
+    return rawResults.gcmsFeatures[0] || {};
+  }
+
+  return rawResults || {};
+};
+
 const GcMsSearch = () => {
   const [formState, setFormState] = useState({
     spectrum: "",
@@ -84,7 +96,6 @@ const GcMsSearch = () => {
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedMatchKey, setSelectedMatchKey] = useState(null);
-  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -164,7 +175,6 @@ const GcMsSearch = () => {
         position: "middle-left",
       });
       setResults(rawResults);
-      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
@@ -175,74 +185,51 @@ const GcMsSearch = () => {
     }
   };
 
-  const featureResults = useMemo(() => {
-    const rawFeatures = results?.gcmsFeatures;
-    if (!Array.isArray(rawFeatures)) {
-      return [];
-    }
+  const gcmsCompounds = useMemo(() => {
+    const resultSource = getGcmsResultSource(results);
+    const experimentalPeaks = toSpectrumPeaks(
+      resultSource?.gcmsSpectrumExperimental?.spectrum
+    );
 
-    return rawFeatures.map((feature, featureIndex) => {
-      const experimentalPeaks =
-        feature?.gcmsSpectrumExperimental?.spectrum?.map(
-          ({ mzValue, intensity }) => ({
-            mz: mzValue,
-            intensity,
-          })
-        ) || [];
+    return (resultSource?.gcmsAnnotations || [])
+      .slice()
+      .sort(
+        (left, right) =>
+          (right.gcmsCosineScore ?? -Infinity) -
+          (left.gcmsCosineScore ?? -Infinity)
+      )
+      .map((annotation, annotationIndex) => {
+        const compoundPeaks = toSpectrumPeaks(
+          annotation?.gcmsCompound?.gcmsspectrum?.[0]?.spectrum
+        );
 
-      const compounds = (feature.gcmsAnnotations || [])
-        .slice()
-        .sort(
-          (left, right) =>
-            (right.gcmsCosineScore ?? -Infinity) -
-            (left.gcmsCosineScore ?? -Infinity)
-        )
-        .map((annotation, annotationIndex) => {
-          const compoundPeaks =
-            annotation?.gcmsCompound?.gcmsspectrum?.[0]?.spectrum?.map(
-              ({ mzValue, intensity }) => ({
-                mz: mzValue,
-                intensity,
-              })
-            ) || [];
-
-          return {
-            ...normalizeAnnotation(annotation, `${featureIndex}-${annotationIndex}`),
-            comparisonKey: `f${featureIndex}-a${annotationIndex}`,
-            featureLabel: `Feature ${featureIndex + 1}`,
-            experimentalPeaks,
-            compoundPeaks,
-          };
-        });
-
-      return {
-        label: `Feature ${featureIndex + 1}`,
-        compounds,
-      };
-    });
+        return {
+          ...normalizeAnnotation(annotation, `gcms-${annotationIndex + 1}`),
+          comparisonKey: `a${annotationIndex}`,
+          experimentalPeaks,
+          compoundPeaks,
+        };
+      });
   }, [results]);
 
   const comparisonOptions = useMemo(
     () =>
-      featureResults.flatMap((feature) =>
-        feature.compounds
-          .filter(
-            (compound) =>
-              Array.isArray(compound?.compoundPeaks) &&
-              compound.compoundPeaks.length > 0
-          )
-          .map((compound, index) => ({
-            key: compound.comparisonKey,
-            label: `${feature.label} - ${
-              compound.compoundName || compound.compoundId || `Match ${index + 1}`
-            }`,
-            experimentalPeaks: compound.experimentalPeaks,
-            compoundPeaks: compound.compoundPeaks,
-            compoundName: compound.compoundName,
-            compoundId: compound.compoundId,
-          }))
-      ),
-    [featureResults]
+      gcmsCompounds
+        .filter(
+          (compound) =>
+            Array.isArray(compound?.compoundPeaks) &&
+            compound.compoundPeaks.length > 0
+        )
+        .map((compound, index) => ({
+          key: compound.comparisonKey,
+          label:
+            compound.compoundName || compound.compoundId || `Match ${index + 1}`,
+          experimentalPeaks: compound.experimentalPeaks,
+          compoundPeaks: compound.compoundPeaks,
+          compoundName: compound.compoundName,
+          compoundId: compound.compoundId,
+        })),
+    [gcmsCompounds]
   );
 
   const selectedComparison = useMemo(
@@ -265,6 +252,9 @@ const GcMsSearch = () => {
 
   useEffect(() => {
     if (!comparisonOptions.length) {
+      if (selectedMatchKey !== null) {
+        setSelectedMatchKey(null);
+      }
       return;
     }
 
@@ -277,18 +267,8 @@ const GcMsSearch = () => {
     }
   }, [comparisonOptions, selectedMatchKey]);
 
-  const activeFeature = featureResults[activeFeatureIndex];
-  const hasActiveFeatureCompounds = (activeFeature?.compounds?.length || 0) > 0;
-  const activeFeatureResults = singleGroupResultMap(
-    activeFeature?.label || `Feature ${activeFeatureIndex + 1}`,
-    activeFeature?.compounds || []
-  );
-  const allFeaturesSummaryResults = buildFeatureSummaryResults(featureResults, {
-    getFeatureLabel: (feature, featureIndex) =>
-      feature?.label || `Feature ${featureIndex + 1}`,
-    getFeatureCompounds: (feature) => feature?.compounds || [],
-  });
-  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
+  const hasGcmsCompounds = gcmsCompounds.length > 0;
+  const summaryResults = singleGroupResultMap("GC-MS matches", gcmsCompounds);
 
   return (
     <div className="page">
@@ -422,70 +402,41 @@ const GcMsSearch = () => {
             />
           )}
 
-          {showResults && featureResults.length > 0 && (
+          {showResults && hasGcmsCompounds && (
             <p className="compare-hint">Click row to compare spectra.</p>
           )}
 
-          {showResults && featureResults.length > 0 && (
+          {showResults && (
             <>
               <ResultsSummary
-                results={allFeaturesSummaryResults}
-                matchedAdductCount={matchedFeatureCount}
-                totalAdductCount={featureResults.length}
-                progressLabel="Features with matches"
-                filename="gcms_all_features_export.csv"
+                results={summaryResults}
+                matchedAdductCount={hasGcmsCompounds ? 1 : 0}
+                totalAdductCount={1}
+                progressLabel="GC-MS matches"
+                filename="gcms_export.csv"
                 hiddenExportKeys={["score", "massErrorPpm"]}
               />
 
-              <div className="feature-tabs" role="tablist">
-                {featureResults.map((feature, featureIndex) => (
-                  <button
-                    key={`gcms-feature-tab-${feature.label}`}
-                    type="button"
-                    className={`feature-tab ${
-                      featureIndex === activeFeatureIndex ? "active" : ""
-                    }`}
-                    onClick={() => setActiveFeatureIndex(featureIndex)}
-                  >
-                    {feature.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="feature-tab-panel">
-                <ResultsSummary
-                  results={activeFeatureResults}
-                  matchedAdductCount={hasActiveFeatureCompounds ? 1 : 0}
-                  totalAdductCount={1}
-                  progressLabel="Feature matches"
-                  filename={`gcms_feature_${activeFeatureIndex + 1}_export.csv`}
-                  hiddenExportKeys={["score", "massErrorPpm"]}
+              {hasGcmsCompounds ? (
+                <ResultsDropdownGroup
+                  adduct="GC-MS matches"
+                  compounds={gcmsCompounds}
+                  defaultOpen
+                  tableProps={{
+                    hiddenColumns: ["score", "massErrorPpm"],
+                    selectedRowId: selectedMatchKey,
+                    getRowId: (compound) => compound.comparisonKey,
+                    isRowSelectable: (compound) =>
+                      Array.isArray(compound?.compoundPeaks) &&
+                      compound.compoundPeaks.length > 0,
+                    onRowClick: (compound) =>
+                      setSelectedMatchKey(compound?.comparisonKey ?? null),
+                  }}
                 />
-
-                {hasActiveFeatureCompounds ? (
-                  <ResultsDropdownGroup
-                    adduct={featureResults[activeFeatureIndex]?.label}
-                    compounds={featureResults[activeFeatureIndex]?.compounds}
-                    tableProps={{
-                      hiddenColumns: ["score", "massErrorPpm"],
-                      selectedRowId: selectedMatchKey,
-                      getRowId: (compound) => compound.comparisonKey,
-                      isRowSelectable: (compound) =>
-                        Array.isArray(compound?.compoundPeaks) &&
-                        compound.compoundPeaks.length > 0,
-                      onRowClick: (compound) =>
-                        setSelectedMatchKey(compound?.comparisonKey ?? null),
-                    }}
-                  />
-                ) : (
-                  <p className="no-results">No results found for this feature.</p>
-                )}
-              </div>
+              ) : (
+                <p className="no-results">No results found for this query.</p>
+              )}
             </>
-          )}
-
-          {showResults && featureResults.length === 0 && (
-            <p className="no-results">No features returned.</p>
           )}
         </div>
       </div>
