@@ -16,6 +16,7 @@ import {
   countMatchedGroups,
   flattenGroupCompounds,
 } from "../../utils/resultsSummary";
+import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -130,21 +131,17 @@ const CeMsEffMobSearch = () => {
     setLoading(true);
 
     const formattedData = {
-      mz_values: formState.mz_values
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(parseFloat),
-      effective_mobilities: formState.effective_mobilities
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(parseFloat),
-      mz_tolerance: parseFloat(formState.mz_tolerance),
+      mz_values: parseRequiredNumberList(formState.mz_values),
+      effective_mobilities: parseRequiredNumberList(
+        formState.effective_mobilities
+      ),
+      mz_tolerance: parseFlexibleNumber(formState.mz_tolerance),
       mz_tolerance_mode: formState.mz_tolerance_mode,
-      eff_mob_tolerance: parseFloat(formState.eff_mob_tolerance),
+      eff_mob_tolerance: parseFlexibleNumber(formState.eff_mob_tolerance),
       eff_mob_tolerance_mode: formState.eff_mob_tolerance_mode,
       buffer_code: formState.buffer_code,
       temperature: formState.temperature
-        ? parseFloat(formState.temperature)
+        ? parseFlexibleNumber(formState.temperature)
         : null,
       polarity: toApiPolarity(formState.polarity),
       chemical_alphabet: toDeuteriumAwareAlphabet(

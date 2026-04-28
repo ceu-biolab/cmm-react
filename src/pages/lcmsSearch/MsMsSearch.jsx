@@ -17,6 +17,11 @@ import {
   CHEMICAL_ALPHABET_OPTIONS,
   toDeuteriumAwareAlphabet,
 } from "../../utils/chemicalAlphabet";
+import {
+  parseFlexibleNumber,
+  parsePeakList,
+  serializePeakListForInput,
+} from "../../utils/numberParsing";
 
 const SPECTRUM_SOURCE_OPTIONS = [
   { value: "ALL", label: "ALL" },
@@ -52,11 +57,11 @@ const MsMsSearch = () => {
     precursorIonMz: "",
     tolerancePrecursorIon: "",
     toleranceModePrecursorIon: "PPM",
-    toleranceFragments: "",
+    toleranceFragments: "30",
     toleranceModeFragments: "PPM",
     ionizationMode: "POSITIVE",
     adducts: [],
-    chemicalAlphabet: "",
+    chemicalAlphabet: "CHNOPS",
     deuterium: false,
     fragmentsMZsIntensities: {
       precursorMz: "",
@@ -78,11 +83,11 @@ const MsMsSearch = () => {
       precursorIonMZ: 132.101905,
       tolerancePrecursorIon: 10.0,
       toleranceModePrecursorIon: "PPM",
-      toleranceFragments: 100.0,
-      toleranceModeFragments: "MDA",
+      toleranceFragments: 30.0,
+      toleranceModeFragments: "PPM",
       ionizationMode: "POSITIVE",
       adducts: ["[M+H]+"],
-      chemicalAlphabet: "",
+      chemicalAlphabet: "CHNOPS",
       deuterium: false,
       fragmentsMZsIntensities: {
         precursorMz: 132.101905,
@@ -102,9 +107,9 @@ const MsMsSearch = () => {
       spectrumSource: "experimental",
     };
 
-    const peaksString = demo.fragmentsMZsIntensities.peaks
-      .map((p) => `${p.mz}:${p.intensity}`)
-      .join("\n");
+    const peaksString = serializePeakListForInput(
+      demo.fragmentsMZsIntensities.peaks
+    );
 
     setFormState({
       CIDEnergy: demo.CIDEnergy,
@@ -161,49 +166,26 @@ const MsMsSearch = () => {
     setFormState((prev) => ({ ...prev, adducts }));
   };
 
-  const parseMsmsPeaks = (input) => {
-    const trimmed = input?.trim();
-    if (!trimmed) return [];
-
-    const tokens = trimmed.split(/[\s,;]+/).filter(Boolean);
-    const pairs = [];
-    const numericBuffer = [];
-
-    for (const token of tokens) {
-      if (token.includes(":")) {
-        const [mzStr, intensityStr] = token.split(":");
-        const mz = parseFloat(mzStr);
-        const intensity = parseFloat(intensityStr);
-        if (!Number.isNaN(mz) && !Number.isNaN(intensity)) {
-          pairs.push({ mz, intensity });
-        }
-      } else {
-        const value = parseFloat(token);
-        if (!Number.isNaN(value)) {
-          numericBuffer.push(value);
-        }
-      }
-    }
-
-    for (let i = 0; i + 1 < numericBuffer.length; i += 2) {
-      pairs.push({ mz: numericBuffer[i], intensity: numericBuffer[i + 1] });
-    }
-
-    return pairs;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const peaksArray = parseMsmsPeaks(formState.fragmentsMZsIntensities.peaks);
+    const { peaks: peaksArray, invalids } = parsePeakList(
+      formState.fragmentsMZsIntensities.peaks
+    );
+
+    if (invalids.length) {
+      alert("MS/MS peak list must use m/z:intensity peaks separated by new lines or semicolons.");
+      setLoading(false);
+      return;
+    }
 
     const formattedData = {
       CIDEnergy: formState.CIDEnergy,
-      precursorIonMZ: parseFloat(formState.precursorIonMz),
-      tolerancePrecursorIon: parseFloat(formState.tolerancePrecursorIon),
+      precursorIonMZ: parseFlexibleNumber(formState.precursorIonMz),
+      tolerancePrecursorIon: parseFlexibleNumber(formState.tolerancePrecursorIon),
       toleranceModePrecursorIon: formState.toleranceModePrecursorIon,
-      toleranceFragments: parseFloat(formState.toleranceFragments),
+      toleranceFragments: parseFlexibleNumber(formState.toleranceFragments),
       toleranceModeFragments: formState.toleranceModeFragments,
       ionizationMode: formState.ionizationMode,
       adducts: formState.adducts,
@@ -213,7 +195,7 @@ const MsMsSearch = () => {
       ),
       deuterium: formState.deuterium,
       fragmentsMZsIntensities: {
-        precursorMz: parseFloat(formState.precursorIonMz),
+        precursorMz: parseFlexibleNumber(formState.precursorIonMz),
         peaks: peaksArray,
       },
       scoreType: formState.scoreType,
@@ -374,7 +356,7 @@ const MsMsSearch = () => {
               value={formState.fragmentsMZsIntensities.peaks}
               onChange={handleNestedChange}
               className="box-input-msms"
-              validationMode="mzIntensityPairs"
+              validationMode="spectrum"
             />
 
             <ToleranceRadio
@@ -389,7 +371,7 @@ const MsMsSearch = () => {
             />
 
             <ToleranceRadio
-              label="M/Z Tolerance"
+              label="Fragment m/z Tolerance"
               inputName="toleranceFragments"
               modeName="toleranceModeFragments"
               toleranceValue={formState.toleranceFragments}

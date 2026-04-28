@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parseFlexibleNumber } from "../../utils/numberParsing";
 
 const TextInput = ({
   label,
@@ -11,8 +12,8 @@ const TextInput = ({
   type,
 }) => {
   const [error, setError] = useState("");
-  const inputType =
-    type ?? (["mz", "tolerance", "mass"].includes(name) ? "number" : "text");
+  const isNumericField =
+    type === "number" || ["mz", "tolerance", "mass"].includes(name);
 
   const handleInputChange = (e) => {
     const val = e.target.value;
@@ -23,9 +24,7 @@ const TextInput = ({
       return;
     }
 
-    const isNumericField = inputType === "number";
-
-    if (isNumericField && !/^[-+]?\d*\.?\d*$/.test(val)) {
+    if (isNumericField && val && parseFlexibleNumber(val) === null) {
       setError("Please enter a valid number");
     } else {
       setError("");
@@ -37,7 +36,8 @@ const TextInput = ({
     <div className={className}>
       <label className="inner-column-label">{label}</label>
       <input
-        type={inputType}
+        type="text"
+        inputMode={isNumericField ? "decimal" : undefined}
         name={name}
         value={value}
         placeholder={placeholder}

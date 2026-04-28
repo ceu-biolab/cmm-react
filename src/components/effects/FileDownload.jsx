@@ -41,6 +41,7 @@ const FileDownload = ({
   const downloadJSON = () => {
     const jsonContent = buildJsonContent({
       data,
+      keys,
       groups: exportGroups,
     });
     const blob = new Blob([jsonContent], { type: "application/json" });

@@ -19,6 +19,12 @@ import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
 } from "../../utils/databaseSelection";
+import {
+  parseCompositeSpectra,
+  parseFlexibleNumber,
+  parseRequiredNumberList,
+  serializeCompositeSpectraForInput,
+} from "../../utils/numberParsing";
 
 const formatFeatureNumber = (value, digits = 4) => {
   const parsed = Number(value);
@@ -74,7 +80,7 @@ const LcMsSearch = () => {
         16.254662,
       ].join("\n"),
 
-      compositeSpectrum: JSON.stringify(
+      compositeSpectrum: serializeCompositeSpectraForInput(
         [
           {
             400.3432: 307034.88,
@@ -221,9 +227,7 @@ const LcMsSearch = () => {
             513.3372: 1544.2075,
             514.3397: 386.18942,
           },
-        ],
-        null,
-        2
+        ]
       ),
 
       chemicalAlphabet: "CHNOPS",
@@ -284,11 +288,11 @@ const LcMsSearch = () => {
     const trimmed = value?.trim();
     if (!trimmed) return [];
 
-    const parsed = JSON.parse(trimmed);
-    if (!Array.isArray(parsed)) {
-      throw new Error("Composite spectra must be a JSON array.");
+    const { spectra, invalids } = parseCompositeSpectra(trimmed);
+    if (invalids.length) {
+      throw new Error("Composite spectra contain invalid peak entries.");
     }
-    return parsed;
+    return spectra;
   };
 
   const handleSubmit = async (e) => {
@@ -298,25 +302,19 @@ const LcMsSearch = () => {
     try {
       compositeSpectrum = parseCompositeSpectrum(formState.compositeSpectrum);
     } catch (error) {
-      console.error("Invalid composite spectra JSON:", error);
-      alert("Composite spectra must be valid JSON.");
+      console.error("Invalid composite spectra:", error);
+      alert("Composite spectra must use m/z:intensity peaks separated by new lines or semicolons, with blank lines between feature spectra.");
       return;
     }
 
     setLoading(true);
 
     const formattedData = {
-      mz: formState.mz
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(Number),
+      mz: parseRequiredNumberList(formState.mz),
 
-      retentionTimes: formState.retentionTimes
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(Number),
+      retentionTimes: parseRequiredNumberList(formState.retentionTimes),
       compositeSpectrum,
-      tolerance: parseFloat(formState.tolerance),
+      tolerance: parseFlexibleNumber(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       chemicalAlphabet: formState.chemicalAlphabet,
       deuterium: formState.deuterium,
@@ -451,7 +449,7 @@ const LcMsSearch = () => {
                 value={formState.compositeSpectrum}
                 onChange={handleChange}
                 className="spec-text-adv"
-                validationMode="json"
+                validationMode="compositeSpectrum"
               />
 
               {/*

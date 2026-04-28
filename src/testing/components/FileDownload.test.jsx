@@ -28,7 +28,7 @@ describe("FileDownload grouped exports", () => {
   });
 
   it("adds a features level to grouped JSON exports", () => {
-    const parsed = JSON.parse(buildJsonContent({ groups }));
+    const parsed = JSON.parse(buildJsonContent({ keys, groups }));
 
     expect(parsed.features).toHaveLength(2);
     expect(parsed.features[0]).toMatchObject({
@@ -45,5 +45,17 @@ describe("FileDownload grouped exports", () => {
     expect(excel).toContain('<Worksheet ss:Name="Feature 2">');
     expect(excel).toContain("Compound A");
     expect(excel).toContain("Compound B");
+  });
+
+  it("creates spreadsheet XML for flat Excel exports", () => {
+    const excel = buildExcelContent({
+      headers,
+      keys,
+      data: [{ compoundId: 1, compoundName: "Compound A" }],
+    });
+
+    expect(excel).toContain('<Worksheet ss:Name="Results">');
+    expect(excel).toContain('<Data ss:Type="Number">1</Data>');
+    expect(excel).toContain("Compound A");
   });
 });

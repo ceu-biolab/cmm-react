@@ -1,9 +1,3 @@
-const escapeHtml = (value) =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
 const escapeXml = (value) =>
   value
     .replace(/&/g, "&amp;")
@@ -64,16 +58,6 @@ const sanitizeWorksheetName = (name, index, usedNames) => {
   return nextName;
 };
 
-const buildTableRows = (data = [], keys = []) =>
-  data
-    .map((row) => {
-      const cells = keys
-        .map((key) => `<td>${escapeHtml(serializeExportValue(row[key]))}</td>`)
-        .join("");
-      return `<tr>${cells}</tr>`;
-    })
-    .join("");
-
 const buildSpreadsheetXmlCell = (value) => {
   const serialized = serializeExportValue(value);
   const cellType =
@@ -95,6 +79,21 @@ const buildSpreadsheetXmlRows = (data = [], headers = [], keys = []) => {
 
   return `${headerRow}${dataRows}`;
 };
+
+const buildWorkbook = (worksheets) => `<?xml version="1.0"?>
+  <?mso-application progid="Excel.Sheet"?>
+  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+    ${worksheets}
+  </Workbook>`;
+
+const pickExportKeys = (row = {}, keys = []) =>
+  keys.reduce((acc, key) => {
+    acc[key] = row[key] ?? "";
+    return acc;
+  }, {});
 
 export const buildCsvContent = ({
   data = [],
@@ -132,7 +131,7 @@ export const buildCsvContent = ({
   return csvRows.join("\n");
 };
 
-export const buildJsonContent = ({ data = [], groups }) => {
+export const buildJsonContent = ({ data = [], keys = [], groups }) => {
   const normalizedGroups = normalizeExportGroups(groups);
 
   if (normalizedGroups.length) {
@@ -141,7 +140,7 @@ export const buildJsonContent = ({ data = [], groups }) => {
         features: normalizedGroups.map((group) => ({
           featureIndex: group.featureIndex,
           featureLabel: group.featureLabel,
-          compounds: group.compounds,
+          compounds: group.compounds.map((row) => pickExportKeys(row, keys)),
         })),
       },
       null,
@@ -149,7 +148,7 @@ export const buildJsonContent = ({ data = [], groups }) => {
     );
   }
 
-  return JSON.stringify(data, null, 2);
+  return JSON.stringify(data.map((row) => pickExportKeys(row, keys)), null, 2);
 };
 
 export const buildExcelContent = ({
@@ -179,30 +178,14 @@ export const buildExcelContent = ({
       })
       .join("");
 
-    return `<?xml version="1.0"?>
-      <?mso-application progid="Excel.Sheet"?>
-      <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-        xmlns:o="urn:schemas-microsoft-com:office:office"
-        xmlns:x="urn:schemas-microsoft-com:office:excel"
-        xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-        ${worksheets}
-      </Workbook>`;
+    return buildWorkbook(worksheets);
   }
 
-  const headerRow = headers
-    .map((header) => `<th>${escapeHtml(header)}</th>`)
-    .join("");
-  const tableRows = buildTableRows(data, keys);
+  const rows = buildSpreadsheetXmlRows(data, headers, keys);
 
-  return `
-    <html>
-      <head><meta charset="utf-8" /></head>
-      <body>
-        <table border="1">
-          <thead><tr>${headerRow}</tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </body>
-    </html>
-  `;
+  return buildWorkbook(`
+    <Worksheet ss:Name="Results">
+      <Table>${rows}</Table>
+    </Worksheet>
+  `);
 };

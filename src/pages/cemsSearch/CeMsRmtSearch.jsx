@@ -16,6 +16,7 @@ import {
   countMatchedGroups,
   flattenGroupCompounds,
 } from "../../utils/resultsSummary";
+import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -45,13 +46,6 @@ const formatFeatureNumber = (value, digits = 4) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
 };
-
-const parseNumericList = (rawValue) =>
-  (rawValue || "")
-    .split(/[\s,;]+/)
-    .filter(Boolean)
-    .map((entry) => Number(entry))
-    .filter((entry) => Number.isFinite(entry));
 
 const CeMsRmtSearch = () => {
   const createInitialFormState = () => ({
@@ -141,8 +135,8 @@ const CeMsRmtSearch = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const masses = parseNumericList(formState.masses);
-    const rmtValues = parseNumericList(formState.rmt);
+    const masses = parseRequiredNumberList(formState.masses);
+    const rmtValues = parseRequiredNumberList(formState.rmt);
 
     if (!masses.length || !rmtValues.length) {
       alert("Experimental masses and RMT values are required.");
@@ -158,14 +152,14 @@ const CeMsRmtSearch = () => {
 
     const formattedData = {
       masses,
-      tolerance: parseFloat(formState.tolerance),
+      tolerance: parseFlexibleNumber(formState.tolerance),
       tolerance_mode: formState.tolerance_mode,
       rmt: rmtValues,
-      rmt_tolerance: parseFloat(formState.rmt_tolerance),
+      rmt_tolerance: parseFlexibleNumber(formState.rmt_tolerance),
       rmt_tolerance_mode: formState.rmt_tolerance_mode,
       buffer: formState.buffer,
       temperature: formState.temperature
-        ? parseFloat(formState.temperature)
+        ? parseFlexibleNumber(formState.temperature)
         : null,
       polarity: toApiPolarity(formState.polarity),
       rmt_reference: formState.rmt_reference,
@@ -242,7 +236,7 @@ const CeMsRmtSearch = () => {
       )}
 
       <header className="title-header">
-        <span className="title-text">CE-MS RMT Search</span>
+        <span className="title-text">CE-MS Search experimental RMT</span>
       </header>
 
       <div
@@ -393,7 +387,7 @@ const CeMsRmtSearch = () => {
                   matchedAdductCount={matchedFeatureCount}
                   totalAdductCount={results.length}
                   progressLabel="Features with matches"
-                  filename="cems_rmt_all_features_export.csv"
+                  filename="cems_experimental_rmt_all_features_export.csv"
                 />
 
                 <div className="feature-tabs" role="tablist">
@@ -418,7 +412,9 @@ const CeMsRmtSearch = () => {
                     results={activeFeatureView.summaryResults}
                     matchedAdductCount={activeFeatureView.matchedGroupCount}
                     totalAdductCount={formState.adducts.length}
-                    filename={`cems_rmt_feature_${activeFeatureIndex + 1}_export.csv`}
+                    filename={`cems_experimental_rmt_feature_${
+                      activeFeatureIndex + 1
+                    }_export.csv`}
                   />
 
                   {!activeFeatureView.hasCompounds && (

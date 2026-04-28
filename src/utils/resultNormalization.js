@@ -24,6 +24,31 @@ const normalizeIdentifier = (value) => {
   return normalized;
 };
 
+const externalIdentifierFields = [
+  ["CAS", "casID"],
+  ["KEGG", "keggID"],
+  ["CHEBI", "chebiID"],
+  ["HMDB", "hmdbID"],
+  ["LipidMaps", "lmID"],
+  ["PubChem", "pcID"],
+  ["KNApSAcK", "knapsackID"],
+  ["NP Atlas", "npatlasID"],
+  ["Agilent", "agilentID"],
+  ["InHouse", "inHouseID"],
+  ["Aspergillus", "aspergillusID"],
+  ["FAHFA", "fahfaID"],
+  ["OH Position", "ohPositionID"],
+];
+
+const buildExternalIds = (compound = {}) =>
+  externalIdentifierFields
+    .map(([label, key]) => {
+      const value = normalizeIdentifier(compound[key]);
+      return value ? `${label}: ${value}` : null;
+    })
+    .filter(Boolean)
+    .join("; ");
+
 const firstMeaningfulValue = (source, keys) => {
   for (const key of keys) {
     if (Object.hasOwn(source, key) && !isNil(source[key])) {
@@ -36,6 +61,11 @@ const firstMeaningfulValue = (source, keys) => {
 const pickScoreValues = (scoreEntry = {}) => {
   const nestedScores =
     scoreEntry && typeof scoreEntry.scores === "object" ? scoreEntry.scores : {};
+
+  const finalScore = toMaybeNumber(
+    firstMeaningfulValue(scoreEntry, ["finalScore"]) ??
+      firstMeaningfulValue(nestedScores, ["finalScore", "final"])
+  );
 
   const score = toMaybeNumber(
     firstMeaningfulValue(scoreEntry, [
@@ -67,6 +97,7 @@ const pickScoreValues = (scoreEntry = {}) => {
   );
 
   return {
+    finalScore,
     score,
     rtScore,
     adductScore,
@@ -92,18 +123,23 @@ const mergeScores = (raw = {}) => {
   const directIonizationScore = toMaybeNumber(
     firstMeaningfulValue(raw, ["ionizationScore"])
   );
+  const directFinalScore = toMaybeNumber(
+    firstMeaningfulValue(raw, ["finalScore"])
+  );
 
   const scoreEntries = Array.isArray(raw.scores) ? raw.scores : [];
   const fromEntries = scoreEntries
     .map((entry) => pickScoreValues(entry))
     .reduce(
       (acc, values) => ({
+        finalScore: acc.finalScore ?? values.finalScore,
         score: acc.score ?? values.score,
         rtScore: acc.rtScore ?? values.rtScore,
         adductScore: acc.adductScore ?? values.adductScore,
         ionizationScore: acc.ionizationScore ?? values.ionizationScore,
       }),
       {
+        finalScore: null,
         score: null,
         rtScore: null,
         adductScore: null,
@@ -112,6 +148,7 @@ const mergeScores = (raw = {}) => {
     );
 
   return {
+    finalScore: directFinalScore ?? fromEntries.finalScore,
     score: directScore ?? fromEntries.score,
     rtScore: directRtScore ?? fromEntries.rtScore,
     adductScore: directAdductScore ?? fromEntries.adductScore,
@@ -267,14 +304,10 @@ export const normalizeCompound = (rawCompound = {}) => {
   );
   const pathways = pathwayEntries.map((entry) => entry.name);
 
-  const {
-    score,
-    rtScore,
-    adductScore,
-    ionizationScore,
-  } = mergeScores(rawCompound);
+  const { finalScore, score, rtScore, adductScore, ionizationScore } =
+    mergeScores(rawCompound);
 
-  return {
+  const normalizedCompound = {
     ...rawCompound,
     compoundId: firstMeaningfulValue(rawCompound, ["compoundId", "id"]),
     compoundName: firstMeaningfulValue(rawCompound, [
@@ -340,6 +373,7 @@ export const normalizeCompound = (rawCompound = {}) => {
     pathways,
     pathwayEntries,
     pathway: pathways.join("; "),
+    finalScore,
     score,
     rtScore,
     adductScore,
@@ -384,6 +418,11 @@ export const normalizeCompound = (rawCompound = {}) => {
       "sourceType",
     ]),
   };
+
+  return {
+    ...normalizedCompound,
+    externalIds: buildExternalIds(normalizedCompound),
+  };
 };
 
 export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
@@ -397,6 +436,8 @@ export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
     compoundId: normalizedCompound.compoundId ?? fallbackId,
     massErrorPpm:
       normalizedAnnotation.massErrorPpm ?? normalizedCompound.massErrorPpm,
+    finalScore:
+      normalizedAnnotation.finalScore ?? normalizedCompound.finalScore,
     score: normalizedAnnotation.score ?? normalizedCompound.score,
     rtScore: normalizedAnnotation.rtScore ?? normalizedCompound.rtScore,
     adductScore: normalizedAnnotation.adductScore ?? normalizedCompound.adductScore,

@@ -1,4 +1,11 @@
 import { useState, useRef } from "react";
+import {
+  parseCompositeSpectra,
+  parseNumberList,
+  parsePeakList,
+  serializeNumberListForInput,
+  serializePeakListForInput,
+} from "../../utils/numberParsing";
 
 const DEFAULT_PLACEHOLDERS = {
   mz: "e.g. 400.3432\n422.3234\n316.2495",
@@ -15,7 +22,7 @@ const DEFAULT_PLACEHOLDERS = {
   "fragmentsMZsIntensities.peaks":
     "e.g. 55.301:12.753\n67.237:14.611\n69.204:39.189",
   compositeSpectrum:
-    'e.g. [\n  { "400.3432": 307034.88 },\n  { "422.32336": 1562.73 }\n]',
+    "e.g. 400.3432:307034.88\n401.34576:73205.016\n\n422.32336:1562.73\n423.3237:564.08",
 };
 
 const getDefaultPlaceholder = (name, label, validationMode) => {
@@ -23,11 +30,11 @@ const getDefaultPlaceholder = (name, label, validationMode) => {
     return DEFAULT_PLACEHOLDERS[name];
   }
 
-  if (validationMode === "json") {
+  if (validationMode === "json" || validationMode === "compositeSpectrum") {
     return DEFAULT_PLACEHOLDERS.compositeSpectrum;
   }
 
-  if (validationMode === "mzIntensityPairs") {
+  if (validationMode === "mzIntensityPairs" || validationMode === "spectrum") {
     return DEFAULT_PLACEHOLDERS["fragmentsMZsIntensities.peaks"];
   }
 
@@ -87,24 +94,12 @@ const TextBoxInput = ({
       return;
     }
 
-    // Split by commas, spaces, semicolons, or newlines
-    const parts = trimmed.split(/[\s,;]+/).filter(Boolean);
-    const invalids = parts.filter((part) => {
-      if (validationMode === "mzIntensityPairs") {
-        if (part.includes(":")) {
-          const [mzStr, intensityStr] = part.split(":");
-          return (
-            mzStr === undefined ||
-            intensityStr === undefined ||
-            isNaN(Number(mzStr)) ||
-            isNaN(Number(intensityStr))
-          );
-        }
-        return isNaN(Number(part));
-      }
-
-      return isNaN(Number(part));
-    });
+    const invalids =
+      validationMode === "mzIntensityPairs" || validationMode === "spectrum"
+        ? parsePeakList(trimmed).invalids
+        : validationMode === "compositeSpectrum"
+        ? parseCompositeSpectra(trimmed).invalids
+        : parseNumberList(trimmed).invalids;
 
     if (invalids.length > 0) {
       setError(`Invalid entries: ${invalids.join(", ")}`);
@@ -146,13 +141,50 @@ const TextBoxInput = ({
           return;
         }
 
-        const masses = text
-          .split(/[\s,;]+/)
-          .map((s) => s.trim())
-          .filter((s) => /^[-+]?(?:\d+\.?\d*|\.\d+)$/.test(s))
-          .map(parseFloat);
+        if (
+          validationMode === "mzIntensityPairs" ||
+          validationMode === "spectrum"
+        ) {
+          const { peaks, invalids } = parsePeakList(text);
+          if (!peaks.length || invalids.length) {
+            setError(
+              invalids.length
+                ? `Invalid entries: ${invalids.join(", ")}`
+                : "No valid spectrum peaks found in file"
+            );
+            return;
+          }
 
-        if (!masses.length) {
+          onChange({
+            target: {
+              name,
+              value: serializePeakListForInput(peaks),
+            },
+          });
+          setError("");
+          return;
+        }
+
+        if (validationMode === "compositeSpectrum") {
+          const { invalids } = parseCompositeSpectra(text);
+          if (invalids.length) {
+            setError(`Invalid entries: ${invalids.join(", ")}`);
+            return;
+          }
+
+          onChange({
+            target: {
+              name,
+              value: text,
+            },
+          });
+          setError("");
+          return;
+        }
+
+        const { values: numbers, invalids } = parseNumberList(text);
+
+        if (!numbers.length || invalids.length) {
           setError("No valid numeric values found in file");
           return;
         }
@@ -160,7 +192,7 @@ const TextBoxInput = ({
         onChange({
           target: {
             name,
-            value: masses.join(", "),
+            value: serializeNumberListForInput(numbers),
           },
         });
         setError("");

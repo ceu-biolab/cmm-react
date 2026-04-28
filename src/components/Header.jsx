@@ -97,7 +97,9 @@ const Header = () => {
                   <Link to="/ce-ms-eff-mob-search">CE-MS EFF MOB Search</Link>
                 </li>
                 <li>
-                  <Link to="/ce-ms-rmt-search">CE-MS RMT Search</Link>
+                  <Link to="/ce-ms-search-experimental-rmt">
+                    CE-MS Search experimental RMT
+                  </Link>
                 </li>
                 <li>
                   <Link to="/ce-ms-mt-1-marker">CE-MS MT 1 Marker</Link>

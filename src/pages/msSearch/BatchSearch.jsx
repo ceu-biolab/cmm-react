@@ -23,6 +23,7 @@ import {
   CHEMICAL_ALPHABET_OPTIONS,
   toDeuteriumAwareAlphabet,
 } from "../../utils/chemicalAlphabet";
+import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
 
 const formatNumber = (value, digits = 4) => {
   const parsed = Number(value);
@@ -126,14 +127,11 @@ const BatchSearch = () => {
     e.preventDefault();
     setLoading(true);
 
-    const mzValues = (formState.mzValues || "")
-      .split(/[\s,;]+/)
-      .filter(Boolean)
-      .map((mass) => parseFloat(mass));
+    const mzValues = parseRequiredNumberList(formState.mzValues);
 
     const formattedData = {
       mzValues,
-      tolerance: parseFloat(formState.tolerance),
+      tolerance: parseFlexibleNumber(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
       metaboliteType: formState.metaboliteType,

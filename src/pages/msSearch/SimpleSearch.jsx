@@ -22,6 +22,7 @@ import {
   CHEMICAL_ALPHABET_OPTIONS,
   toDeuteriumAwareAlphabet,
 } from "../../utils/chemicalAlphabet";
+import { parseFlexibleNumber } from "../../utils/numberParsing";
 
 const SimpleSearch = () => {
   const createInitialFormState = () => ({
@@ -119,8 +120,8 @@ const SimpleSearch = () => {
     setLoading(true);
 
     const formattedData = {
-      mz: parseFloat(formState.mz),
-      tolerance: parseFloat(formState.tolerance),
+      mz: parseFlexibleNumber(formState.mz),
+      tolerance: parseFlexibleNumber(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
       metaboliteType: formState.metaboliteType,

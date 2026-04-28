@@ -209,6 +209,9 @@ const getColumns = (normalizedResults, options = {}) => {
       type: "number",
       digits: 4,
     },
+    ...(hasAny("finalScore")
+      ? [{ header: "Final Score", key: "finalScore", type: "number", digits: 4 }]
+      : []),
     ...(hasAny("score")
       ? [{ header: "Score", key: "score", type: "number", digits: 4 }]
       : []),

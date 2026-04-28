@@ -70,10 +70,12 @@ describe("resultNormalization search metadata", () => {
           ionizationScore: 1,
           adductRelationScore: 1,
           rtScore: 0.75,
+          finalScore: 0.82,
         },
       ],
     });
 
+    expect(normalized.finalScore).toBe(0.82);
     expect(normalized.ionizationScore).toBe(1);
     expect(normalized.adductScore).toBe(1);
     expect(normalized.rtScore).toBe(0.75);
@@ -101,5 +103,16 @@ describe("resultNormalization search metadata", () => {
     });
 
     expect(normalized.spectrumSource).toBe("experimental");
+  });
+
+  it("builds one external IDs export value", () => {
+    const normalized = normalizeCompound({
+      compoundId: 123,
+      casID: "50-00-0",
+      keggID: "C00001",
+      hmdbID: null,
+    });
+
+    expect(normalized.externalIds).toBe("CAS: 50-00-0; KEGG: C00001");
   });
 });

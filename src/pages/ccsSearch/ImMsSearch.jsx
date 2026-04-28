@@ -15,6 +15,7 @@ import {
   countMatchedGroups,
   flattenGroupCompounds,
 } from "../../utils/resultsSummary";
+import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
 
 const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   if (!deuteriumEnabled || formulaType === "ALL") {
@@ -114,15 +115,8 @@ const ImMsSearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const parseNumericValues = (rawValue) =>
-      (rawValue || "")
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map((entry) => Number(entry))
-        .filter((entry) => Number.isFinite(entry));
-
-    const mzValues = parseNumericValues(formState.mzValues);
-    const ccsValues = parseNumericValues(formState.ccsValues);
+    const mzValues = parseRequiredNumberList(formState.mzValues);
+    const ccsValues = parseRequiredNumberList(formState.ccsValues);
 
     if (!mzValues.length || !ccsValues.length) {
       alert("Masses and CCS values are required.");
@@ -139,9 +133,9 @@ const ImMsSearch = () => {
     const formattedData = {
       mzValues,
       ccsValues,
-      mzTolerance: parseFloat(formState.mzTolerance),
+      mzTolerance: parseFlexibleNumber(formState.mzTolerance),
       mzToleranceMode: formState.mzToleranceMode,
-      ccsTolerance: parseFloat(formState.ccsTolerance),
+      ccsTolerance: parseFlexibleNumber(formState.ccsTolerance),
       ccsToleranceMode: formState.ccsToleranceMode,
       formulaType: toDeuteriumAwareFormula(
         formState.formulaType,

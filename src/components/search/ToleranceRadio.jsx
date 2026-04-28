@@ -1,3 +1,5 @@
+import { parseFlexibleNumber } from "../../utils/numberParsing";
+
 const ToleranceRadio = ({
   label = "Tolerance",
   toleranceValue,
@@ -41,8 +43,8 @@ const ToleranceRadio = ({
       return rawValue;
     }
 
-    const numeric = Number(rawValue);
-    if (!Number.isFinite(numeric)) {
+    const numeric = parseFlexibleNumber(rawValue);
+    if (numeric === null) {
       return rawValue;
     }
 

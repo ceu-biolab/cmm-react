@@ -10,6 +10,11 @@ import ResultsSummary from "../../components/search/ResultsSummary";
 import { formatApiError } from "../../utils/apiError";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import { singleGroupResultMap } from "../../utils/resultsSummary";
+import {
+  parseFlexibleNumber,
+  parsePeakList,
+  serializePeakListForInput,
+} from "../../utils/numberParsing";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -25,44 +30,6 @@ const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   }
 
   return chemicalAlphabet;
-};
-
-const parseSpectrumPairs = (input) => {
-  const trimmed = input?.trim();
-  if (!trimmed) {
-    return [];
-  }
-
-  const tokens = trimmed.split(/[\s,;]+/).filter(Boolean);
-  const pairs = [];
-  const numericBuffer = [];
-
-  tokens.forEach((token) => {
-    if (token.includes(":")) {
-      const [mzStr, intensityStr] = token.split(":");
-      const mzValue = Number(mzStr);
-      const intensity = Number(intensityStr);
-
-      if (Number.isFinite(mzValue) && Number.isFinite(intensity)) {
-        pairs.push({ mzValue, intensity });
-      }
-      return;
-    }
-
-    const value = Number(token);
-    if (Number.isFinite(value)) {
-      numericBuffer.push(value);
-    }
-  });
-
-  for (let index = 0; index + 1 < numericBuffer.length; index += 2) {
-    pairs.push({
-      mzValue: numericBuffer[index],
-      intensity: numericBuffer[index + 1],
-    });
-  }
-
-  return pairs;
 };
 
 const toSpectrumPeaks = (spectrum = []) =>
@@ -100,7 +67,27 @@ const GcMsSearch = () => {
   const loadDemoData = () => {
     console.log("Loading demo data...");
     setFormState({
-      spectrum: `115.0376,100.0,55.0177,40.31255,59.0128,18.10327,87.0427,15.90476,71.0855,6.21324,57.0698,5.426879,116.0395,5.407668,43.0292,5.190647,85.1014,3.522497,43.0541,3.221486,143.0325,2.812858,113.1323,2.04844,56.0257,2.012552,84.0934,1.697714,121.9918,1.101694,326.9567,1.095998,127.1478,1.063178,151.9783,1.049012,107.5385,1.047718`,
+      spectrum: serializePeakListForInput([
+        { mz: 115.0376, intensity: 100.0 },
+        { mz: 55.0177, intensity: 40.31255 },
+        { mz: 59.0128, intensity: 18.10327 },
+        { mz: 87.0427, intensity: 15.90476 },
+        { mz: 71.0855, intensity: 6.21324 },
+        { mz: 57.0698, intensity: 5.426879 },
+        { mz: 116.0395, intensity: 5.407668 },
+        { mz: 43.0292, intensity: 5.190647 },
+        { mz: 85.1014, intensity: 3.522497 },
+        { mz: 43.0541, intensity: 3.221486 },
+        { mz: 143.0325, intensity: 2.812858 },
+        { mz: 113.1323, intensity: 2.04844 },
+        { mz: 56.0257, intensity: 2.012552 },
+        { mz: 84.0934, intensity: 1.697714 },
+        { mz: 121.9918, intensity: 1.101694 },
+        { mz: 326.9567, intensity: 1.095998 },
+        { mz: 127.1478, intensity: 1.063178 },
+        { mz: 151.9783, intensity: 1.049012 },
+        { mz: 107.5385, intensity: 1.047718 },
+      ]),
       retentionIndex: "1500",
       retentionIndexTolerance: "10",
       derivatizationMethod: "METHYL_CHLOROFORMATE",
@@ -140,12 +127,26 @@ const GcMsSearch = () => {
     e.preventDefault();
     setLoading(true);
 
-    const spectrumPairs = parseSpectrumPairs(formState.spectrum);
+    const { peaks, invalids } = parsePeakList(formState.spectrum);
+
+    if (invalids.length) {
+      toast.dismiss();
+      toast.error("Spectrum must use m/z:intensity peaks separated by new lines or semicolons.");
+      setLoading(false);
+      return;
+    }
+
+    const spectrumPairs = peaks.map((peak) => ({
+      mzValue: peak.mz,
+      intensity: peak.intensity,
+    }));
 
     const formattedData = {
       gcmsSpectrumExperimental: { spectrum: spectrumPairs },
-      retentionIndex: parseFloat(formState.retentionIndex),
-      retentionIndexTolerance: parseFloat(formState.retentionIndexTolerance),
+      retentionIndex: parseFlexibleNumber(formState.retentionIndex),
+      retentionIndexTolerance: parseFlexibleNumber(
+        formState.retentionIndexTolerance
+      ),
       derivatizationMethod: formState.derivatizationMethod,
       columnType: formState.columnType,
       chemicalAlphabet: toDeuteriumAwareAlphabet(
@@ -294,7 +295,7 @@ const GcMsSearch = () => {
               value={formState.spectrum}
               onChange={handleChange}
               className="box-input-gcms"
-              validationMode="mzIntensityPairs"
+              validationMode="spectrum"
             />
 
             <TextInput

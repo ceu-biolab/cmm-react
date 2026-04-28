@@ -16,6 +16,7 @@ import {
   countMatchedGroups,
   flattenGroupCompounds,
 } from "../../utils/resultsSummary";
+import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
 
 const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   if (!deuteriumEnabled || chemicalAlphabet === "ALL") {
@@ -146,30 +147,24 @@ const CeMsMt2Search = () => {
     setLoading(true);
 
     const formattedData = {
-      masses: formState.masses
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(parseFloat),
-      mt: formState.mt
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(parseFloat),
-      tolerance: parseFloat(formState.tolerance),
+      masses: parseRequiredNumberList(formState.masses),
+      mt: parseRequiredNumberList(formState.mt),
+      tolerance: parseFlexibleNumber(formState.tolerance),
       tolerance_mode: formState.tolerance_mode,
-      mt_tolerance: parseFloat(formState.mt_tolerance),
+      mt_tolerance: parseFlexibleNumber(formState.mt_tolerance),
       mt_tolerance_mode: formState.mt_tolerance_mode,
       buffer: formState.buffer,
       temperature: formState.temperature
-        ? parseFloat(formState.temperature)
+        ? parseFlexibleNumber(formState.temperature)
         : null,
       polarity: toApiPolarity(formState.polarity),
       marker1: formState.marker1,
       marker1_time: formState.marker1_time
-        ? parseFloat(formState.marker1_time)
+        ? parseFlexibleNumber(formState.marker1_time)
         : null,
       marker2: formState.marker2,
       marker2_time: formState.marker2_time
-        ? parseFloat(formState.marker2_time)
+        ? parseFlexibleNumber(formState.marker2_time)
         : null,
       chemical_alphabet: toDeuteriumAwareAlphabet(
         formState.chemical_alphabet,
@@ -289,7 +284,7 @@ const CeMsMt2Search = () => {
             />
 
             <ToleranceRadio
-              label="MT / CCS Tolerance"
+              label="MT Tolerance"
               toleranceValue={formState.mt_tolerance}
               mzToleranceMode={formState.mt_tolerance_mode}
               onChange={handleChange}

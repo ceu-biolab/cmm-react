@@ -39,7 +39,10 @@ const App = () => {
           <Route path="/ms-ms-search" element={<MsMsSearch />} />
           <Route path="/gc-ms-search" element={<GcMsSearch />} />
           <Route path="/ce-ms-eff-mob-search" element={<CeMsEffMobSearch />} />
-          <Route path="/ce-ms-rmt-search" element={<CeMsRmtSearch />} />
+          <Route
+            path="/ce-ms-search-experimental-rmt"
+            element={<CeMsRmtSearch />}
+          />
           <Route path="/ce-ms-mt-1-marker" element={<CeMsMt1Search />} />
           <Route path="/ce-ms-mt-2-markers" element={<CeMsMt2Search />} />
           <Route path="/compound/:id" element={<CompoundPage />} />
