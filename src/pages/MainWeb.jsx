@@ -63,9 +63,9 @@ const MainWeb = () => {
   return (
     <div>
       <div>
-        {/*<section className="full-width-section-main">
-        <img src={CMMFinalHeader} alt="CMM Header" />
-      </section>*/}
+        <section className="full-width-section-main">
+          <img src={CMMFinalHeader} alt="CMM Header" />
+        </section>
         <div className="main-body">
           {/*
         <div className="hero-subheader">
@@ -97,10 +97,6 @@ const MainWeb = () => {
                   </div>
                 ))}
               </section>
-            </section>
-
-            <section className="full-width-section-main">
-              <img src={CMMFinalHeader} alt="CMM Header" />
             </section>
 
             <main className="main-container">

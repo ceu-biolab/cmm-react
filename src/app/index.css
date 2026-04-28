@@ -212,8 +212,6 @@ body {
   margin: 0.5rem;
   border-radius: 1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  aspect-ratio: 16 / 10;
-  min-height: 0;
 }
 
 .image-card img {
@@ -2108,6 +2106,7 @@ tbody tr:hover {
   font-size: 0.9rem;
   opacity: 0.8;
   font-family: monospace;
+  z-index: 2;
 }
 
 .title-block {
@@ -2115,6 +2114,7 @@ tbody tr:hover {
   bottom: 2rem;
   left: 2rem;
   max-width: 50%;
+  z-index: 2;
 }
 
 .title-block h2 {
@@ -2142,6 +2142,7 @@ tbody tr:hover {
   display: flex;
   gap: 2rem;
   text-align: center;
+  z-index: 2;
 }
 
 .stat .value {
