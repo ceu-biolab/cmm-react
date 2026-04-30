@@ -60,6 +60,9 @@ const Header = () => {
                   <Link to="/lc-ms-search">LC-MS Search</Link>
                 </li>
                 <li>
+                  <Link to="/lc-ms-ms-search">LC-MS/MS Search</Link>
+                </li>
+                <li>
                   <Link to="/lc-im-ms-search">LC-IM-MS Search</Link>
                 </li>
                 <li>

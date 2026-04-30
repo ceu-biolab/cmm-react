@@ -4,8 +4,6 @@ Remove items that are finished.
 If "BE Block" is specified in an item, it means that at the moment of writing the backend still needed an updated before the item can be implemented in the frontend. Check first if they are ready before attempting the implementation on the frontend.
 
 ## To implement
-- (BE Block) Create the page for LC-MS/MS Search after the endpoint is implemented in the backend.
-- (BE Block) Browse Search is missing a Chemical Alphabet "CHNOPS" filter
 
 
 ## For Manual Human Review

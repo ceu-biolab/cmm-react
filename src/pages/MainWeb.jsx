@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import CMMFinalHeader from "../assets/images/ceu-mass-mediator-logo.png";
-import omarImg from "../assets/images/omar-lopez-rincon-XkPNEqAhlaI-unsplash.jpg";
-import cembioImg from "../assets/images/cembio03.jpg";
-import cembioLabImg from "../assets/images/CEMBIO-BW.jpg";
-import mainImg from "../assets/images/Main-Image-1.jpg";
-import arrow from "../assets/svgs/right-arrow.svg";
-import databaseImg from "../assets/svgs/database-link.svg";
-import twoImg from "../assets/svgs/two-link.svg";
-import threeImg from "../assets/svgs/three-link.svg";
-import searchImg from "../assets/svgs/search-link.svg";
 import { Link } from "react-router-dom";
+import databaseIcon from "../assets/svgs/database.svg";
+import moleculeIcon from "../assets/svgs/molecule-main.svg";
+import searchIcon from "../assets/svgs/search-svg.svg";
+import spectraIcon from "../assets/svgs/spectra.svg";
 
 const FALLBACK_STATS = {
   compounds: 306000,
@@ -24,6 +18,121 @@ const formatCompact = (value) =>
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(Number(value) || 0);
+
+const primaryActions = [
+  {
+    label: "Simple Search",
+    to: "/simple-search",
+    variant: "primary",
+  },
+  {
+    label: "Batch Search",
+    to: "/batch-search",
+  },
+  {
+    label: "Browse Compounds",
+    to: "/browse-search",
+  },
+];
+
+const workflows = [
+  {
+    title: "MS Search",
+    description:
+      "Search exact masses, batches, or known compounds across the metabolite database.",
+    icon: searchIcon,
+    links: [
+      { label: "Simple Search", to: "/simple-search" },
+      { label: "Batch Search", to: "/batch-search" },
+      { label: "Browse Search", to: "/browse-search" },
+    ],
+  },
+  {
+    title: "LC-MS",
+    description:
+      "Use retention time and ion mobility context to refine LC-MS annotations.",
+    icon: moleculeIcon,
+    links: [
+      { label: "LC-MS Search", to: "/lc-ms-search" },
+      { label: "LC-MS/MS Search", to: "/lc-ms-ms-search" },
+      { label: "LC-IM-MS Search", to: "/lc-im-ms-search" },
+    ],
+  },
+  {
+    title: "MS/MS",
+    description:
+      "Match fragmentation spectra and inspect candidate annotations from tandem MS data.",
+    icon: spectraIcon,
+    links: [{ label: "MS/MS Search", to: "/ms-ms-search" }],
+  },
+  {
+    title: "GC-MS",
+    description:
+      "Search GC-MS spectra with a focused workflow for volatile metabolite annotation.",
+    icon: databaseIcon,
+    links: [{ label: "GC-MS Search", to: "/gc-ms-search" }],
+  },
+  {
+    title: "CE-MS",
+    description:
+      "Query capillary electrophoresis resources using effective mobility and migration time.",
+    icon: moleculeIcon,
+    links: [
+      { label: "EFF MOB Search", to: "/ce-ms-eff-mob-search" },
+      { label: "Experimental RMT", to: "/ce-ms-search-experimental-rmt" },
+      { label: "MT 1 Marker", to: "/ce-ms-mt-1-marker" },
+      { label: "MT 2 Markers", to: "/ce-ms-mt-2-markers" },
+    ],
+  },
+  {
+    title: "CCS",
+    description:
+      "Compare collision cross section records for ion mobility mass spectrometry.",
+    icon: databaseIcon,
+    links: [
+      { label: "IM-MS Search", to: "/im-ms-search" },
+      { label: "LC-IM-MS Search", to: "/lc-im-ms-search" },
+    ],
+  },
+];
+
+const benefits = [
+  "Unified compound search across KEGG, HMDB, LipidMaps, Metlin, MINE, NP Atlas, and in-house libraries.",
+  "InChIKey-based unification to reduce duplicate candidates across data sources.",
+  "Annotation support for exact mass, adducts, retention time, mobility, CCS, CE-MS, GC-MS, and MS/MS workflows.",
+  "Research-backed workflows developed by CEMBIO at Universidad CEU San Pablo.",
+];
+
+const publications = [
+  {
+    tag: "CMM 2.0",
+    title: "Knowledge-based metabolite annotation tool: CEU Mass Mediator",
+    authors: "Gil-de-la-Fuente A., Godzien J. et al.",
+    source: "Journal of Pharmaceutical and Biomedical Analysis, 2018",
+    href: "https://www.sciencedirect.com/science/article/abs/pii/S0731708517326559",
+  },
+  {
+    tag: "CMM 3.0",
+    title: "CEU Mass Mediator 3.0: A Metabolite Annotation Tool",
+    authors: "Gil-de-la-Fuente A., Godzien J. et al.",
+    source: "Journal of Proteome Research, 2019",
+    href: "https://pubs.acs.org/doi/abs/10.1021/acs.jproteome.8b00720",
+  },
+  {
+    tag: "CE-MS",
+    title: "Capillary Electrophoresis-Mass Spectrometry database",
+    authors: "Mamani-Huanca, M., Gil-de-la-Fuente A. et al.",
+    source: "Journal of Chromatography A, 2020",
+    href: "https://www.sciencedirect.com/science/article/abs/pii/S0021967320310323",
+  },
+  {
+    tag: "RT Prediction",
+    title: "Probabilistic Annotation using RT Prediction and Projections",
+    authors: "Garcia, C.A., Gil-de-la-Fuente, A., Barbas, C. et al.",
+    source: "Journal of Cheminformatics, 2022",
+    href: "https://jcheminf.biomedcentral.com/articles/10.1186/s13321-022-00613-8",
+  },
+];
 
 const MainWeb = () => {
   const [stats, setStats] = useState(FALLBACK_STATS);
@@ -41,7 +150,7 @@ const MainWeb = () => {
         }));
       })
       .catch(() => {
-        // keep fallback stats on network/API failures
+        // Keep fallback stats on network/API failures.
       });
 
     return () => {
@@ -49,7 +158,7 @@ const MainWeb = () => {
     };
   }, []);
 
-  const statCards = useMemo(() => {
+  const statItems = useMemo(() => {
     const totalSpectra =
       (Number(stats.msmsSpectra) || 0) + (Number(stats.gcmsSpectra) || 0);
 
@@ -61,269 +170,113 @@ const MainWeb = () => {
   }, [stats]);
 
   return (
-    <div>
-      <div>
-        <section className="full-width-section-main">
-          <img src={CMMFinalHeader} alt="CMM Header" />
-        </section>
-        <div className="main-body">
-          {/*
-        <div className="hero-subheader">
-          <h3>
-            Empowering Metabolomics Research <span>|</span> Fast, unified, and
-            accurate metabolite annotation at your fingertips
-          </h3>
-        </div>*/}
-          <div className="main-background">
-            <section className="cmm-title-con">
-              <h5 className="version">V4 CEU Mass Mediator</h5>
+    <main className="home-page">
+      <section className="home-hero" aria-labelledby="home-title">
+        <div className="home-hero-content">
+          <p className="home-kicker">V4 CEU Mass Mediator</p>
+          <h1 id="home-title">CEU Mass Mediator</h1>
+          <p className="home-lede">
+            Metabolite annotation across MS, LC-MS, GC-MS, CE-MS, CCS, and
+            MS/MS workflows.
+          </p>
 
-              <div className="title-block">
-                <h2>
-                  Unified Metabolite Search for <br />
-                  <span className="mass">Mass Spectrometry</span>
-                </h2>
-                <h4>
-                  Search across multiple databases all in one place. Faster,
-                  accurate, and streamlined.
-                </h4>
-              </div>
-
-              <section className="stats">
-                {statCards.map((item) => (
-                  <div className="stat" key={item.label}>
-                    <div className="value">{formatCompact(item.value)}</div>
-                    <div className="label">{item.label}</div>
-                  </div>
-                ))}
-              </section>
-            </section>
-
-            <main className="main-container">
-              <section className="image-panel">
-                <Link className="image-card" to="/browse-search">
-                  <img src={mainImg} alt="Browse Search" />
-                  <div className="overlay-title">Browse Search</div>
-                  <div className="overlay-bottom">
-                    <p>
-                      Cut your search time in half by searching all of the most
-                      common databases at the click of a button.
-                    </p>
-                    <div className="learn-more">
-                      <span className="arrow">
-                        <img src={arrow} />
-                      </span>
-                      <span className="text">Learn more</span>
-                    </div>
-                  </div>
-                </Link>
-
-                <div className="image-card">
-                  <img src={omarImg} alt="Analyze Molecules" />
-                  <div className="overlay-title">Analyze Molecules</div>
-                  <div className="overlay-bottom">
-                    <p>
-                      Explore and analyze 2D and 3D molecular structures and
-                      gain deeper insights.
-                    </p>
-                    <div className="learn-more">
-                      <span className="arrow">
-                        <img src={arrow} />
-                      </span>
-                      <span className="text">Learn more</span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              <section className="section-3">
-                <aside className="sidebar-info">
-                  <h3>About CEU Mass Mediator</h3>
-                  <h5>
-                    A powerful tool for searching metabolites across multiple
-                    databases (Kegg, HMDB, LipidMaps, Metlin, MINE, and in-house
-                    libraries), optimized for mass spectrometry data.
-                  </h5>
-
-                  <h4>Why Use It?</h4>
-                  <ul>
-                    <li>
-                      Unifies compounds from multiple sources using InChI Keys
-                    </li>
-                    <li>
-                      Saves time by avoiding manual database searches and
-                      unification
-                    </li>
-                    <li>Reduces risk of incorrect compound annotation</li>
-                  </ul>
-                  <br></br>
-                  <h4>Key Features</h4>
-                  <ul>
-                    <li>
-                      <strong>LC-MS Advanced Search:</strong> Scores annotations
-                      based on adduct probability, co-occurring signals, and
-                      retention times.
-                    </li>
-                    <li>
-                      <strong>CE-MS Search:</strong> Uses experimental data from
-                      various setups (electrolyte, polarity, ionization).
-                    </li>
-                    <li>
-                      <strong>Oxidized Lipid Identification:</strong> Detect
-                      oxPCs from MS/MS spectra.
-                    </li>
-                  </ul>
-                </aside>
-              </section>
-              <section className="image-panel">
-                <Link className="image-card" to="/simple-search">
-                  <img src={cembioImg} alt="Simple Search" />
-                  <div className="overlay-title">Simple Search</div>
-                  <div className="overlay-bottom">
-                    <p>
-                      Input data and get results in seconds with our easy-to-use
-                      Simple Search.
-                    </p>
-                    <div className="learn-more">
-                      <span className="arrow">
-                        <img src={arrow} />
-                      </span>
-                      <span className="text">Learn more</span>
-                    </div>
-                  </div>
-                </Link>
-
-                <div className="image-card">
-                  <img src={cembioLabImg} alt="Get to know us" />
-                  <div className="overlay-title">Get to Know Us</div>
-                  <div className="overlay-bottom">
-                    <p>
-                      Explore our most recent publications, up-to-date research,
-                      and current team.
-                    </p>
-                    <div className="learn-more">
-                      <span className="arrow">
-                        <img src={arrow} />
-                      </span>
-                      <span className="text">Learn more</span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </main>
+          <div className="home-actions" aria-label="Primary search actions">
+            {primaryActions.map((action) => (
+              <Link
+                className={`home-action ${
+                  action.variant === "primary" ? "home-action-primary" : ""
+                }`}
+                key={action.to}
+                to={action.to}
+              >
+                {action.label}
+              </Link>
+            ))}
           </div>
-          <section className="second-main-con">
-            <section>
-              <h2 className="citation-heading">Publications</h2>
-              <section className="citation-links">
-                <div className="citation-link">
-                  <div className="link-subtitle">
-                    <img src={twoImg} alt="DB Logo" />
-                    CMM 2.0
-                  </div>
-                  <p className="link-title">
-                    <span>
-                      Knowledge-based metabolite annotation tool: CEU Mass
-                      Mediator
-                    </span>
-                  </p>
-                  <a
-                    href="https://www.sciencedirect.com/science/article/abs/pii/S0731708517326559"
-                    target="_blank"
-                    className="link"
-                  >
-                    Gil-de-la-Fuente A., Godzien J. et al.{" "}
-                    <em>
-                      Journal of Pharmaceutical and Biomedical Analysis, 2018,
-                      154, 138-149 →
-                    </em>
-                  </a>
-                </div>
-
-                <div className="citation-link">
-                  <div className="link-subtitle">
-                    <img src={threeImg} alt="DB Logo" />
-                    CMM 3.0
-                  </div>
-                  <p className="link-title">
-                    <span>
-                      CEU Mass Mediator 3.0: A Metabolite Annotation Tool
-                    </span>
-                  </p>
-                  <a
-                    href="https://pubs.acs.org/doi/abs/10.1021/acs.jproteome.8b00720"
-                    target="_blank"
-                    className="link"
-                  >
-                    Gil-de-la-Fuente A., Godzien J. et al.
-                    <em>
-                      Journal of Proteome Research 2019, 18 (2), 797-802 →
-                    </em>
-                  </a>
-                </div>
-
-                <div className="citation-link">
-                  <div className="link-subtitle">
-                    <img src={databaseImg} alt="DB Logo" />
-                    CE-MS Database
-                  </div>
-                  <p className="link-title">
-                    <span>Capillary Electrophoresis-Mass Spectrometry</span>
-                  </p>
-                  <a
-                    href="https://www.sciencedirect.com/science/article/abs/pii/S0021967320310323"
-                    target="_blank"
-                    className="link"
-                  >
-                    Mamani-Huanca, M., Gil-de-la-Fuente A. et al.
-                    <em>
-                      Journal of Chromatography A 2020, 1635 (4), 461758 →
-                    </em>
-                  </a>
-                </div>
-
-                <div className="citation-link">
-                  <div className="link-subtitle">
-                    <img src={searchImg} alt="DB Logo" />
-                    RT Pred Search
-                  </div>
-                  <p className="link-title">
-                    <span>
-                      Probabilistic Annotation using RT Prediction and
-                      Projections
-                    </span>
-                  </p>
-                  <a
-                    href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-022-00613-8"
-                    target="_blank"
-                    className="link"
-                  >
-                    García, C.A., Gil-de-la-Fuente, A., Barbas, C. et al.{" "}
-                    <em>Journal of Cheminformatics 2022, 14, 33 →</em>
-                  </a>
-                </div>
-              </section>
-            </section>
-          </section>
-          {/* 
-        <section className="third-main-con">
-          <img src={labImg} />
-        </section>
-        */}
         </div>
 
-        {/*
-             
-      <section className="molecule-viewer-main-con">
-        <div className="molecule-viewer-main-page">
-          <MoleculeViewer
-            mol2Data={mol2A}
-            className="custom-molecule-viewer custom-molecule-viewer-main-page"
-          />
+        <dl className="home-stats" aria-label="Database statistics">
+          {statItems.map((item) => (
+            <div className="home-stat" key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{formatCompact(item.value)}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="home-section" aria-labelledby="workflows-title">
+        <div className="home-section-heading">
+          <p className="home-section-kicker">Search workflows</p>
+          <h2 id="workflows-title">Choose the closest experimental context</h2>
+        </div>
+
+        <div className="workflow-grid">
+          {workflows.map((workflow) => (
+            <article className="workflow-card" key={workflow.title}>
+              <div className="workflow-card-header">
+                <img src={workflow.icon} alt="" aria-hidden="true" />
+                <h3>{workflow.title}</h3>
+              </div>
+              <p>{workflow.description}</p>
+              <div className="workflow-links">
+                {workflow.links.map((link) => (
+                  <Link key={link.to} to={link.to}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
         </div>
       </section>
-      */}
-      </div>
-    </div>
+
+      <section className="home-about" aria-labelledby="about-title">
+        <div>
+          <p className="home-section-kicker">About</p>
+          <h2 id="about-title">Built for metabolite annotation work</h2>
+          <p>
+            CEU Mass Mediator centralizes metabolite search and annotation
+            resources so experimental results can be compared against multiple
+            databases and workflow-specific evidence from one place.
+          </p>
+        </div>
+
+        <ul className="benefit-list">
+          {benefits.map((benefit) => (
+            <li key={benefit}>{benefit}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="home-section" aria-labelledby="publications-title">
+        <div className="home-section-heading">
+          <p className="home-section-kicker">Publications</p>
+          <h2 id="publications-title">Methods and data resources</h2>
+        </div>
+
+        <div className="publication-list">
+          {publications.map((publication) => (
+            <article className="publication-row" key={publication.href}>
+              <div className="publication-tag">{publication.tag}</div>
+              <div className="publication-body">
+                <h3>{publication.title}</h3>
+                <p>
+                  {publication.authors} <span>{publication.source}</span>
+                </p>
+              </div>
+              <a
+                href={publication.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View paper
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 };
 

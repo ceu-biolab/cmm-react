@@ -7,6 +7,7 @@ import MainWeb from "../pages/MainWeb";
 import SimpleSearch from "../pages/msSearch/SimpleSearch";
 import BatchSearch from "../pages/msSearch/BatchSearch";
 import LcMsSearch from "../pages/lcmsSearch/LcMsSearch";
+import LcMsMsSearch from "../pages/lcmsSearch/LcMsMsSearch";
 import ImMsSearch from "../pages/ccsSearch/ImMsSearch";
 import LcImMsSearch from "../pages/lcmsSearch/LcImMsSearch";
 import BrowseSearch from "../pages/msSearch/BrowseSearch";
@@ -33,6 +34,7 @@ const App = () => {
             path="/lc-ms-search"
             element={<LcMsSearch />}
           />
+          <Route path="/lc-ms-ms-search" element={<LcMsMsSearch />} />
           <Route path="/im-ms-search" element={<ImMsSearch />} />
           <Route path="/lc-im-ms-search" element={<LcImMsSearch />} />
           <Route path="/browse-search" element={<BrowseSearch />} />

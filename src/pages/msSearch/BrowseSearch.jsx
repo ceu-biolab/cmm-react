@@ -6,6 +6,7 @@ import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 import ResultsSummary from "../../components/search/ResultsSummary";
 import { formatApiError } from "../../utils/apiError";
+import { CHEMICAL_ALPHABET_OPTIONS } from "../../utils/chemicalAlphabet";
 import {
   DEFAULT_DATABASES,
   toggleDatabaseSelection,
@@ -17,6 +18,7 @@ const BrowseSearch = () => {
     name: "",
     formula: "",
     metaboliteType: "ALL",
+    chemicalAlphabet: "",
     databases: DEFAULT_DATABASES,
   });
 
@@ -33,6 +35,7 @@ const BrowseSearch = () => {
       name: "Choline",
       formula: "C5H14NO",
       metaboliteType: "ALL",
+      chemicalAlphabet: "CHNOPS",
       databases: DEFAULT_DATABASES,
     });
   };
@@ -81,6 +84,7 @@ const BrowseSearch = () => {
       compoundName: trimmedName || null,
       formula: trimmedFormula || null,
       metaboliteType: formState.metaboliteType,
+      chemicalAlphabet: formState.chemicalAlphabet,
       databases: formState.databases,
     };
 
@@ -163,6 +167,15 @@ const BrowseSearch = () => {
               options={["ALL", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-browse-div"
+            />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={CHEMICAL_ALPHABET_OPTIONS}
+              onChange={handleChange}
+              className="chemical-alphabet-browse-div"
             />
 
             <DatabasesCheckboxes
