@@ -141,7 +141,7 @@ const MainWeb = () => {
     let mounted = true;
 
     axios
-      .get(`${import.meta.env.VITE_API_URL}get/stats`)
+      .get(`${import.meta.env.VITE_API_URL}metadata/stats`)
       .then((response) => {
         if (!mounted) return;
         setStats((prev) => ({

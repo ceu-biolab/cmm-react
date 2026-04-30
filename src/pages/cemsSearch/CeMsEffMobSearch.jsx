@@ -156,7 +156,7 @@ const CeMsEffMobSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}CEMSSearch`,
+        `${import.meta.env.VITE_API_URL}cems-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );

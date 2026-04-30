@@ -92,7 +92,7 @@ const BrowseSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}browseSearch`,
+        `${import.meta.env.VITE_API_URL}browse-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );

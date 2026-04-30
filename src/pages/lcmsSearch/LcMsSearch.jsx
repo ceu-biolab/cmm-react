@@ -329,7 +329,7 @@ const LcMsSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}batch-advanced-search`,
+        `${import.meta.env.VITE_API_URL}lcms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );

@@ -74,7 +74,7 @@ const cachedAdductsByEndpoint = {};
 const adductsPromiseByEndpoint = {};
 
 const resolveFallbackAdducts = (endpoint) => {
-  if (endpoint === "get/ccs-adducts") {
+  if (endpoint === "metadata/ccs-adducts") {
     return FALLBACK_CCS_ADDUCTS;
   }
   return FALLBACK_ADDUCTS;
@@ -165,7 +165,7 @@ const AdductsCheckboxes = ({
   label = "Adducts",
   name = "adductsString",
   ionizationMode,
-  adductsEndpoint = "get/adducts",
+  adductsEndpoint = "adducts",
 }) => {
   const [adducts, setAdducts] = useState(
     cachedAdductsByEndpoint[adductsEndpoint] ||

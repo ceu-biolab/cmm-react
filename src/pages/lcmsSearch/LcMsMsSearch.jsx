@@ -34,12 +34,6 @@ const SPECTRUM_SOURCE_OPTIONS = [
   { value: "predicted", label: "Predicted" },
 ];
 
-const LCMSMS_ENDPOINTS = [
-  "LCMSMSSearch",
-  "lcmsms-search",
-  "lc-ms-ms-search",
-];
-
 const firstDefined = (...values) =>
   values.find((value) => value !== undefined && value !== null);
 
@@ -88,13 +82,36 @@ const buildDemoSpectra = () => [
     { mz: 91.118, intensity: 12.331 },
     { mz: 93.14, intensity: 30.405 },
     { mz: 95.091, intensity: 50.0 },
+    { mz: 96.871, intensity: 15.034 },
     { mz: 105.084, intensity: 27.365 },
     { mz: 107.052, intensity: 25.0 },
     { mz: 109.035, intensity: 31.757 },
+    { mz: 111.057, intensity: 18.074 },
+    { mz: 119.012, intensity: 20.777 },
     { mz: 121.035, intensity: 100.0 },
+    { mz: 121.722, intensity: 11.318 },
+    { mz: 122.549, intensity: 15.456 },
+    { mz: 124.954, intensity: 15.203 },
+    { mz: 130.958, intensity: 10.98 },
     { mz: 132.972, intensity: 31.419 },
+    { mz: 134.987, intensity: 21.199 },
+    { mz: 137.048, intensity: 26.689 },
+    { mz: 143.036, intensity: 9.544 },
+    { mz: 145.113, intensity: 14.949 },
+    { mz: 146.854, intensity: 15.034 },
+    { mz: 148.939, intensity: 11.74 },
     { mz: 150.992, intensity: 27.027 },
+    { mz: 157.2, intensity: 13.851 },
+    { mz: 159.066, intensity: 16.639 },
+    { mz: 161.08, intensity: 16.639 },
+    { mz: 163.149, intensity: 12.078 },
+    { mz: 165.094, intensity: 8.108 },
+    { mz: 171.028, intensity: 12.331 },
+    { mz: 173.152, intensity: 10.557 },
+    { mz: 174.916, intensity: 12.584 },
     { mz: 185.099, intensity: 12.5 },
+    { mz: 199.295, intensity: 8.024 },
+    { mz: 216.966, intensity: 12.078 },
     { mz: 244.947, intensity: 13.936 },
   ],
 ];
@@ -148,6 +165,7 @@ const getRawFeatures = (rawResults) => {
   const candidates = [
     rawResults?.features,
     rawResults?.msFeatures,
+    rawResults?.msmsFeatures,
     rawResults?.msfeatures,
     rawResults?.lcmsmsFeatures,
     rawResults?.results,
@@ -289,26 +307,11 @@ const normalizeFeatureResults = (rawResults, formattedData) => {
 };
 
 const postLcMsMsSearch = async (formattedData) => {
-  let lastError;
-
-  for (const endpoint of LCMSMS_ENDPOINTS) {
-    try {
-      return await axios.post(
-        `${import.meta.env.VITE_API_URL}${endpoint}`,
-        formattedData,
-        { headers: { "Content-Type": "application/json" } }
-      );
-    } catch (error) {
-      const status = error?.response?.status;
-      lastError = error;
-
-      if (status !== 404 && status !== 405) {
-        throw error;
-      }
-    }
-  }
-
-  throw lastError;
+  return axios.post(
+    `${import.meta.env.VITE_API_URL}lcmsms-search`,
+    formattedData,
+    { headers: { "Content-Type": "application/json" } }
+  );
 };
 
 const formatFeatureNumber = (value, digits = 4) => {

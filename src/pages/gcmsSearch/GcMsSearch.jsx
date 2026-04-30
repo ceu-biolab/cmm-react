@@ -160,7 +160,7 @@ const GcMsSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}gcms`,
+        `${import.meta.env.VITE_API_URL}gcms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );

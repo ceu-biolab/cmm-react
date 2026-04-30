@@ -88,7 +88,7 @@ export const getCeMsBuffers = async () => {
 
   if (!buffersPromise) {
     buffersPromise = axios
-      .get(`${import.meta.env.VITE_API_URL}get/ce-ms-buffers`)
+      .get(`${import.meta.env.VITE_API_URL}metadata/ce-ms-buffers`)
       .then((response) => {
         const normalized = normalizeBuffers(response.data);
         cachedBuffers =

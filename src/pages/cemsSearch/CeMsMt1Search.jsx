@@ -181,7 +181,7 @@ const CeMsMt1Search = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}CEMS1Marker`,
+        `${import.meta.env.VITE_API_URL}cems-1-marker`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );

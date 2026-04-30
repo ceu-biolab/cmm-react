@@ -48,7 +48,7 @@ export const getCcsAdducts = async () => {
 
   if (!ccsAdductsPromise) {
     ccsAdductsPromise = axios
-      .get(`${import.meta.env.VITE_API_URL}get/ccs-adducts`)
+      .get(`${import.meta.env.VITE_API_URL}metadata/ccs-adducts`)
       .then((response) => {
         const normalized = normalizeAdductsPayload(response.data);
         cachedCcsAdducts = normalized || FALLBACK_CCS_ADDUCTS;
@@ -97,4 +97,3 @@ export const sortAdductEntries = (entries, order) => {
     return String(left).localeCompare(String(right));
   });
 };
-

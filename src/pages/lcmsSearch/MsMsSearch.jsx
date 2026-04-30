@@ -206,7 +206,7 @@ const MsMsSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}MSMSSearch`,
+        `${import.meta.env.VITE_API_URL}msms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );

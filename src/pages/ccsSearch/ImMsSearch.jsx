@@ -149,7 +149,7 @@ const ImMsSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}ccs`,
+        `${import.meta.env.VITE_API_URL}imms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -324,7 +324,7 @@ const ImMsSearch = () => {
               selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
               ionizationMode={formState.ionizationMode}
-              adductsEndpoint="get/ccs-adducts"
+              adductsEndpoint="metadata/ccs-adducts"
               name="adducts"
               className="adducts-im-ms"
             />

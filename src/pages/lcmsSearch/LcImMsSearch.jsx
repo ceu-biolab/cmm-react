@@ -344,7 +344,7 @@ const LcImMsSearch = () => {
               selectedAdducts={formState.adducts}
               onSelectionChange={handleAdductsChange}
               ionizationMode={formState.ionizationMode}
-              adductsEndpoint="get/ccs-adducts"
+              adductsEndpoint="metadata/ccs-adducts"
               className="adducts-lc-im-ms"
             />
           </div>
