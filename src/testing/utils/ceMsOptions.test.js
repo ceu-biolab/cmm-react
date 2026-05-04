@@ -143,4 +143,13 @@ describe("ceMsOptions helpers", () => {
     expect(toCeMsApiPolarity("Inverse")).toBe("Reverse");
     expect(toCeMsMetadataIonizationMode("negative")).toBe("Negative");
   });
+
+  it("tolerates null metadata before the request resolves", () => {
+    expect(getCeMsAllCompoundNames(null, "rmtReferenceCompounds")).toEqual([]);
+    expect(
+      getCeMsAvailableCompoundNames(null, "rmtReferenceCompounds", {
+        bufferCode: "FORMIC_ACID_1M",
+      })
+    ).toEqual([]);
+  });
 });

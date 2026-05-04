@@ -191,7 +191,12 @@ export const getCeMsAllCompoundNames = (
     return [];
   }
 
-  return ceMsOptions[compoundField] || [];
+  const normalizedOptions =
+    ceMsOptions && typeof ceMsOptions === "object"
+      ? ceMsOptions
+      : EMPTY_CE_MS_OPTIONS;
+
+  return normalizedOptions[compoundField] || [];
 };
 
 export const getCeMsAvailableCompoundNames = (
@@ -203,8 +208,13 @@ export const getCeMsAvailableCompoundNames = (
     return [];
   }
 
+  const normalizedOptions =
+    ceMsOptions && typeof ceMsOptions === "object"
+      ? ceMsOptions
+      : EMPTY_CE_MS_OPTIONS;
+
   return uniqueNames(
-    (ceMsOptions.conditions || [])
+    (normalizedOptions.conditions || [])
       .filter((condition) =>
         matchesTextFilter(condition.bufferCode, filters.bufferCode)
       )
