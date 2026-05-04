@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
+import CeMsCompoundSelector from "../../components/search/CeMsCompoundSelector.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
@@ -9,6 +10,13 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
+import {
+  getCeMsAllCompoundNames,
+  getCeMsAvailableCompoundNames,
+  getCeMsOptions,
+  toCeMsApiPolarity,
+  toCeMsMetadataIonizationMode,
+} from "../../utils/ceMsOptions";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import {
   buildGroupedResultsView,
@@ -32,14 +40,6 @@ const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   }
 
   return chemicalAlphabet;
-};
-
-const toApiPolarity = (polarity) => {
-  if (polarity === "Inverse") {
-    return "Reverse";
-  }
-
-  return polarity;
 };
 
 const formatFeatureNumber = (value, digits = 4) => {
@@ -71,7 +71,6 @@ const CeMsMt1Search = () => {
   const [formState, setFormState] = useState(createInitialFormState);
 
   const loadDemoData = () => {
-    console.log("Loading demo data...");
     setFormState({
       masses: ["291.1299", "298.098", "308.094", "316.2488", "55.055"].join(
         "\n"
@@ -103,7 +102,6 @@ const CeMsMt1Search = () => {
   };
 
   const clearInput = () => {
-    console.log("Clearing input...");
     setFormState(createInitialFormState());
   };
 
@@ -112,10 +110,8 @@ const CeMsMt1Search = () => {
   const [showResults, setShowResults] = useState(false);
   const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
-
-  useEffect(() => {
-    console.log("Updated searchData:", formState);
-  }, [formState]);
+  const [ceMsOptions, setCeMsOptions] = useState(null);
+  const [ceMsOptionsError, setCeMsOptionsError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -123,6 +119,25 @@ const CeMsMt1Search = () => {
       if (!mounted) return;
       setBufferOptions(buffers && buffers.length ? buffers : defaultCeMsBuffers);
     });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getCeMsOptions()
+      .then((options) => {
+        if (!mounted) return;
+        setCeMsOptions(options);
+        setCeMsOptionsError(false);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCeMsOptionsError(true);
+      });
 
     return () => {
       mounted = false;
@@ -158,7 +173,7 @@ const CeMsMt1Search = () => {
       temperature: formState.temperature
         ? parseFlexibleNumber(formState.temperature)
         : null,
-      polarity: toApiPolarity(formState.polarity),
+      polarity: toCeMsApiPolarity(formState.polarity),
       marker: formState.marker,
       marker_time: formState.marker_time
         ? parseFlexibleNumber(formState.marker_time)
@@ -177,17 +192,13 @@ const CeMsMt1Search = () => {
       adducts: formState.adducts,
     };
 
-    console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
-
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}cems-1-marker`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
-
       const rawResults = response.data;
-      console.log(rawResults);
 
       const features =
         rawResults.ceFeatures?.map((item, featureIndex) => {
@@ -223,6 +234,58 @@ const CeMsMt1Search = () => {
       setLoading(false);
     }
   };
+
+  const compoundFilters = useMemo(
+    () => ({
+      bufferCode: formState.buffer,
+      temperature: formState.temperature
+        ? parseFlexibleNumber(formState.temperature)
+        : null,
+      polarity: toCeMsApiPolarity(formState.polarity),
+      ionizationMode: toCeMsMetadataIonizationMode(formState.ion_mode),
+    }),
+    [
+      formState.buffer,
+      formState.temperature,
+      formState.polarity,
+      formState.ion_mode,
+    ]
+  );
+
+  const allMarkerCompounds = useMemo(
+    () => getCeMsAllCompoundNames(ceMsOptions, "markerCompounds"),
+    [ceMsOptions]
+  );
+
+  const availableMarkerCompounds = useMemo(
+    () =>
+      getCeMsAvailableCompoundNames(
+        ceMsOptions,
+        "markerCompounds",
+        compoundFilters
+      ),
+    [ceMsOptions, compoundFilters]
+  );
+
+  useEffect(() => {
+    if (!ceMsOptions || !formState.marker) {
+      return;
+    }
+
+    const availableLookup = new Set(availableMarkerCompounds);
+    if (availableLookup.has(formState.marker)) {
+      return;
+    }
+
+    setFormState((prev) =>
+      prev.marker
+        ? {
+            ...prev,
+            marker: "",
+          }
+        : prev
+    );
+  }, [availableMarkerCompounds, ceMsOptions, formState.marker]);
 
   const activeFeatureView = buildGroupedResultsView(
     results[activeFeatureIndex]?.annotationsByAdducts,
@@ -361,14 +424,27 @@ const CeMsMt1Search = () => {
               className="temperature-input-im-ms"
             />
 
-            <TextInput
-              label="Marker Compound"
-              name="marker"
-              value={formState.marker}
-              onChange={handleChange}
-              placeholder="e.g. L-Methionine sulfone"
-              className="marker-input-im-ms"
-            />
+            {ceMsOptions && allMarkerCompounds.length && !ceMsOptionsError ? (
+              <CeMsCompoundSelector
+                label="Marker Compound"
+                name="marker"
+                value={formState.marker}
+                onChange={handleChange}
+                options={allMarkerCompounds}
+                availableOptions={availableMarkerCompounds}
+                searchPlaceholder="Search marker compounds"
+                className="marker-input-im-ms"
+              />
+            ) : (
+              <TextInput
+                label="Marker Compound"
+                name="marker"
+                value={formState.marker}
+                onChange={handleChange}
+                placeholder="e.g. L-Methionine sulfone"
+                className="marker-input-im-ms"
+              />
+            )}
 
             <TextInput
               label="Marker Time (min)"

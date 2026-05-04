@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
+import CeMsCompoundSelector from "../../components/search/CeMsCompoundSelector.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
 import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
@@ -9,6 +10,13 @@ import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import { formatApiError } from "../../utils/apiError";
 import { defaultCeMsBuffers, getCeMsBuffers } from "../../utils/cemsBuffers";
+import {
+  getCeMsAllCompoundNames,
+  getCeMsAvailableCompoundNames,
+  getCeMsOptions,
+  toCeMsApiPolarity,
+  toCeMsMetadataIonizationMode,
+} from "../../utils/ceMsOptions";
 import { normalizeAnnotation } from "../../utils/resultNormalization";
 import {
   buildFeatureSummaryResults,
@@ -32,14 +40,6 @@ const toDeuteriumAwareAlphabet = (chemicalAlphabet, deuteriumEnabled) => {
   }
 
   return chemicalAlphabet;
-};
-
-const toApiPolarity = (polarity) => {
-  if (polarity === "Inverse") {
-    return "Reverse";
-  }
-
-  return polarity;
 };
 
 const formatFeatureNumber = (value, digits = 4) => {
@@ -72,6 +72,8 @@ const CeMsRmtSearch = () => {
   const [showResults, setShowResults] = useState(false);
   const [bufferOptions, setBufferOptions] = useState(defaultCeMsBuffers);
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
+  const [ceMsOptions, setCeMsOptions] = useState(null);
+  const [ceMsOptionsError, setCeMsOptionsError] = useState(false);
 
   const loadDemoData = () => {
     setFormState({
@@ -111,6 +113,25 @@ const CeMsRmtSearch = () => {
       if (!mounted) return;
       setBufferOptions(buffers && buffers.length ? buffers : defaultCeMsBuffers);
     });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getCeMsOptions()
+      .then((options) => {
+        if (!mounted) return;
+        setCeMsOptions(options);
+        setCeMsOptionsError(false);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCeMsOptionsError(true);
+      });
 
     return () => {
       mounted = false;
@@ -161,7 +182,7 @@ const CeMsRmtSearch = () => {
       temperature: formState.temperature
         ? parseFlexibleNumber(formState.temperature)
         : null,
-      polarity: toApiPolarity(formState.polarity),
+      polarity: toCeMsApiPolarity(formState.polarity),
       rmt_reference: formState.rmt_reference,
       chemical_alphabet: toDeuteriumAwareAlphabet(
         formState.chemical_alphabet,
@@ -210,6 +231,58 @@ const CeMsRmtSearch = () => {
       setLoading(false);
     }
   };
+
+  const compoundFilters = useMemo(
+    () => ({
+      bufferCode: formState.buffer,
+      temperature: formState.temperature
+        ? parseFlexibleNumber(formState.temperature)
+        : null,
+      polarity: toCeMsApiPolarity(formState.polarity),
+      ionizationMode: toCeMsMetadataIonizationMode(formState.ion_mode),
+    }),
+    [
+      formState.buffer,
+      formState.temperature,
+      formState.polarity,
+      formState.ion_mode,
+    ]
+  );
+
+  const allReferenceCompounds = useMemo(
+    () => getCeMsAllCompoundNames(ceMsOptions, "rmtReferenceCompounds"),
+    [ceMsOptions]
+  );
+
+  const availableReferenceCompounds = useMemo(
+    () =>
+      getCeMsAvailableCompoundNames(
+        ceMsOptions,
+        "rmtReferenceCompounds",
+        compoundFilters
+      ),
+    [ceMsOptions, compoundFilters]
+  );
+
+  useEffect(() => {
+    if (!ceMsOptions || !formState.rmt_reference) {
+      return;
+    }
+
+    const availableLookup = new Set(availableReferenceCompounds);
+    if (availableLookup.has(formState.rmt_reference)) {
+      return;
+    }
+
+    setFormState((prev) =>
+      prev.rmt_reference
+        ? {
+            ...prev,
+            rmt_reference: "",
+          }
+        : prev
+    );
+  }, [availableReferenceCompounds, ceMsOptions, formState.rmt_reference]);
 
   const activeFeatureView = buildGroupedResultsView(
     results[activeFeatureIndex]?.annotationsByAdducts,
@@ -348,13 +421,25 @@ const CeMsRmtSearch = () => {
               className="temperature-input-im-ms"
             />
 
-            <TextInput
-              label="RMT Reference Compound"
-              name="rmt_reference"
-              value={formState.rmt_reference}
-              onChange={handleChange}
-              placeholder="e.g. L-Methionine sulfone"
-            />
+            {ceMsOptions && allReferenceCompounds.length && !ceMsOptionsError ? (
+              <CeMsCompoundSelector
+                label="RMT Reference Compound"
+                name="rmt_reference"
+                value={formState.rmt_reference}
+                onChange={handleChange}
+                options={allReferenceCompounds}
+                availableOptions={availableReferenceCompounds}
+                searchPlaceholder="Search reference compounds"
+              />
+            ) : (
+              <TextInput
+                label="RMT Reference Compound"
+                name="rmt_reference"
+                value={formState.rmt_reference}
+                onChange={handleChange}
+                placeholder="e.g. L-Methionine sulfone"
+              />
+            )}
           </div>
 
           <div className="form-buttons-container center-button">
