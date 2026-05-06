@@ -16,6 +16,8 @@ import CeMsMt1Search from "../pages/cemsSearch/CeMsMt1Search";
 import CeMsMt2Search from "../pages/cemsSearch/CeMsMt2Search";
 import CeMsEffMobSearch from "../pages/cemsSearch/CeMsEffMobSearch";
 import CeMsRmtSearch from "../pages/cemsSearch/CeMsRmtSearch";
+import CeMsRmt1Search from "../pages/cemsSearch/CeMsRmt1Search";
+import CeMsRmt2Search from "../pages/cemsSearch/CeMsRmt2Search";
 import CompoundPage from "../pages/CompoundPage";
 import Manual from "../pages/Manual";
 import GcMsSearch from "../pages/gcmsSearch/GcMsSearch";
@@ -47,6 +49,8 @@ const App = () => {
           />
           <Route path="/ce-ms-mt-1-marker" element={<CeMsMt1Search />} />
           <Route path="/ce-ms-mt-2-markers" element={<CeMsMt2Search />} />
+          <Route path="/ce-ms-rmt-1-marker" element={<CeMsRmt1Search />} />
+          <Route path="/ce-ms-rmt-2-markers" element={<CeMsRmt2Search />} />
           <Route path="/compound/:id" element={<CompoundPage />} />
           <Route path="/manual" element={<Manual />} />
         </Routes>

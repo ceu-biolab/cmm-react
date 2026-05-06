@@ -110,6 +110,12 @@ const Header = () => {
                 <li>
                   <Link to="/ce-ms-mt-2-markers">CE-MS MT 2 Markers</Link>
                 </li>
+                <li>
+                  <Link to="/ce-ms-rmt-1-marker">CE-MS RMT 1 Marker</Link>
+                </li>
+                <li>
+                  <Link to="/ce-ms-rmt-2-markers">CE-MS RMT 2 Markers</Link>
+                </li>
               </ul>
             </div>
           </div>

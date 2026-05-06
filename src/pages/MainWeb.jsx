@@ -82,6 +82,8 @@ const workflows = [
       { label: "Experimental RMT", to: "/ce-ms-search-experimental-rmt" },
       { label: "MT 1 Marker", to: "/ce-ms-mt-1-marker" },
       { label: "MT 2 Markers", to: "/ce-ms-mt-2-markers" },
+      { label: "RMT 1 Marker", to: "/ce-ms-rmt-1-marker" },
+      { label: "RMT 2 Markers", to: "/ce-ms-rmt-2-markers" },
     ],
   },
   {
