@@ -15,7 +15,12 @@ import {
   countMatchedGroups,
   flattenGroupCompounds,
 } from "../../utils/resultsSummary";
-import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
+import {
+  parseCompositeSpectra,
+  parseFlexibleNumber,
+  parseRequiredNumberList,
+  serializeCompositeSpectraForInput,
+} from "../../utils/numberParsing";
 
 const toDeuteriumAwareFormula = (formulaType, deuteriumEnabled) => {
   if (!deuteriumEnabled || formulaType === "ALL") {
@@ -43,6 +48,7 @@ const LcImMsSearch = () => {
     mzValues: "",
     ccsValues: "",
     rtValues: "",
+    compositeSpectrum: "",
     mzTolerance: "",
     mzToleranceMode: "PPM",
     ccsTolerance: "",
@@ -69,6 +75,24 @@ const LcImMsSearch = () => {
       ),
       ccsValues: ["291.175", "299.553", "294.385", "300.53"].join("\n"),
       rtValues: ["6.0", "6.0", "5.0", "5.0"].join("\n"),
+      compositeSpectrum: serializeCompositeSpectraForInput([
+        {
+          790.63203: 100.0,
+          812.61397: 42.0,
+        },
+        {
+          812.61397: 100.0,
+          790.63203: 37.5,
+        },
+        {
+          782.56943: 100.0,
+          804.55137: 44.0,
+        },
+        {
+          804.55137: 100.0,
+          782.56943: 39.5,
+        },
+      ]),
       mzTolerance: "5",
       mzToleranceMode: "PPM",
       ccsTolerance: "1.5",
@@ -115,11 +139,31 @@ const LcImMsSearch = () => {
     setFormState((prev) => ({ ...prev, adducts }));
   };
 
+  const parseCompositeSpectrum = (value) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return [];
+
+    const { spectra, invalids } = parseCompositeSpectra(trimmed);
+    if (invalids.length) {
+      throw new Error("Composite spectra contain invalid peak entries.");
+    }
+    return spectra;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const mzValues = parseRequiredNumberList(formState.mzValues);
     const ccsValues = parseRequiredNumberList(formState.ccsValues);
     const rtValues = parseRequiredNumberList(formState.rtValues);
+    let compositeSpectrum = [];
+
+    try {
+      compositeSpectrum = parseCompositeSpectrum(formState.compositeSpectrum);
+    } catch (error) {
+      console.error("Invalid composite spectra:", error);
+      alert("Composite spectra must use m/z:intensity peaks separated by new lines or semicolons, with blank lines between feature spectra.");
+      return;
+    }
 
     if (!mzValues.length || !ccsValues.length || !rtValues.length) {
       alert("Masses, CCS values, and RT values are all required.");
@@ -138,6 +182,7 @@ const LcImMsSearch = () => {
       mzValues,
       ccsValues,
       rtValues,
+      compositeSpectrum,
       mzTolerance: parseFlexibleNumber(formState.mzTolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ccsTolerance: parseFlexibleNumber(formState.ccsTolerance),
@@ -279,6 +324,15 @@ const LcImMsSearch = () => {
               onChange={handleChange}
               className="rt-values-lc-im-ms"
               required
+            />
+
+            <TextBoxInput
+              label="Composite Spectra"
+              name="compositeSpectrum"
+              value={formState.compositeSpectrum}
+              onChange={handleChange}
+              className="composite-spectrum-lc-im-ms"
+              validationMode="compositeSpectrum"
             />
 
             <ToleranceRadio
