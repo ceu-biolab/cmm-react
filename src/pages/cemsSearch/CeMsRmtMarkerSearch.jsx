@@ -322,21 +322,6 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
     ]
   );
 
-  const allReferenceCompounds = useMemo(
-    () => getCeMsAllCompoundNames(ceMsOptions, "rmtReferenceCompounds"),
-    [ceMsOptions]
-  );
-
-  const availableReferenceCompounds = useMemo(
-    () =>
-      getCeMsAvailableCompoundNames(
-        ceMsOptions,
-        "rmtReferenceCompounds",
-        compoundFilters
-      ),
-    [ceMsOptions, compoundFilters]
-  );
-
   const allMarkerCompounds = useMemo(
     () => getCeMsAllCompoundNames(ceMsOptions, "markerCompounds"),
     [ceMsOptions]
@@ -357,7 +342,6 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
       return;
     }
 
-    const availableReferenceLookup = new Set(availableReferenceCompounds);
     const availableMarkerLookup = new Set(availableMarkerCompounds);
 
     setFormState((prev) => {
@@ -366,7 +350,7 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
 
       if (
         nextState.rmt_reference &&
-        !availableReferenceLookup.has(nextState.rmt_reference)
+        !availableMarkerLookup.has(nextState.rmt_reference)
       ) {
         nextState.rmt_reference = "";
         changed = true;
@@ -389,7 +373,7 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
 
       return changed ? nextState : prev;
     });
-  }, [availableMarkerCompounds, availableReferenceCompounds, ceMsOptions]);
+  }, [availableMarkerCompounds, ceMsOptions]);
 
   const activeFeatureView = buildGroupedResultsView(
     results[activeFeatureIndex]?.annotationsByAdducts,
@@ -408,14 +392,14 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
   const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   const renderReferenceSelector = () =>
-    ceMsOptions && allReferenceCompounds.length && !ceMsOptionsError ? (
+    ceMsOptions && allMarkerCompounds.length && !ceMsOptionsError ? (
       <CeMsCompoundSelector
         label="RMT Reference Compound"
         name="rmt_reference"
         value={formState.rmt_reference}
         onChange={handleChange}
-        options={allReferenceCompounds}
-        availableOptions={availableReferenceCompounds}
+        options={allMarkerCompounds}
+        availableOptions={availableMarkerCompounds}
         searchPlaceholder="Search reference compounds"
       />
     ) : (
