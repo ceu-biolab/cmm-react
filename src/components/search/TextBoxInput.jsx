@@ -67,7 +67,7 @@ const TextBoxInput = ({
   value,
   onChange,
   name = "mz",
-  label = "Experimental Masses",
+  label = "Experimental m/z Values",
   className: customClassName = "",
   placeholder: customPlaceholder = "",
   required = false,

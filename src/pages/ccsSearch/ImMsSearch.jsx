@@ -245,7 +245,7 @@ const ImMsSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container-im-ms">
             <TextBoxInput
-              label="Experimental Masses"
+              label="Experimental m/z Values"
               name="mzValues"
               value={formState.mzValues}
               onChange={handleChange}

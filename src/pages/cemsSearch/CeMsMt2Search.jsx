@@ -326,7 +326,7 @@ const CeMsMt2Search = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container-ce-ms-markers">
             <TextBoxInput
-              label="Experimental Masses"
+              label="Experimental m/z Values"
               name="masses"
               value={formState.masses}
               onChange={handleChange}

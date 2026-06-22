@@ -242,11 +242,11 @@ const SimpleSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
             <TextInput
-              label="Experimental Mass"
+              label="Experimental m/z"
               name="mz"
               value={formState.mz}
               onChange={handleChange}
-              placeholder="Enter mass value"
+              placeholder="Enter m/z value"
               className="experimental-mass-div"
             />
 

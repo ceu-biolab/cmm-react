@@ -254,12 +254,12 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
     const rmtValues = parseRequiredNumberList(formState.rmt);
 
     if (!masses.length || !rmtValues.length) {
-      alert("Experimental masses and RMT values are required.");
+      alert("Experimental m/z values and RMT values are required.");
       return;
     }
 
     if (masses.length !== rmtValues.length) {
-      alert("Experimental masses and RMT values must have the same length.");
+      alert("Experimental m/z values and RMT values must have the same length.");
       return;
     }
 
@@ -452,7 +452,7 @@ const CeMsRmtMarkerSearch = ({ markerCount }) => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container-ce-ms-markers">
             <TextBoxInput
-              label="Experimental Masses"
+              label="Experimental m/z Values"
               name="masses"
               value={formState.masses}
               onChange={handleChange}

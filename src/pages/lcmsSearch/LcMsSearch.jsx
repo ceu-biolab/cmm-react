@@ -408,7 +408,7 @@ const LcMsSearch = () => {
           <form onSubmit={handleSubmit}>
             <div className="grid-container-batch-adv">
               <TextBoxInput
-                label="Experimental Masses"
+                label="Experimental m/z Values"
                 name="mz"
                 value={formState.mz}
                 onChange={handleChange}
@@ -417,7 +417,7 @@ const LcMsSearch = () => {
 
               {/*
             <TextBoxInput
-              label="All Experimental Masses"
+              label="All Experimental m/z Values"
               name="allMz"
               value={formState.allMz}
               onChange={handleChange}

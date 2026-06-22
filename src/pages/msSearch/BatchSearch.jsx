@@ -222,7 +222,7 @@ const BatchSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
             <TextBoxInput
-              label="Experimental Masses"
+              label="Experimental m/z Values"
               name="mzValues"
               value={formState.mzValues}
               onChange={handleChange}
