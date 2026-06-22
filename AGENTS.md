@@ -21,7 +21,9 @@
 - In numeric multi-value inputs, use only newlines and semicolons as value separators; commas are decimal separators and all API requests must send decimal points.
 - Allow decimal commas in numeric form inputs where numeric values make sense, but normalize submitted payloads to decimal points.
 - Keep spectra textarea formats consistent: use `m/z:intensity` peak entries separated by newlines or semicolons, and use blank lines between multiple composite spectra.
-- Treat Browse Search chemical alphabet filtering and LC-MS/MS Search as backend-blocked until the backend request/response contract is available.
+- In form UI text, use `experimental m/z` terminology for entered m/z readings.
+- Treat Browse Search chemical alphabet filtering as backend-blocked until the backend request/response contract is available.
+- LC-MS/MS Search uses the batched backend endpoint `lcmsms-search`.
 - In Codex non-interactive shells, `~/.bashrc` returns early so `nvm` is not auto-loaded; run `export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 22` before `node`/`npm` commands.
 - You can test any backend GET/POST request with curl at https://ceumassdev.eps.uspceu.es/api/ but note that the backend is also in testing phase
 - Keep git commits up to date while implementing multi-step work; commit logical chunks as you go.
