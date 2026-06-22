@@ -339,7 +339,7 @@ const GcMsSearch = () => {
               label="Derivatization Method"
               name="derivatizationMethod"
               value={formState.derivatizationMethod}
-              options={["METHYL_CHLOROFORMATE", "TMS", "TBDMS_DERIVATIZATION"]}
+              options={["METHYL_CHLOROFORMATE", "TMS"]}
               onChange={handleChange}
               className="metabolites-gcms"
             />
@@ -351,7 +351,6 @@ const GcMsSearch = () => {
               options={[
                 "SEMISTANDARD_NON_POLAR",
                 "STANDARD_NON_POLAR",
-                "STANDARD_POLAR",
               ]}
               onChange={handleChange}
               className="ionization-gcms"
