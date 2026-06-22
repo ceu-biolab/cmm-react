@@ -68,8 +68,6 @@ const CeMsCompoundSelector = ({
     });
   };
 
-  const availableCount = availableOptions.length;
-  const selectedIsAvailable = !value || availableLookup.has(normalizeTextKey(value));
   const emptyMessage = searchTerm
     ? "No compounds match this search."
     : "No compounds available for the current selection.";
@@ -82,6 +80,7 @@ const CeMsCompoundSelector = ({
 
       <div className="ce-ms-compound-selector">
         <input
+          className="ce-ms-compound-selector-search"
           id={searchInputId}
           type="search"
           value={searchTerm}
@@ -89,20 +88,6 @@ const CeMsCompoundSelector = ({
           placeholder={searchPlaceholder}
           aria-label={`${label} search`}
         />
-
-        <p className="ce-ms-compound-selector-meta">
-          {availableCount} available / {allOptions.length} total
-        </p>
-
-        {value ? (
-          <p
-            className={`ce-ms-compound-selector-current ${
-              selectedIsAvailable ? "" : "is-unavailable"
-            }`}
-          >
-            Selected: {value}
-          </p>
-        ) : null}
 
         <div className="ce-ms-compound-selector-list scrollable-checkboxes">
           {visibleOptions.length ? (
@@ -123,11 +108,6 @@ const CeMsCompoundSelector = ({
                   aria-pressed={isSelected}
                 >
                   <span>{option}</span>
-                  {!isAvailable ? (
-                    <span className="ce-ms-compound-option-status">
-                      Unavailable
-                    </span>
-                  ) : null}
                 </button>
               );
             })

@@ -27,7 +27,7 @@ describe("CeMsCompoundSelector", () => {
     expect(optionButtons.map((button) => button.textContent)).toEqual([
       "Paracetamol",
       "L-Methionine sulfone",
-      "MESUnavailable",
+      "MES",
     ]);
     expect(optionButtons[2]).toBeDisabled();
 
