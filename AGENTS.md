@@ -25,5 +25,6 @@
 - Treat Browse Search chemical alphabet filtering as backend-blocked until the backend request/response contract is available.
 - LC-MS/MS Search uses the batched backend endpoint `lcmsms-search`.
 - In Codex non-interactive shells, `~/.bashrc` returns early so `nvm` is not auto-loaded; run `export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 22` before `node`/`npm` commands.
+- Firefox is installed as a Snap; for concurrent headless screenshots, create the temporary profile and write the screenshot under `$HOME/snap/firefox/common` so both paths are visible through Snap confinement (do not use `/tmp` or `~/.cache`).
 - You can test any backend GET/POST request with curl at https://ceumassdev.eps.uspceu.es/api/ but note that the backend is also in testing phase
 - Keep git commits up to date while implementing multi-step work; commit logical chunks as you go.
