@@ -5,6 +5,7 @@ import databaseIcon from "../assets/svgs/database.svg";
 import moleculeIcon from "../assets/svgs/molecule-main.svg";
 import searchIcon from "../assets/svgs/search-svg.svg";
 import spectraIcon from "../assets/svgs/spectra.svg";
+import cmmLogo from "../assets/images/cmm-logo.png";
 
 const FALLBACK_STATS = {
   compounds: 306000,
@@ -176,7 +177,15 @@ const MainWeb = () => {
       <section className="home-hero" aria-labelledby="home-title">
         <div className="home-hero-content">
           <p className="home-kicker">V4 CEU Mass Mediator</p>
-          <h1 id="home-title">CEU Mass Mediator</h1>
+          <h1 id="home-title" className="visually-hidden">
+            CEU Mass Mediator
+          </h1>
+          <img
+            className="home-hero-logo"
+            src={cmmLogo}
+            alt=""
+            aria-hidden="true"
+          />
           <p className="home-lede">
             Metabolite annotation across MS, LC-MS, GC-MS, CE-MS, CCS, and
             MS/MS workflows.
