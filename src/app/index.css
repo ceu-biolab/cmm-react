@@ -84,7 +84,14 @@ body {
 }
 
 /* Logo */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
 .logo img {
+  display: block;
   width: 190px;
   height: auto;
   cursor: pointer;

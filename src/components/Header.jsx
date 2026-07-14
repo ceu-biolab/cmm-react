@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../assets/images/logo copy 2.png";
+import logo from "../assets/images/cmm-logo.png";
 import ceu from "../assets/images/logo-ceu-blanco.png";
 
 const Header = () => {
@@ -31,7 +31,7 @@ const Header = () => {
       </section>
       <section className="header">
         <Link to="/" className="logo" onClick={goToMainWeb}>
-          <img src={logo} alt="CMM Logo" />
+          <img src={logo} alt="CEU Mass Mediator" />
         </Link>
 
         <nav className="button-container">
