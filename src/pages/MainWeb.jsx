@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import databaseIcon from "../assets/svgs/database.svg";
-import moleculeIcon from "../assets/svgs/molecule-main.svg";
-import searchIcon from "../assets/svgs/search-svg.svg";
-import spectraIcon from "../assets/svgs/spectra.svg";
 import cmmLogo from "../assets/images/cmm-logo.png";
+import cembioLogo from "../assets/images/CEMBIO-Logo.png";
+import ceuLogo from "../assets/svgs/Logo-CEU-Positivo.svg";
+import "./MainWeb.css";
 
 const FALLBACK_STATS = {
   compounds: 306000,
@@ -20,90 +19,152 @@ const formatCompact = (value) =>
     maximumFractionDigits: 1,
   }).format(Number(value) || 0);
 
-const primaryActions = [
-  {
-    label: "Simple Search",
-    to: "/simple-search",
-    variant: "primary",
-  },
-  {
-    label: "Batch Search",
-    to: "/batch-search",
-  },
-  {
-    label: "Browse Compounds",
-    to: "/browse-search",
-  },
-];
-
-const workflows = [
+const toolGroups = [
   {
     title: "MS Search",
-    description:
-      "Search exact masses, batches, or known compounds across the metabolite database.",
-    icon: searchIcon,
-    links: [
-      { label: "Simple Search", to: "/simple-search" },
-      { label: "Batch Search", to: "/batch-search" },
-      { label: "Browse Search", to: "/browse-search" },
+    description: "Search and browse compounds using mass spectrometry data.",
+    tools: [
+      {
+        title: "Simple Search",
+        description:
+          "Find candidate metabolites from one experimental m/z value.",
+        to: "/simple-search",
+      },
+      {
+        title: "Batch Search",
+        description:
+          "Search several experimental m/z values in a single submission.",
+        to: "/batch-search",
+      },
+      {
+        title: "Browse Search",
+        description:
+          "Explore compounds directly by name, formula, mass, or identifier.",
+        to: "/browse-search",
+      },
     ],
   },
   {
-    title: "LC-MS",
+    title: "LC-MS Search",
     description:
-      "Use retention time and ion mobility context to refine LC-MS annotations.",
-    icon: moleculeIcon,
-    links: [
-      { label: "LC-MS Search", to: "/lc-ms-search" },
-      { label: "LC-MS/MS Search", to: "/lc-ms-ms-search" },
-      { label: "LC-IM-MS Search", to: "/lc-im-ms-search" },
+      "Use liquid chromatography and fragmentation data to refine annotations.",
+    tools: [
+      {
+        title: "LC-MS Search",
+        description:
+          "Match experimental m/z values with retention-time information.",
+        to: "/lc-ms-search",
+      },
+      {
+        title: "LC-MS/MS Search",
+        description:
+          "Combine precursor, retention-time, and fragmentation evidence.",
+        to: "/lc-ms-ms-search",
+      },
+      {
+        title: "LC-IM-MS Search",
+        description:
+          "Search with retention time and ion-mobility measurements.",
+        to: "/lc-im-ms-search",
+      },
+      {
+        title: "MS/MS Search",
+        description:
+          "Compare tandem mass spectra with reference fragmentation data.",
+        to: "/ms-ms-search",
+      },
     ],
   },
   {
-    title: "MS/MS",
+    title: "GC-MS Search",
     description:
-      "Match fragmentation spectra and inspect candidate annotations from tandem MS data.",
-    icon: spectraIcon,
-    links: [{ label: "MS/MS Search", to: "/ms-ms-search" }],
-  },
-  {
-    title: "GC-MS",
-    description:
-      "Search GC-MS spectra with a focused workflow for volatile metabolite annotation.",
-    icon: databaseIcon,
-    links: [{ label: "GC-MS Search", to: "/gc-ms-search" }],
-  },
-  {
-    title: "CE-MS",
-    description:
-      "Query capillary electrophoresis resources using effective mobility and migration time.",
-    icon: moleculeIcon,
-    links: [
-      { label: "EFF MOB Search", to: "/ce-ms-eff-mob-search" },
-      { label: "Experimental RMT", to: "/ce-ms-search-experimental-rmt" },
-      { label: "MT 1 Marker", to: "/ce-ms-mt-1-marker" },
-      { label: "MT 2 Markers", to: "/ce-ms-mt-2-markers" },
-      { label: "RMT 1 Marker", to: "/ce-ms-rmt-1-marker" },
-      { label: "RMT 2 Markers", to: "/ce-ms-rmt-2-markers" },
+      "Annotate volatile and derivatized compounds from GC-MS spectra.",
+    tools: [
+      {
+        title: "GC-MS Search",
+        description:
+          "Compare an experimental GC-MS spectrum with reference records.",
+        to: "/gc-ms-search",
+      },
     ],
   },
   {
-    title: "CCS",
+    title: "CCS Search",
     description:
-      "Compare collision cross section records for ion mobility mass spectrometry.",
-    icon: databaseIcon,
-    links: [
-      { label: "IM-MS Search", to: "/im-ms-search" },
-      { label: "LC-IM-MS Search", to: "/lc-im-ms-search" },
+      "Use collision cross section data from ion-mobility experiments.",
+    tools: [
+      {
+        title: "IM-MS Search",
+        description:
+          "Match experimental m/z and collision cross section values.",
+        to: "/im-ms-search",
+      },
+      {
+        title: "LC-IM-MS Search",
+        description:
+          "Combine LC retention time with ion-mobility evidence.",
+        to: "/lc-im-ms-search",
+      },
+    ],
+  },
+  {
+    title: "CE-MS Search",
+    description:
+      "Search capillary electrophoresis data using mobility and migration time.",
+    tools: [
+      {
+        title: "Effective Mobility",
+        description:
+          "Find candidates using experimental electrophoretic mobility.",
+        to: "/ce-ms-eff-mob-search",
+      },
+      {
+        title: "Experimental RMT",
+        description:
+          "Search directly with an experimental relative migration time.",
+        to: "/ce-ms-search-experimental-rmt",
+      },
+      {
+        title: "MT · 1 Marker",
+        description:
+          "Calculate and search migration time using one marker.",
+        to: "/ce-ms-mt-1-marker",
+      },
+      {
+        title: "MT · 2 Markers",
+        description:
+          "Calculate and search migration time using two markers.",
+        to: "/ce-ms-mt-2-markers",
+      },
+      {
+        title: "RMT · 1 Marker",
+        description:
+          "Calculate and search relative migration time with one marker.",
+        to: "/ce-ms-rmt-1-marker",
+      },
+      {
+        title: "RMT · 2 Markers",
+        description:
+          "Calculate and search relative migration time with two markers.",
+        to: "/ce-ms-rmt-2-markers",
+      },
     ],
   },
 ];
 
-const benefits = [
-  "Unified compound search across KEGG, HMDB, LipidMaps, Metlin, MINE, NP Atlas, and in-house libraries.",
-  "InChIKey-based unification to reduce duplicate candidates across data sources.",
-  "Annotation support for exact mass, adducts, retention time, mobility, CCS, CE-MS, GC-MS, and MS/MS workflows.",
-  "Research-backed workflows developed by CEMBIO at Universidad CEU San Pablo.",
+const organizations = [
+  {
+    name: "Universidad CEU San Pablo",
+    href: "https://www.uspceu.com",
+    logo: ceuLogo,
+    className: "organization-logo-ceu",
+  },
+  {
+    name: "CEMBIO",
+    href: "https://cembio.uspceu.es",
+    logo: cembioLogo,
+    className: "organization-logo-cembio",
+  },
 ];
 
 const publications = [
@@ -147,8 +208,8 @@ const MainWeb = () => {
       .get(`${import.meta.env.VITE_API_URL}metadata/stats`)
       .then((response) => {
         if (!mounted) return;
-        setStats((prev) => ({
-          ...prev,
+        setStats((previousStats) => ({
+          ...previousStats,
           ...(response.data || {}),
         }));
       })
@@ -175,36 +236,19 @@ const MainWeb = () => {
   return (
     <main className="home-page">
       <section className="home-hero" aria-labelledby="home-title">
-        <div className="home-hero-content">
-          <p className="home-kicker">V4 CEU Mass Mediator</p>
-          <h1 id="home-title" className="visually-hidden">
-            CEU Mass Mediator
-          </h1>
-          <img
-            className="home-hero-logo"
-            src={cmmLogo}
-            alt=""
-            aria-hidden="true"
-          />
-          <p className="home-lede">
-            Metabolite annotation across MS, LC-MS, GC-MS, CE-MS, CCS, and
-            MS/MS workflows.
-          </p>
-
-          <div className="home-actions" aria-label="Primary search actions">
-            {primaryActions.map((action) => (
-              <Link
-                className={`home-action ${
-                  action.variant === "primary" ? "home-action-primary" : ""
-                }`}
-                key={action.to}
-                to={action.to}
-              >
-                {action.label}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <p className="home-kicker">V4 CEU Mass Mediator</p>
+        <h1 id="home-title" className="visually-hidden">
+          CEU Mass Mediator
+        </h1>
+        <img
+          className="home-hero-logo"
+          src={cmmLogo}
+          alt="CEU Mass Mediator"
+        />
+        <p className="home-lede">
+          Metabolite annotation across MS, LC-MS, GC-MS, CE-MS, CCS, and
+          MS/MS workflows.
+        </p>
 
         <dl className="home-stats" aria-label="Database statistics">
           {statItems.map((item) => (
@@ -214,56 +258,83 @@ const MainWeb = () => {
             </div>
           ))}
         </dl>
+
+        <div className="organization-list" aria-label="Related organizations">
+          {organizations.map((organization) => (
+            <a
+              className="organization-item"
+              href={organization.href}
+              key={organization.name}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={organization.name}
+            >
+              <img
+                className={organization.className}
+                src={organization.logo}
+                alt={organization.name}
+              />
+            </a>
+          ))}
+          <div
+            className="organization-item organization-placeholder"
+            role="img"
+            aria-label="CEU-BIOLAB logo placeholder"
+          >
+            <span className="organization-placeholder-mark" aria-hidden="true">
+              B
+            </span>
+            <span>
+              <strong>CEU-BIOLAB</strong>
+              <small>Logo coming soon</small>
+            </span>
+          </div>
+        </div>
       </section>
 
-      <section className="home-section" aria-labelledby="workflows-title">
-        <div className="home-section-heading">
-          <p className="home-section-kicker">Search workflows</p>
-          <h2 id="workflows-title">Choose the closest experimental context</h2>
+      <section className="home-tools" aria-labelledby="tools-title">
+        <div className="home-section-heading home-tools-heading">
+          <p className="home-section-kicker">Search tools</p>
+          <h2 id="tools-title">Choose a search workflow</h2>
         </div>
 
-        <div className="workflow-grid">
-          {workflows.map((workflow) => (
-            <article className="workflow-card" key={workflow.title}>
-              <div className="workflow-card-header">
-                <img src={workflow.icon} alt="" aria-hidden="true" />
-                <h3>{workflow.title}</h3>
-              </div>
-              <p>{workflow.description}</p>
-              <div className="workflow-links">
-                {workflow.links.map((link) => (
-                  <Link key={link.to} to={link.to}>
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+        <div className="tool-group-list">
+          {toolGroups.map((group) => {
+            const groupId = `${group.title.replaceAll(" ", "-")}-title`;
 
-      <section className="home-about" aria-labelledby="about-title">
-        <div>
-          <p className="home-section-kicker">About</p>
-          <h2 id="about-title">Built for metabolite annotation work</h2>
-          <p>
-            CEU Mass Mediator centralizes metabolite search and annotation
-            resources so experimental results can be compared against multiple
-            databases and workflow-specific evidence from one place.
-          </p>
+            return (
+              <section
+                className="tool-group"
+                key={group.title}
+                aria-labelledby={groupId}
+              >
+                <div className="tool-group-heading">
+                  <h3 id={groupId}>{group.title}</h3>
+                  <p>{group.description}</p>
+                </div>
+                <div className="tool-card-grid">
+                  {group.tools.map((tool) => (
+                    <article className="tool-card" key={tool.to}>
+                      <div>
+                        <h4>{tool.title}</h4>
+                        <p>{tool.description}</p>
+                      </div>
+                      <Link to={tool.to}>Open search</Link>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
-
-        <ul className="benefit-list">
-          {benefits.map((benefit) => (
-            <li key={benefit}>{benefit}</li>
-          ))}
-        </ul>
       </section>
 
       <section className="home-section" aria-labelledby="publications-title">
         <div className="home-section-heading">
-          <p className="home-section-kicker">Publications</p>
-          <h2 id="publications-title">Methods and data resources</h2>
+          <div>
+            <p className="home-section-kicker">Publications</p>
+            <h2 id="publications-title">Methods and data resources</h2>
+          </div>
         </div>
 
         <div className="publication-list">
