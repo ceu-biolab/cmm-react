@@ -22,6 +22,12 @@ export default defineConfig({
       : undefined,
     host: "localhost",
     port: 5178,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     alias: {
