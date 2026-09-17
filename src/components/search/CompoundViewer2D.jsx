@@ -45,7 +45,7 @@ const CompoundViewer2D = ({ smiles }) => {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    canvas.style.backgroundColor = "#f1f7f9";
+    canvas.style.backgroundColor = "#f1eff8";
 
     sd.draw(smiles, "#canvasRef", "light");
   }, [smiles]);

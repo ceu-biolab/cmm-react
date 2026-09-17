@@ -1,6 +1,6 @@
 import React from "react";
 
-const ProgressRing = ({ matched, total, size = 60, strokeWidth = 2, color = "#00acc1", bgColor = "#eee" }) => {
+const ProgressRing = ({ matched, total, size = 60, strokeWidth = 2, color = "#594da8", bgColor = "#dedbea" }) => {
   const percentage = total > 0 ? (matched / total) * 100 : 0;
 
   return (

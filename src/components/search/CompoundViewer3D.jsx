@@ -18,7 +18,7 @@ const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
     }
 
     const viewer = window.$3Dmol.createViewer(containerRef.current, {
-      backgroundColor: "#12323B",
+      backgroundColor: "#2d2d40",
     });
 
     const model = viewer.addModel(
@@ -90,7 +90,7 @@ const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
       }
     );
 
-    viewer.setBackgroundColor("#f1f7f9");
+    viewer.setBackgroundColor("#f1eff8");
     viewer.zoomTo();
     viewer.render();
     viewer.zoom(1.1, 500);

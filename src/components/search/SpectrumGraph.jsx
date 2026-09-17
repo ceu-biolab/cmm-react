@@ -16,12 +16,12 @@ const CustomTooltip = ({ active, payload }) => {
           backgroundColor: "white",
           border: "none",
           padding: "8px",
-          color: "#617475",
+          color: "#626277",
           borderRadius: "4px",
         }}
       >
-        <div style={{ fontWeight: "bold", color: "#617475" }}>m/z: {mz}</div>
-        <div style={{ color: "#879a9c" }}>
+        <div style={{ fontWeight: "bold", color: "#626277" }}>m/z: {mz}</div>
+        <div style={{ color: "#8d86b7" }}>
           Intensity: {(intensity * 100).toFixed(2)}%
         </div>
       </div>
@@ -38,13 +38,13 @@ const SpectrumGraph = ({ peaks }) => {
         <CartesianGrid stroke="#ccc" />
         <XAxis
           dataKey="mz"
-          stroke="#617475" 
-          tick={{ fill: "#617475", fontSize: 12 }}
+          stroke="#626277"
+          tick={{ fill: "#626277", fontSize: 12 }}
           label={{
             value: "m/z",
             position: "insideBottom",
             offset: -5,
-            fill: "#617475",
+            fill: "#626277",
           }}
         />
         <YAxis

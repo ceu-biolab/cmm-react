@@ -1,6 +1,6 @@
 const ManualPDF = () => {
   return (
-    <div style={{ height: "80vh", backgroundColor: "#f1f7f9", padding: "1rem", borderRadius: "10px" }}>
+    <div style={{ height: "80vh", backgroundColor: "#f1eff8", padding: "1rem", borderRadius: "10px" }}>
       <iframe
         src="/CMM_manual_version_3.0.pdf"
         width="100%"

@@ -255,13 +255,13 @@ const MirroredSpectrum = ({
                 width={120}
                 height={50}
                 fill="white"
-                stroke="#617475"
+                stroke="#626277"
                 rx={4}
               />
               <text
                 x={tooltip.x + 15}
                 y={tooltip.y - 25}
-                fill="#617475"
+                fill="#626277"
                 fontSize={12}
               >
                 {tooltip.type}
@@ -269,7 +269,7 @@ const MirroredSpectrum = ({
               <text
                 x={tooltip.x + 15}
                 y={tooltip.y - 10}
-                fill="#617475"
+                fill="#626277"
                 fontSize={12}
               >
                 m/z: {tooltip.mz?.toFixed(2)}
@@ -277,7 +277,7 @@ const MirroredSpectrum = ({
               <text
                 x={tooltip.x + 15}
                 y={tooltip.y + 5}
-                fill="#617475"
+                fill="#626277"
                 fontSize={12}
               >
                 Intensity: {tooltip.intensity?.toFixed(2)}

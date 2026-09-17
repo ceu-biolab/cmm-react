@@ -1,12 +1,12 @@
 .home-page {
-  --home-bg: #f6f8f9;
-  --home-surface: #ffffff;
-  --home-surface-muted: #eef4f5;
-  --home-border: #d9e3e6;
-  --home-text: #243033;
-  --home-muted: #66757a;
-  --home-accent: #207f91;
-  --home-accent-dark: #155f6d;
+  --home-bg: var(--color-bg);
+  --home-surface: var(--color-surface);
+  --home-surface-muted: var(--color-surface-soft);
+  --home-border: var(--color-border);
+  --home-text: var(--color-text);
+  --home-muted: var(--color-text-soft);
+  --home-accent: var(--color-accent);
+  --home-accent-dark: var(--color-accent-strong);
 
   width: 100%;
   padding: 0 clamp(1rem, 3vw, 2rem) 4rem;
@@ -47,8 +47,8 @@
   padding: clamp(2.75rem, 5vw, 4.5rem) 0 0;
   border-bottom: 1px solid var(--home-border);
   background:
-    radial-gradient(circle at 50% 35%, rgba(32, 127, 145, 0.1), transparent 30%),
-    radial-gradient(circle at 15% 15%, rgba(139, 95, 125, 0.05), transparent 22%);
+    radial-gradient(circle at 50% 35%, rgba(89, 77, 168, 0.12), transparent 30%),
+    radial-gradient(circle at 15% 15%, rgba(153, 83, 111, 0.06), transparent 22%);
   text-align: center;
 }
 
@@ -68,6 +68,7 @@
   width: min(680px, 90%);
   height: auto;
   margin-top: 0.35rem;
+  filter: hue-rotate(34deg) saturate(1.15);
 }
 
 .home-page .home-lede {
@@ -83,9 +84,9 @@
   width: min(720px, 100%);
   margin: 2rem auto 0;
   padding: 1rem 0.5rem;
-  border: 1px solid rgba(32, 127, 145, 0.1);
+  border: 1px solid rgba(89, 77, 168, 0.12);
   border-radius: 12px;
-  background: rgba(238, 244, 245, 0.78);
+  background: rgba(241, 239, 248, 0.82);
 }
 
 .home-page .home-stat {
@@ -129,10 +130,10 @@
   margin-bottom: -42px;
   padding: 0.7rem 1.25rem;
   transform: translateY(42px);
-  border: 1px solid rgba(36, 48, 51, 0.09);
+  border: 1px solid rgba(45, 45, 64, 0.09);
   border-radius: 14px;
   background: var(--home-surface);
-  box-shadow: 0 14px 38px rgba(36, 48, 51, 0.08);
+  box-shadow: 0 14px 38px rgba(38, 35, 64, 0.09);
 }
 
 .organization-item {
@@ -173,7 +174,7 @@
   flex: 0 0 auto;
   width: 3.2rem;
   height: 3.2rem;
-  border: 1px solid #9eb5ba;
+  border: 1px solid var(--color-border-strong);
   border-radius: 50%;
   color: var(--home-accent-dark);
   font-size: 1.2rem;
@@ -240,7 +241,7 @@
 
 .tool-group:not(:last-child) {
   padding-bottom: clamp(3rem, 6vw, 4.75rem);
-  border-bottom: 1px solid rgba(102, 117, 122, 0.16);
+  border-bottom: 1px solid rgba(98, 98, 119, 0.16);
 }
 
 .tool-group + .tool-group {
@@ -293,14 +294,14 @@
   border: 1px solid var(--home-border);
   border-radius: 10px;
   background: var(--home-surface);
-  box-shadow: 0 5px 16px rgba(36, 48, 51, 0.035);
+  box-shadow: 0 5px 16px rgba(38, 35, 64, 0.045);
   transition: border-color 160ms ease, box-shadow 160ms ease,
     transform 160ms ease;
 }
 
 .tool-card:hover {
-  border-color: rgba(32, 127, 145, 0.35);
-  box-shadow: 0 10px 24px rgba(36, 48, 51, 0.075);
+  border-color: rgba(89, 77, 168, 0.38);
+  box-shadow: 0 10px 24px rgba(38, 35, 64, 0.09);
   transform: translateY(-2px);
 }
 
