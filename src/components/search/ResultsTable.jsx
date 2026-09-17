@@ -242,7 +242,24 @@ const getColumns = (normalizedResults, options = {}) => {
         ]
       : []),
     ...(hasAny("riError")
-      ? [{ header: "RI Error", key: "riError", type: "number", digits: 2 }]
+      ? [
+          {
+            header: "RI Error (absolute)",
+            key: "riError",
+            type: "number",
+            digits: 2,
+          },
+        ]
+      : []),
+    ...(hasAny("riErrorPct")
+      ? [
+          {
+            header: "RI Error (%)",
+            key: "riErrorPct",
+            type: "number",
+            digits: 2,
+          },
+        ]
       : []),
     ...(hasAny("dbCcs")
       ? [{ header: "DB CCS", key: "dbCcs", type: "number", digits: 3 }]

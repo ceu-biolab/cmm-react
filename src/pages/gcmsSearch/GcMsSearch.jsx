@@ -308,12 +308,13 @@ const GcMsSearch = () => {
             />
 
             <TextInput
-              label="Retention Index Tolerance"
+              label="Retention Index Tolerance (%)"
               name="retentionIndexTolerance"
               value={formState.retentionIndexTolerance}
               onChange={handleChange}
-              placeholder="Enter RI tolerance"
+              placeholder="Enter RI tolerance (%)"
               className="input-gcms"
+              type="number"
             />
 
             <GroupRadio

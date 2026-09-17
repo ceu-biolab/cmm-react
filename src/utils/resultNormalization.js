@@ -9,6 +9,21 @@ const toMaybeNumber = (value) => {
   return Number.isFinite(numericValue) ? numericValue : null;
 };
 
+const toRelativeErrorPercent = (absoluteError, referenceValue) => {
+  const normalizedAbsoluteError = toMaybeNumber(absoluteError);
+  const normalizedReferenceValue = toMaybeNumber(referenceValue);
+
+  if (
+    normalizedAbsoluteError === null ||
+    normalizedReferenceValue === null ||
+    normalizedReferenceValue === 0
+  ) {
+    return null;
+  }
+
+  return Math.abs(normalizedAbsoluteError / normalizedReferenceValue) * 100;
+};
+
 const normalizeIdentifier = (value) => {
   if (isNil(value)) {
     return null;
@@ -307,6 +322,13 @@ export const normalizeCompound = (rawCompound = {}) => {
   const { finalScore, score, rtScore, adductScore, ionizationScore } =
     mergeScores(rawCompound);
 
+  const riError = toMaybeNumber(
+    firstMeaningfulValue(rawCompound, ["deltaRI", "riError"])
+  );
+  const experimentalRI = toMaybeNumber(
+    firstMeaningfulValue(rawCompound, ["experimentalRI", "experimentalRi"])
+  );
+
   const normalizedCompound = {
     ...rawCompound,
     compoundId: firstMeaningfulValue(rawCompound, ["compoundId", "id"]),
@@ -381,10 +403,11 @@ export const normalizeCompound = (rawCompound = {}) => {
     gcmsCosineScore: toMaybeNumber(
       firstMeaningfulValue(rawCompound, ["gcmsCosineScore"])
     ),
-    riError: toMaybeNumber(firstMeaningfulValue(rawCompound, ["deltaRI", "riError"])),
-    experimentalRI: toMaybeNumber(
-      firstMeaningfulValue(rawCompound, ["experimentalRI", "experimentalRi"])
-    ),
+    riError,
+    riErrorPct:
+      toMaybeNumber(firstMeaningfulValue(rawCompound, ["riErrorPct"])) ??
+      toRelativeErrorPercent(riError, experimentalRI),
+    experimentalRI,
     mobilityErrorPct: toMaybeNumber(
       firstMeaningfulValue(rawCompound, [
         "mobilityErrorPct",
@@ -446,6 +469,8 @@ export const normalizeAnnotation = (annotation = {}, fallbackId = null) => {
     gcmsCosineScore:
       normalizedAnnotation.gcmsCosineScore ?? normalizedCompound.gcmsCosineScore,
     riError: normalizedAnnotation.riError ?? normalizedCompound.riError,
+    riErrorPct:
+      normalizedAnnotation.riErrorPct ?? normalizedCompound.riErrorPct,
     experimentalRI:
       normalizedAnnotation.experimentalRI ?? normalizedCompound.experimentalRI,
     mobilityErrorPct:

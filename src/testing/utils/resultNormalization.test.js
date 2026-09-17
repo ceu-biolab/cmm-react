@@ -115,4 +115,29 @@ describe("resultNormalization search metadata", () => {
 
     expect(normalized.externalIds).toBe("CAS: 50-00-0; KEGG: C00001");
   });
+
+  it("calculates GC-MS RI error as a percentage of the experimental RI", () => {
+    const normalized = normalizeAnnotation({
+      gcmsCompound: {
+        compoundId: 123,
+        dbRI: 1350,
+      },
+      experimentalRI: 1500,
+      deltaRI: 150,
+    });
+
+    expect(normalized.riError).toBe(150);
+    expect(normalized.riErrorPct).toBe(10);
+  });
+
+  it("does not calculate a relative RI error without a valid reference RI", () => {
+    const normalized = normalizeAnnotation({
+      gcmsCompound: { compoundId: 123 },
+      experimentalRI: 0,
+      deltaRI: 150,
+    });
+
+    expect(normalized.riError).toBe(150);
+    expect(normalized.riErrorPct).toBeNull();
+  });
 });

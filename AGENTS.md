@@ -21,6 +21,7 @@
 - In numeric multi-value inputs, use only newlines and semicolons as value separators; commas are decimal separators and all API requests must send decimal points.
 - Allow decimal commas in numeric form inputs where numeric values make sense, but normalize submitted payloads to decimal points.
 - Keep spectra textarea formats consistent: use `m/z:intensity` peak entries separated by newlines or semicolons, and use blank lines between multiple composite spectra.
+- In GC-MS Search, treat retention index tolerance as a percentage and show RI error in both absolute and relative (%) forms in results and downloads.
 - In form UI text, use `experimental m/z` terminology for entered m/z readings.
 - Treat Browse Search chemical alphabet filtering as backend-blocked until the backend request/response contract is available.
 - LC-MS/MS Search uses the batched backend endpoint `lcmsms-search`.
