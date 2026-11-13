@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link, createSearchParams } from "react-router-dom";
 import {
   extractPathwayEntries,
@@ -26,6 +26,16 @@ const hasValue = (value) =>
   value !== "" &&
   value !== "null" &&
   value !== "undefined";
+
+const getSortValue = (row, column) => {
+  const value = column.type === "pathways" ? row.pathway : row[column.key];
+  if (!hasValue(value)) return null;
+  if (column.type === "number") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return String(value);
+};
 
 const PathwaysCell = ({ pathways = [] }) => {
   const normalizedPathways = extractPathwayEntries(pathways);
@@ -283,6 +293,7 @@ const ResultsTable = ({
   getRowId,
   isRowSelectable,
 }) => {
+  const [sort, setSort] = useState(null);
   const normalizedResults = useMemo(
     () => (Array.isArray(results) ? results.map(normalizeCompound) : []),
     [results]
@@ -297,6 +308,27 @@ const ResultsTable = ({
       }),
     [normalizedResults, extraColumns, forceColumns, hiddenColumns]
   );
+
+  const sortedRows = useMemo(() => {
+    // Preserve original indices for row IDs, selection callbacks and stable ties.
+    const rows = normalizedResults.map((item, index) => ({ item, index }));
+    const column = columns.find((entry) => entry.key === sort?.key);
+    if (!column) return rows;
+
+    return rows.sort((left, right) => {
+      const a = getSortValue(left.item, column);
+      const b = getSortValue(right.item, column);
+      // Missing values remain last in both directions.
+      if (a === null && b === null) return left.index - right.index;
+      if (a === null) return 1;
+      if (b === null) return -1;
+      const comparison = column.type === "number"
+        ? a - b
+        : a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+      return (sort.direction === "ascending" ? comparison : -comparison)
+        || left.index - right.index;
+    });
+  }, [normalizedResults, columns, sort]);
 
   const storeCompound = (compound) => {
     const compoundId = compound?.compoundId ?? compound?.id;
@@ -319,14 +351,35 @@ const ResultsTable = ({
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.header} className={column.className || ""}>
-                  {column.header}
+                <th
+                  key={column.key}
+                  scope="col"
+                  className={column.className || ""}
+                  aria-sort={sort?.key === column.key ? sort.direction : "none"}
+                >
+                  <button
+                    type="button"
+                    className="results-sort-button"
+                    onClick={() => setSort((current) => ({
+                      key: column.key,
+                      direction: current?.key === column.key && current.direction === "ascending"
+                        ? "descending"
+                        : "ascending",
+                    }))}
+                  >
+                    {column.header}{" "}
+                    <span aria-hidden="true">
+                      {sort?.key === column.key
+                        ? sort.direction === "ascending" ? "↑" : "↓"
+                        : "↕"}
+                    </span>
+                  </button>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {normalizedResults.map((item, index) => {
+            {sortedRows.map(({ item, index }) => {
               const compoundId = item.compoundId ?? `${index + 1}`;
               const rowId =
                 typeof getRowId === "function"
