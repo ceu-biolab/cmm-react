@@ -17,6 +17,7 @@
 - Remove unused legacy pages/routes instead of maintaining parallel deprecated result UIs.
 - Search forms should preselect the baseline default options where those controls exist: `PPM` tolerance mode, positive ionization mode, `ALL` metabolites, and the default databases (`HMDB`, `LIPIDMAPS`, `KEGG`, `INHOUSE`, `FAHFA`). `Clear Input` should reset back to those defaults.
 - Keep form behavior consistent across searches (naming, tolerance mode wiring, and reset behavior).
+- In CCS Search, default Chemical Alphabet to `ALL` and Buffer Gas to `N2`, including after `Clear Input`.
 - Keep `Deuterium` bundled with `Chemical Alphabet` in forms (rendered directly under/with that control, not detached in a separate section).
 - In numeric multi-value inputs, use only newlines and semicolons as value separators; commas are decimal separators and all API requests must send decimal points.
 - Allow decimal commas in numeric form inputs where numeric values make sense, but normalize submitted payloads to decimal points.

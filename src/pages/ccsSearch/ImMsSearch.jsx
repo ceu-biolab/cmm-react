@@ -48,9 +48,9 @@ const ImMsSearch = () => {
     ccsToleranceMode: "PERCENTAGE",
     deuterium: false,
     ionizationMode: "POSITIVE",
-    bufferGas: "",
+    bufferGas: "N2",
     adducts: [],
-    formulaType: "",
+    formulaType: "ALL",
   });
 
   const [formState, setFormState] = useState(createInitialFormState);
