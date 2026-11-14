@@ -2,15 +2,32 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 
+const httpsKeyPath = "./localhost+2-key.pem";
+const httpsCertPath = "./localhost+2.pem";
+const hasHttpsCerts =
+  fs.existsSync(httpsKeyPath) && fs.existsSync(httpsCertPath);
+
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/setupTests.jsx",
+  },
   server: {
-    https: {
-      key: fs.readFileSync("./localhost+2-key.pem"),
-      cert: fs.readFileSync("./localhost+2.pem"),
-    },
+    https: hasHttpsCerts
+      ? {
+          key: fs.readFileSync(httpsKeyPath),
+          cert: fs.readFileSync(httpsCertPath),
+        }
+      : undefined,
     host: "localhost",
     port: 5178,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     alias: {

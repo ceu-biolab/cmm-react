@@ -1,13 +1,19 @@
 import React, { useState } from "react";
 import ResultsTable from "./ResultsTable";
-import FileDownload from "../effects/FileDownload";
 
-const ResultsDropdownGroup = ({ adduct, compounds }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!compounds || compounds.length === 0) {
+const ResultsDropdownGroup = ({
+  adduct,
+  compounds,
+  defaultOpen = false,
+  tableProps = {},
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const normalizedCompounds = Array.isArray(compounds) ? compounds : [];
+  if (normalizedCompounds.length === 0) {
     return null;
   }
+
+  const title = adduct || "Results";
 
   return (
     <div className="dropdown-container">
@@ -16,10 +22,10 @@ const ResultsDropdownGroup = ({ adduct, compounds }) => {
           className="dropdown-toggle"
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          {adduct} ({compounds.length} compounds) {isOpen ? "▲" : "▼"}
+          {title} ({normalizedCompounds.length} compounds) {isOpen ? "▲" : "▼"}
         </button>
       </div>
-      {isOpen && <ResultsTable results={compounds} />}
+      {isOpen && <ResultsTable results={normalizedCompounds} {...tableProps} />}
     </div>
   );
 };

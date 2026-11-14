@@ -3,18 +3,22 @@ import React, { useEffect, useRef } from "react";
 const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
   const containerRef = useRef(null);
 
-  if (!mol2Data && !sdfData) {
-    return null;
-  }
-
   useEffect(() => {
+    if (!mol2Data && !sdfData) {
+      return;
+    }
+
+    if (!containerRef.current) {
+      return;
+    }
+
     if (!window.$3Dmol) {
       console.error("$3Dmol is not loaded!");
       return;
     }
 
-    const viewer = $3Dmol.createViewer(containerRef.current, {
-      backgroundColor: "#12323B",
+    const viewer = window.$3Dmol.createViewer(containerRef.current, {
+      backgroundColor: "#2d2d40",
     });
 
     const model = viewer.addModel(
@@ -86,11 +90,15 @@ const CompoundViewer3D = ({ mol2Data, sdfData, className = "" }) => {
       }
     );
 
-    viewer.setBackgroundColor("#f1f7f9");
+    viewer.setBackgroundColor("#f1eff8");
     viewer.zoomTo();
     viewer.render();
     viewer.zoom(1.1, 500);
   }, [mol2Data, sdfData]);
+
+  if (!mol2Data && !sdfData) {
+    return null;
+  }
 
   return <div className={`viewer-wrapper ${className}`} ref={containerRef} />;
 };

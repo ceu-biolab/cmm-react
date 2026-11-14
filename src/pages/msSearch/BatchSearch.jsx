@@ -3,24 +3,52 @@ import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  buildGroupedResultsView,
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  flattenGroupCompounds,
+} from "../../utils/resultsSummary";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
+import {
+  CHEMICAL_ALPHABET_OPTIONS,
+  toDeuteriumAwareAlphabet,
+} from "../../utils/chemicalAlphabet";
+import { parseFlexibleNumber, parseRequiredNumberList } from "../../utils/numberParsing";
+
+const formatNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
 
 const BatchSearch = () => {
-  const [formState, setFormState] = useState({
-    mzValues: [],
+  const createInitialFormState = () => ({
+    mzValues: "",
     tolerance: "",
     mzToleranceMode: "PPM",
     ionizationMode: "POSITIVE",
     metaboliteType: "ALL",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
+    chemicalAlphabet: "",
+    deuterium: false,
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     setFormState({
@@ -41,7 +69,7 @@ const BatchSearch = () => {
         "482.324",
         "478.29312",
         "500.27457",
-      ],
+      ].join("\n"),
       tolerance: "10",
       mzToleranceMode: "PPM",
       metaboliteType: "ONLYLIPIDS",
@@ -54,21 +82,15 @@ const BatchSearch = () => {
         "[M+NH4]+",
         "[M+H-H2O]+",
       ],
-      databases: ["HMDB"],
+      databases: DEFAULT_DATABASES,
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
     });
   };
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      mzValues: [],
-      tolerance: "10",
-      mzToleranceMode: "PPM",
-      metaboliteType: "ALL",
-      ionizationMode: "NEUTRAL",
-      adductsString: [],
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {
@@ -79,41 +101,47 @@ const BatchSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (name === "mzValues") {
-      const newMZValues = value.split(",").map((val) => parseFloat(val.trim()));
-      setFormState((prev) => ({ ...prev, [name]: newMZValues }));
-    } else if (type === "checkbox") {
-      if (name === "adductsString") {
+      setFormState((prev) => ({ ...prev, [name]: value }));
+      return;
+    }
+
+    if (type === "checkbox") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((adduct) => adduct !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
-      } else if (name === "databases") {
-        setFormState((prev) => ({
-          ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
-        }));
+      } else if (name === "deuterium") {
+        setFormState((prev) => ({ ...prev, deuterium: checked }));
       }
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
   };
 
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    const mzValues = parseRequiredNumberList(formState.mzValues);
+
     const formattedData = {
-      mzValues: formState.mzValues.map((mass) => parseFloat(mass)),
-      tolerance: parseFloat(formState.tolerance),
+      mzValues,
+      tolerance: parseFlexibleNumber(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
       metaboliteType: formState.metaboliteType,
       adductsString: formState.adductsString,
       databases: formState.databases,
+      chemicalAlphabet: toDeuteriumAwareAlphabet(
+        formState.chemicalAlphabet,
+        formState.deuterium
+      ),
+      deuterium: formState.deuterium,
     };
 
     console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
@@ -128,34 +156,53 @@ const BatchSearch = () => {
       const rawResults = response.data;
 
       const features = rawResults.msfeatures || [];
+      const normalizedFeatures = features.map((featureObj, featureIndex) => {
+        const adductGroups = (featureObj.annotationsByAdducts || [])
+          .map((adductGroup, adductIndex) => ({
+            adduct: adductGroup.adduct,
+            compounds: (adductGroup.annotations || [])
+              .map((annotation, annotationIndex) =>
+                normalizeAnnotation(
+                  annotation,
+                  `${featureIndex}-${adductIndex}-${annotationIndex}`
+                )
+              ),
+          }));
 
-      const groupedByAdduct = {};
-
-      features.forEach((featureObj) => {
-        const adductGroups = featureObj.annotationsByAdducts || [];
-
-        adductGroups.forEach(({ adduct, annotations }) => {
-          if (!groupedByAdduct[adduct]) groupedByAdduct[adduct] = [];
-
-          annotations.forEach(({ compound }) => {
-            if (compound) {
-              groupedByAdduct[adduct].push(compound);
-            }
-          });
-        });
+        return {
+          feature: featureObj.feature,
+          adductGroups,
+        };
       });
 
       console.log("Raw results:", rawResults);
 
-      setResults(groupedByAdduct);
+      setResults(normalizedFeatures);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
   };
+
+  const activeFeatureView = buildGroupedResultsView(
+    results[activeFeatureIndex]?.adductGroups,
+    formState.adductsString,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(results, {
+    getFeatureLabel: (_, featureIndex) => `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (featureObj) =>
+      flattenGroupCompounds(featureObj.adductGroups, "compounds"),
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page">
@@ -175,7 +222,7 @@ const BatchSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
             <TextBoxInput
-              label="Experimental Masses"
+              label="Experimental m/z Values"
               name="mzValues"
               value={formState.mzValues}
               onChange={handleChange}
@@ -185,14 +232,15 @@ const BatchSearch = () => {
               label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
+              options={["POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-div"
             />
 
             <AdductsCheckboxes
               selectedAdducts={formState.adductsString}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
             />
 
             <DatabasesCheckboxes
@@ -216,10 +264,29 @@ const BatchSearch = () => {
               onChange={handleChange}
               className="metabolites-div"
             />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={CHEMICAL_ALPHABET_OPTIONS}
+              onChange={handleChange}
+              className="chemical-alphabet-div"
+            >
+              <label className="box group-radio-deuterium">
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </GroupRadio>
           </div>
 
           <div className="form-buttons-container center-button">
-            <button type="submit" onClick={handleSubmit}>
+            <button type="submit">
               Submit
             </button>
           </div>
@@ -240,16 +307,62 @@ const BatchSearch = () => {
           </div>
         </div>
 
-        <div className="results-div">
-          {showResults &&
-            Object.entries(results).map(([adduct, compounds]) => (
-              <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
-              />
-            ))}
-        </div>
+        {showResults && (
+          <div className="results-div">
+            {results.length > 0 ? (
+              <>
+                <ResultsSummary
+                  results={allFeaturesSummaryResults}
+                  matchedAdductCount={matchedFeatureCount}
+                  totalAdductCount={results.length}
+                  progressLabel="Features with matches"
+                  filename="batch_all_features_export.csv"
+                />
+
+                <div className="feature-tabs" role="tablist">
+                  {results.map((featureObj, featureIndex) => (
+                    <button
+                      key={`feature-tab-${featureIndex}`}
+                      type="button"
+                      className={`feature-tab ${
+                        featureIndex === activeFeatureIndex ? "active" : ""
+                      }`}
+                      onClick={() => setActiveFeatureIndex(featureIndex)}
+                    >
+                      Feature {featureIndex + 1} | m/z{" "}
+                      {formatNumber(featureObj.feature?.mzValue, 4)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="feature-tab-panel">
+                  <ResultsSummary
+                    results={activeFeatureView.summaryResults}
+                    matchedAdductCount={activeFeatureView.matchedGroupCount}
+                    totalAdductCount={formState.adductsString.length}
+                    filename={`batch_feature_${activeFeatureIndex + 1}_export.csv`}
+                  />
+
+                  {!activeFeatureView.hasCompounds && (
+                    <p className="no-results">
+                      No results found for this feature.
+                    </p>
+                  )}
+
+                  {activeFeatureView.displayGroups.map((group) => (
+                    <ResultsDropdownGroup
+                      key={`${activeFeatureIndex}-${group.adduct}`}
+                      adduct={group.adduct}
+                      compounds={group.compounds}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="no-results">No features returned.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

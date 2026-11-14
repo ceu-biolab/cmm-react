@@ -1,13 +1,77 @@
 import { useState, useRef } from "react";
+import {
+  parseCompositeSpectra,
+  parseNumberList,
+  parsePeakList,
+  serializeNumberListForInput,
+  serializePeakListForInput,
+} from "../../utils/numberParsing";
+
+const DEFAULT_PLACEHOLDERS = {
+  mz: "e.g. 400.3432\n422.3234\n316.2495",
+  mzValues: "e.g. 400.3432\n422.3234\n316.2495",
+  masses: "e.g. 291.1299\n298.0980\n308.0940",
+  mz_values: "e.g. 291.1299\n298.0980\n308.0940",
+  retentionTimes: "e.g. 18.8425\n18.8425\n8.1449",
+  rtValues: "e.g. 8.50\n6.20\n17.40",
+  mt: "e.g. 11.56\n13.65\n15.62",
+  ccsValues: "e.g. 202.881\n178.546\n190.314",
+  effective_mobilities: "e.g. 1174\n1060\n646",
+  rmt: "e.g. 0.85\n0.86\n1.07",
+  spectrum: "e.g. 115.0376:100\n55.0177:40.3126\n59.0128:18.1033",
+  "fragmentsMZsIntensities.peaks":
+    "e.g. 55.301:12.753\n67.237:14.611\n69.204:39.189",
+  compositeSpectrum:
+    "e.g. 400.3432:307034.88\n401.34576:73205.016\n\n422.32336:1562.73\n423.3237:564.08",
+};
+
+const getDefaultPlaceholder = (name, label, validationMode) => {
+  if (DEFAULT_PLACEHOLDERS[name]) {
+    return DEFAULT_PLACEHOLDERS[name];
+  }
+
+  if (validationMode === "json" || validationMode === "compositeSpectrum") {
+    return DEFAULT_PLACEHOLDERS.compositeSpectrum;
+  }
+
+  if (validationMode === "mzIntensityPairs" || validationMode === "spectrum") {
+    return DEFAULT_PLACEHOLDERS["fragmentsMZsIntensities.peaks"];
+  }
+
+  const normalizedLabel = String(label || "").toLowerCase();
+
+  if (normalizedLabel.includes("spectrum")) {
+    return DEFAULT_PLACEHOLDERS.spectrum;
+  }
+
+  if (normalizedLabel.includes("retention")) {
+    return DEFAULT_PLACEHOLDERS.retentionTimes;
+  }
+
+  if (normalizedLabel.includes("migration")) {
+    return DEFAULT_PLACEHOLDERS.mt;
+  }
+
+  if (normalizedLabel.includes("ccs")) {
+    return DEFAULT_PLACEHOLDERS.ccsValues;
+  }
+
+  if (normalizedLabel.includes("mobility")) {
+    return DEFAULT_PLACEHOLDERS.effective_mobilities;
+  }
+
+  return "e.g. 400.3432\n422.3234\n316.2495";
+};
 
 const TextBoxInput = ({
   value,
   onChange,
   name = "mz",
-  label = "Experimental Masses",
+  label = "Experimental m/z Values",
   className: customClassName = "",
   placeholder: customPlaceholder = "",
   required = false,
+  validationMode = "numbers",
 }) => {
   const [error, setError] = useState("");
   const typingTimeout = useRef(null);
@@ -20,9 +84,22 @@ const TextBoxInput = ({
       return;
     }
 
-    // Split by commas, spaces, semicolons, or newlines
-    const parts = trimmed.split(/[\s,;]+/).filter(Boolean);
-    const invalids = parts.filter((p) => isNaN(Number(p)));
+    if (validationMode === "json") {
+      try {
+        JSON.parse(trimmed);
+        setError("");
+      } catch {
+        setError("Invalid JSON");
+      }
+      return;
+    }
+
+    const invalids =
+      validationMode === "mzIntensityPairs" || validationMode === "spectrum"
+        ? parsePeakList(trimmed).invalids
+        : validationMode === "compositeSpectrum"
+        ? parseCompositeSpectra(trimmed).invalids
+        : parseNumberList(trimmed).invalids;
 
     if (invalids.length > 0) {
       setError(`Invalid entries: ${invalids.join(", ")}`);
@@ -53,13 +130,61 @@ const TextBoxInput = ({
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target.result;
-        const masses = text
-          .split(/[\s,;]+/)
-          .map((s) => s.trim())
-          .filter((s) => /^[-+]?(?:\d+\.?\d*|\.\d+)$/.test(s))
-          .map(parseFloat);
+        if (validationMode === "json") {
+          onChange({
+            target: {
+              name,
+              value: text,
+            },
+          });
+          validateInput(text);
+          return;
+        }
 
-        if (!masses.length) {
+        if (
+          validationMode === "mzIntensityPairs" ||
+          validationMode === "spectrum"
+        ) {
+          const { peaks, invalids } = parsePeakList(text);
+          if (!peaks.length || invalids.length) {
+            setError(
+              invalids.length
+                ? `Invalid entries: ${invalids.join(", ")}`
+                : "No valid spectrum peaks found in file"
+            );
+            return;
+          }
+
+          onChange({
+            target: {
+              name,
+              value: serializePeakListForInput(peaks),
+            },
+          });
+          setError("");
+          return;
+        }
+
+        if (validationMode === "compositeSpectrum") {
+          const { invalids } = parseCompositeSpectra(text);
+          if (invalids.length) {
+            setError(`Invalid entries: ${invalids.join(", ")}`);
+            return;
+          }
+
+          onChange({
+            target: {
+              name,
+              value: text,
+            },
+          });
+          setError("");
+          return;
+        }
+
+        const { values: numbers, invalids } = parseNumberList(text);
+
+        if (!numbers.length || invalids.length) {
           setError("No valid numeric values found in file");
           return;
         }
@@ -67,7 +192,7 @@ const TextBoxInput = ({
         onChange({
           target: {
             name,
-            value: masses.join(", "),
+            value: serializeNumberListForInput(numbers),
           },
         });
         setError("");
@@ -78,9 +203,7 @@ const TextBoxInput = ({
 
   return (
     <div className={`inner-column ${customClassName}`}>
-      <label className="inner-column-label">
-        {label} {required && <span style={{ color: "red" }}>*</span>}
-      </label>
+      <label className="inner-column-label">{label}</label>
 
       <textarea
         name={name}
@@ -90,7 +213,7 @@ const TextBoxInput = ({
         onBlur={handleBlur}
         placeholder={
           customPlaceholder ||
-          "Enter mass values separated by commas, spaces, or semicolons"
+          getDefaultPlaceholder(name, label, validationMode)
         }
         rows="6"
         required={required}

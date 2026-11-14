@@ -1,29 +1,61 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const MirroredSpectrum = ({ data }) => {
-  const [selectedCompoundIndex, setSelectedCompoundIndex] = useState(0);
+const normalizePeaks = (peaks) => {
+  if (!Array.isArray(peaks) || peaks.length === 0) {
+    return [];
+  }
 
-  const feature = data?.gcmsFeatures?.[0];
-  if (!feature) return <div>No GCMS features available.</div>;
+  const validPeaks = peaks
+    .map((peak) => ({
+      mz: Number(peak?.mz),
+      intensity: Number(peak?.intensity),
+    }))
+    .filter((peak) => Number.isFinite(peak.mz) && Number.isFinite(peak.intensity));
 
-  const experimentalPeaks =
-    feature.gcmsSpectrumExperimental?.spectrum?.map(
-      ({ mzValue, intensity }) => ({
-        mz: mzValue,
-        intensity,
-      })
-    ) || [];
+  if (!validPeaks.length) {
+    return [];
+  }
 
-  const compounds = feature.gcmsAnnotations || [];
-  const selectedCompound = compounds[selectedCompoundIndex];
+  const maxIntensity = validPeaks.reduce(
+    (max, peak) => Math.max(max, peak.intensity),
+    0
+  );
 
-  const compoundPeaks =
-    selectedCompound?.gcmsCompound?.gcmsspectrum?.[0]?.spectrum?.map(
-      ({ mzValue, intensity }) => ({ mz: mzValue, intensity }) // mirrored later
-    ) || [];
+  if (!maxIntensity) {
+    return validPeaks.map((peak) => ({
+      ...peak,
+      intensity: 0,
+    }));
+  }
 
-  if (!experimentalPeaks.length && !compoundPeaks.length)
+  return validPeaks.map((peak) => ({
+    ...peak,
+    intensity: (peak.intensity / maxIntensity) * 100,
+  }));
+};
+
+const MirroredSpectrum = ({
+  title,
+  experimentalPeaks = [],
+  compoundPeaks = [],
+  selectorOptions = [],
+  selectedOptionIndex = 0,
+  onSelectOption,
+  selectorAriaLabel = "Select compound for comparison",
+}) => {
+  const [tooltip, setTooltip] = useState(null);
+  const normalizedExperimental = useMemo(
+    () => normalizePeaks(experimentalPeaks),
+    [experimentalPeaks]
+  );
+  const normalizedCompound = useMemo(
+    () => normalizePeaks(compoundPeaks),
+    [compoundPeaks]
+  );
+
+  if (!normalizedExperimental.length && !normalizedCompound.length) {
     return <div>No spectrum data available.</div>;
+  }
 
   const width = 1150;
   const height = 600;
@@ -31,44 +63,61 @@ const MirroredSpectrum = ({ data }) => {
   const padding = 50;
 
   const allMz = [
-    ...experimentalPeaks.map((p) => p.mz),
-    ...compoundPeaks.map((p) => p.mz),
-  ];
+    ...normalizedExperimental.map((peak) => peak.mz),
+    ...normalizedCompound.map((peak) => peak.mz),
+  ].filter((mz) => Number.isFinite(mz));
 
-  const basePeak = experimentalPeaks.find((p) => p.intensity === 100);
+  if (!allMz.length) {
+    return <div>No spectrum data available.</div>;
+  }
 
-  const centerMz = basePeak
-    ? basePeak.mz
-    : (Math.min(...allMz) + Math.max(...allMz)) / 2;
+  const basePeak = normalizedExperimental.reduce((max, peak) => {
+    if (!max || peak.intensity > max.intensity) {
+      return peak;
+    }
+    return max;
+  }, null);
 
-  const mzRange = Math.max(...allMz) - Math.min(...allMz);
-  const displayRange = mzRange;
-
-  const minMz = centerMz - displayRange / 2;
-  const maxMz = centerMz + displayRange / 2;
+  const minMz = Math.min(...allMz);
+  const maxMz = Math.max(...allMz);
+  const centerMz = basePeak?.mz ?? (minMz + maxMz) / 2;
+  const displayRange = maxMz - minMz || 1;
 
   const scaleX = (mz) =>
-    ((mz - minMz) / (maxMz - minMz)) * (width - 2 * padding) + padding;
+    ((mz - (centerMz - displayRange / 2)) / displayRange) *
+      (width - 2 * padding) +
+    padding;
 
-  const scaleY = (val) => (val / 100) * (height / 2 - padding);
+  const scaleY = (intensity) => (intensity / 100) * (height / 2 - padding);
 
-  const [tooltip, setTooltip] = useState(null);
+  const hasSelector = Array.isArray(selectorOptions) && selectorOptions.length > 0;
+  const selectedIndex = Math.max(
+    0,
+    Math.min(selectedOptionIndex, Math.max(selectorOptions.length - 1, 0))
+  );
 
   return (
     <div className="graph-div">
-      <label className="compound-select-label">
-        <select
-          className="compound-select"
-          value={selectedCompoundIndex}
-          onChange={(e) => setSelectedCompoundIndex(Number(e.target.value))}
-        >
-          {compounds.map((c, idx) => (
-            <option key={idx} value={idx}>
-              {c.gcmsCompound?.compoundName || `Compound ${idx + 1}`}
-            </option>
-          ))}
-        </select>
-      </label>
+      {title && <h3>{title}</h3>}
+      {hasSelector && (
+        <label className="compound-select-label">
+          <select
+            className="compound-select"
+            aria-label={selectorAriaLabel}
+            value={selectedIndex}
+            onChange={(event) => onSelectOption?.(Number(event.target.value))}
+          >
+            {selectorOptions.map((option, index) => (
+              <option
+                key={option?.value ?? option?.label ?? index}
+                value={index}
+              >
+                {option?.label ?? `Option ${index + 1}`}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div
         style={{
@@ -93,7 +142,6 @@ const MirroredSpectrum = ({ data }) => {
           }}
           onMouseLeave={() => setTooltip(null)}
         >
-          {/* X-axis (center line) */}
           <line
             x1={padding}
             x2={width - padding}
@@ -102,13 +150,11 @@ const MirroredSpectrum = ({ data }) => {
             stroke="#000"
           />
 
-          {/* 🆕 Y-axis gridlines and labels */}
-          {Array.from({ length: 6 }, (_, i) => i * 20).map((tick) => {
+          {Array.from({ length: 6 }, (_, index) => index * 20).map((tick) => {
             const yTop = yCenter - scaleY(tick);
             const yBottom = yCenter + scaleY(tick);
             return (
               <g key={tick}>
-                {/* Top gridline */}
                 <line
                   x1={padding}
                   x2={width - padding}
@@ -117,8 +163,7 @@ const MirroredSpectrum = ({ data }) => {
                   stroke="#ccc"
                   strokeDasharray="3,3"
                 />
-                {/* Bottom gridline */}
-                {tick > 0 && ( // avoid duplicating the center line
+                {tick > 0 && (
                   <line
                     x1={padding}
                     x2={width - padding}
@@ -128,7 +173,6 @@ const MirroredSpectrum = ({ data }) => {
                     strokeDasharray="3,3"
                   />
                 )}
-                {/* Labels on left side */}
                 <text
                   x={padding - 10}
                   y={yTop + 4}
@@ -153,13 +197,12 @@ const MirroredSpectrum = ({ data }) => {
             );
           })}
 
-          {/* Experimental peaks */}
-          {experimentalPeaks.map((p, idx) => {
-            const x = scaleX(p.mz);
-            const y = yCenter - scaleY(p.intensity);
+          {normalizedExperimental.map((peak, index) => {
+            const x = scaleX(peak.mz);
+            const y = yCenter - scaleY(peak.intensity);
             return (
               <line
-                key={`exp-${idx}`}
+                key={`exp-${index}`}
                 x1={x}
                 x2={x}
                 y1={yCenter}
@@ -168,8 +211,8 @@ const MirroredSpectrum = ({ data }) => {
                 strokeWidth={2}
                 onMouseEnter={() =>
                   setTooltip({
-                    mz: p.mz,
-                    intensity: p.intensity,
+                    mz: peak.mz,
+                    intensity: peak.intensity,
                     type: "Experimental",
                     x,
                     y,
@@ -179,13 +222,12 @@ const MirroredSpectrum = ({ data }) => {
             );
           })}
 
-          {/* Compound peaks */}
-          {compoundPeaks.map((p, idx) => {
-            const x = scaleX(p.mz);
-            const y = yCenter + scaleY(p.intensity);
+          {normalizedCompound.map((peak, index) => {
+            const x = scaleX(peak.mz);
+            const y = yCenter + scaleY(peak.intensity);
             return (
               <line
-                key={`cmp-${idx}`}
+                key={`cmp-${index}`}
                 x1={x}
                 x2={x}
                 y1={yCenter}
@@ -194,8 +236,8 @@ const MirroredSpectrum = ({ data }) => {
                 strokeWidth={2}
                 onMouseEnter={() =>
                   setTooltip({
-                    mz: p.mz,
-                    intensity: p.intensity,
+                    mz: peak.mz,
+                    intensity: peak.intensity,
                     type: "Compound",
                     x,
                     y,
@@ -205,7 +247,6 @@ const MirroredSpectrum = ({ data }) => {
             );
           })}
 
-          {/* Tooltip */}
           {tooltip && (
             <g>
               <rect
@@ -214,13 +255,13 @@ const MirroredSpectrum = ({ data }) => {
                 width={120}
                 height={50}
                 fill="white"
-                stroke="#617475"
+                stroke="#626277"
                 rx={4}
               />
               <text
                 x={tooltip.x + 15}
                 y={tooltip.y - 25}
-                fill="#617475"
+                fill="#626277"
                 fontSize={12}
               >
                 {tooltip.type}
@@ -228,23 +269,22 @@ const MirroredSpectrum = ({ data }) => {
               <text
                 x={tooltip.x + 15}
                 y={tooltip.y - 10}
-                fill="#617475"
+                fill="#626277"
                 fontSize={12}
               >
-                m/z: {tooltip.mz.toFixed(2)}
+                m/z: {tooltip.mz?.toFixed(2)}
               </text>
               <text
                 x={tooltip.x + 15}
                 y={tooltip.y + 5}
-                fill="#617475"
+                fill="#626277"
                 fontSize={12}
               >
-                Intensity: {tooltip.intensity.toFixed(2)}
+                Intensity: {tooltip.intensity?.toFixed(2)}
               </text>
             </g>
           )}
 
-          {/* Axis labels */}
           <text
             x={width / 2}
             y={height - 5}

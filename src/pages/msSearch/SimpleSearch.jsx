@@ -7,20 +7,39 @@ import GroupRadio from "../../components/search/GroupRadio";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
 import ToleranceRadio from "../../components/search/ToleranceRadio";
 import { ToastContainer, toast } from "react-toastify";
+import { formatApiError } from "../../utils/apiError";
 import ResultsSummary from "../../components/search/ResultsSummary";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  buildGroupedResultsView,
+  resultMapToGroups,
+} from "../../utils/resultsSummary";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
+import {
+  CHEMICAL_ALPHABET_OPTIONS,
+  toDeuteriumAwareAlphabet,
+} from "../../utils/chemicalAlphabet";
+import { parseFlexibleNumber } from "../../utils/numberParsing";
 
 const SimpleSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mz: "",
     mzToleranceMode: "PPM",
     tolerance: "",
     ionizationMode: "POSITIVE",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
     metaboliteType: "ALL",
+    chemicalAlphabet: "",
+    deuterium: false,
   });
 
-  const [results, setResults] = useState([]);
+  const [formState, setFormState] = useState(createInitialFormState);
+
+  const [results, setResults] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [matchedAdductCount, setMatchedAdductCount] = useState(0);
   const [totalAdductCount, setTotalAdductCount] = useState(0);
@@ -41,32 +60,16 @@ const SimpleSearch = () => {
         "[M+NH4]+",
         "[M+H-H2O]+",
       ],
-      databases: [
-        "HMDB",
-        "LIPIDMAPS",
-        "ASPERGILLUS",
-        "FAHFA",
-        "KEGG",
-        "INHOUSE",
-        "CHEBI",
-        "PUBCHEM",
-        "NPATLAS",
-      ],
+      databases: DEFAULT_DATABASES,
       metaboliteType: "ALL",
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
     });
   };
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      mz: "",
-      tolerance: "10",
-      mzToleranceMode: "PPM",
-      metaboliteType: "ALL",
-      ionizationMode: "NEUTRAL",
-      adductsString: [],
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   const countDuplicates = (compounds) => {
@@ -95,24 +98,21 @@ const SimpleSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adductsString") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((adduct) => adduct !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
-      } else if (name === "databases") {
-        setFormState((prev) => ({
-          ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
-        }));
+      } else if (name === "deuterium") {
+        setFormState((prev) => ({ ...prev, deuterium: checked }));
       }
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
     }
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
   };
 
   const handleSubmit = async (e) => {
@@ -120,13 +120,18 @@ const SimpleSearch = () => {
     setLoading(true);
 
     const formattedData = {
-      mz: parseFloat(formState.mz),
-      tolerance: parseFloat(formState.tolerance),
+      mz: parseFlexibleNumber(formState.mz),
+      tolerance: parseFlexibleNumber(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       ionizationMode: formState.ionizationMode,
       metaboliteType: formState.metaboliteType,
       adductsString: formState.adductsString,
       databases: formState.databases,
+      chemicalAlphabet: toDeuteriumAwareAlphabet(
+        formState.chemicalAlphabet,
+        formState.deuterium
+      ),
+      deuterium: formState.deuterium,
     };
 
     console.log("Sending to backend:", JSON.stringify(formattedData, null, 2));
@@ -143,26 +148,27 @@ const SimpleSearch = () => {
 
       const rawResults = response.data;
 
-      const groupedByAdduct = {};
+      const adductGroups = [];
 
       if (Array.isArray(rawResults.msfeatures)) {
-        rawResults.msfeatures.forEach((feature) => {
+        rawResults.msfeatures.forEach((feature, featureIndex) => {
           const annotationsByAdducts = feature.annotationsByAdducts;
 
           if (Array.isArray(annotationsByAdducts)) {
-            annotationsByAdducts.forEach(({ adduct, annotations }) => {
-              if (!groupedByAdduct[adduct]) {
-                groupedByAdduct[adduct] = [];
-              }
+            annotationsByAdducts.forEach(({ adduct, annotations }, adductIndex) => {
+              const compounds = Array.isArray(annotations)
+                ? annotations.map((annotation, annotationIndex) =>
+                    normalizeAnnotation(
+                      annotation,
+                      `${featureIndex}-${adductIndex}-${annotationIndex}`
+                    )
+                  )
+                : [];
 
-              if (Array.isArray(annotations)) {
-                annotations.forEach((annotation) => {
-                  const compound = annotation.compound;
-                  if (compound) {
-                    groupedByAdduct[adduct].push(compound);
-                  }
-                });
-              }
+              adductGroups.push({
+                adduct,
+                compounds,
+              });
             });
           }
         });
@@ -170,35 +176,52 @@ const SimpleSearch = () => {
         console.error("Expected response.data.msfeatures to be an array");
       }
 
-      const adductsWithResults = Object.keys(groupedByAdduct).filter(
-        (adduct) => groupedByAdduct[adduct].length > 0
+      const groupedByAdductView = buildGroupedResultsView(
+        adductGroups,
+        formState.adductsString,
+        {
+          labelKey: "adduct",
+          compoundsKey: "compounds",
+          fallbackLabel: "Adduct",
+        }
       );
-      const totalAdducts = formState.adductsString.length;
-      const matchedAdducts = adductsWithResults.length;
-      setMatchedAdductCount(matchedAdducts);
-      setTotalAdductCount(totalAdducts);
 
-      const allCompounds = Object.values(groupedByAdduct).flat();
+      setMatchedAdductCount(groupedByAdductView.matchedGroupCount);
+      setTotalAdductCount(formState.adductsString.length);
+
+      const allCompounds = groupedByAdductView.displayGroups.flatMap(
+        (group) => group.compounds
+      );
       const duplicateCount = countDuplicates(allCompounds);
       console.log("Duplicate Count: ", duplicateCount);
 
       console.log("Raw results:", rawResults);
 
+      toast.dismiss();
       toast.success("Form submitted successfully!", {
         autoClose: 2000,
         closeOnClick: true,
         draggable: true,
         position: "middle-left",
       });
-      setResults(groupedByAdduct);
+      setResults(groupedByAdductView.summaryResults);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      toast.dismiss();
+      toast.error(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
   };
+
+  const resultGroups = resultMapToGroups(results, {
+    labelKey: "adduct",
+    compoundsKey: "compounds",
+  }).filter(
+    (group) => Array.isArray(group.compounds) && group.compounds.length > 0
+  );
+  const hasResultCompounds = resultGroups.length > 0;
 
   return (
     <div className="page">
@@ -219,11 +242,11 @@ const SimpleSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container">
             <TextInput
-              label="Experimental Mass"
+              label="Experimental m/z"
               name="mz"
               value={formState.mz}
               onChange={handleChange}
-              placeholder="Enter mass value"
+              placeholder="Enter m/z value"
               className="experimental-mass-div"
             />
 
@@ -240,14 +263,15 @@ const SimpleSearch = () => {
               label="Ionization Mode"
               name="ionizationMode"
               value={formState.ionizationMode}
-              options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
+              options={["POSITIVE", "NEGATIVE"]}
               onChange={handleChange}
               className="ionization-div"
             />
 
             <AdductsCheckboxes
               selectedAdducts={formState.adductsString}
-              onChange={handleChange}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
             />
 
             <DatabasesCheckboxes
@@ -262,13 +286,32 @@ const SimpleSearch = () => {
               modeName="mzToleranceMode"
               onChange={handleChange}
             />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={CHEMICAL_ALPHABET_OPTIONS}
+              onChange={handleChange}
+              className="chemical-alphabet-div"
+            >
+              <label className="box group-radio-deuterium">
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </GroupRadio>
           </div>
 
           <div className="form-buttons-container center-button">
             <button type="submit">Submit</button>
           </div>
         </form>
-        <ToastContainer />
+        <ToastContainer limit={1} />
 
         <div className="align-buttons-container">
           <div className="other-buttons">
@@ -293,11 +336,15 @@ const SimpleSearch = () => {
               totalAdductCount={totalAdductCount}
             />
 
-            {Object.entries(results).map(([adduct, compounds]) => (
+            {!hasResultCompounds && (
+              <p className="no-results">No results found for this query.</p>
+            )}
+
+            {resultGroups.map((group) => (
               <ResultsDropdownGroup
-                key={adduct}
-                adduct={adduct}
-                compounds={compounds}
+                key={group.adduct}
+                adduct={group.adduct}
+                compounds={group.compounds}
               />
             ))}
           </div>

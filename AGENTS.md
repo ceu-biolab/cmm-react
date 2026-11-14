@@ -1,0 +1,33 @@
+# AGENTS.md
+
+- Never make design assumptions; in case of ambiguity or doubt, stop the implementation and ask questions.
+- Self update this file for future sessions when new general guidelines are given or can be inferred.
+- You can find a symlink to examples backend requests in __backend_request_examples/. Make sure to never modify anything in there.
+- For result pages that split output by feature tabs, include a top results summary viewer per active tab.
+- Multi-feature top summaries should stay compact and preserve feature boundaries in downloads: CSV with feature columns, JSON with a `features` array level, and Excel with one sheet per feature.
+- Keep one unified `External IDs` column across all results tables (include all available DB identifiers there).
+- In tabbed feature results, compute matched adducts per active feature and only count adducts with `> 0` compounds.
+- In results tables, hide adduct sections with `0` compounds; show a single empty-state message only when total matches are `0`.
+- Keep adduct group ordering in results aligned with the adduct order shown in each form.
+- Results table column headers toggle ascending/descending sorting within each table; preserve feature/adduct groups and the initial backend row order until a header is clicked.
+- Default adduct preselection should use the first six currently available options for the active ionization mode, not a hardcoded preferred list.
+- Keep the `Ionization Mode` section visually adjacent to the `Adducts` section because the controls are related.
+- In CE-MS forms, display buffer `description` labels from the backend, but keep submitting buffer `code` values.
+- In CE-MS forms, render buffer options in a limited-height scrollable list (same UX pattern as adduct lists).
+- Keep pathway rendering consistent across all result tables: preserve KEGG pathway hyperlinks via shared normalization (no page-specific divergence).
+- Remove unused legacy pages/routes instead of maintaining parallel deprecated result UIs.
+- Search forms should preselect the baseline default options where those controls exist: `PPM` tolerance mode, positive ionization mode, `ALL` metabolites, and the default databases (`HMDB`, `LIPIDMAPS`, `KEGG`, `INHOUSE`, `FAHFA`). `Clear Input` should reset back to those defaults.
+- Keep form behavior consistent across searches (naming, tolerance mode wiring, and reset behavior).
+- In CCS Search, default Chemical Alphabet to `ALL` and Buffer Gas to `N2`, including after `Clear Input`.
+- Keep `Deuterium` bundled with `Chemical Alphabet` in forms (rendered directly under/with that control, not detached in a separate section).
+- In numeric multi-value inputs, use only newlines and semicolons as value separators; commas are decimal separators and all API requests must send decimal points.
+- Allow decimal commas in numeric form inputs where numeric values make sense, but normalize submitted payloads to decimal points.
+- Keep spectra textarea formats consistent: use `m/z:intensity` peak entries separated by newlines or semicolons, and use blank lines between multiple composite spectra.
+- In GC-MS Search, treat retention index tolerance as a percentage and show RI error in both absolute and relative (%) forms in results and downloads.
+- In form UI text, use `experimental m/z` terminology for entered m/z readings.
+- Treat Browse Search chemical alphabet filtering as backend-blocked until the backend request/response contract is available.
+- LC-MS/MS Search uses the batched backend endpoint `lcmsms-search`.
+- In Codex non-interactive shells, `~/.bashrc` returns early so `nvm` is not auto-loaded; run `export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 22` before `node`/`npm` commands.
+- Firefox is installed as a Snap; for concurrent headless screenshots, create the temporary profile and write the screenshot under `$HOME/snap/firefox/common` so both paths are visible through Snap confinement (do not use `/tmp` or `~/.cache`).
+- You can test any backend GET/POST request with curl at https://ceumassdev.eps.uspceu.es/api/ but note that the backend is also in testing phase
+- Keep git commits up to date while implementing multi-step work; commit logical chunks as you go.

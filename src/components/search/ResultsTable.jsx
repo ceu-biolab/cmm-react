@@ -1,183 +1,519 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { createSearchParams } from "react-router-dom";
-import CompoundInfoCard from "./CompoundInfoCard";
+import React, { useMemo, useState } from "react";
+import { Link, createSearchParams } from "react-router-dom";
+import {
+  extractPathwayEntries,
+  normalizeCompound,
+} from "../../utils/resultNormalization";
 
-const ResultsTable = ({ results }) => {
-  const [hoveredId, setHoveredId] = useState(null);
-  const [hoveredCompound, setHoveredCompound] = useState(null);
+const EMPTY_VALUE = "—";
 
-  const linkableFields = [
-    "CAS",
-    "KEGG",
-    "CHEBI",
-    "HMDB",
-    "LipidMaps",
-    "PubChem",
-    "KNApSAcK",
-    "NPAtlas",
-  ];
+const formatNumber = (value, digits = 4) => {
+  if (value === null || value === undefined || value === "") {
+    return EMPTY_VALUE;
+  }
 
-  if (!results || results.length === 0) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return EMPTY_VALUE;
+  }
+
+  return parsed.toFixed(digits);
+};
+
+const hasValue = (value) =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  value !== "null" &&
+  value !== "undefined";
+
+const getSortValue = (row, column) => {
+  const value = column.type === "pathways" ? row.pathway : row[column.key];
+  if (!hasValue(value)) return null;
+  if (column.type === "number") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return String(value);
+};
+
+const PathwaysCell = ({ pathways = [] }) => {
+  const normalizedPathways = extractPathwayEntries(pathways);
+
+  if (!normalizedPathways.length) {
+    return EMPTY_VALUE;
+  }
+
+  return (
+    <div className="pathway-cell">
+      {normalizedPathways.map((pathwayEntry, index) => (
+        <span
+          key={`${pathwayEntry.name}-${pathwayEntry.keggPathwayId || index}`}
+          className="pathway-pill"
+          title={pathwayEntry.name}
+        >
+          {pathwayEntry.keggPathwayUrl ? (
+            <a
+              href={pathwayEntry.keggPathwayUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {pathwayEntry.name}
+            </a>
+          ) : (
+            pathwayEntry.name
+          )}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const identifierConfig = [
+  {
+    label: "CAS",
+    key: "casID",
+    linkBuilder: (value) =>
+      `https://commonchemistry.cas.org/detail?cas_rn=${value}`,
+  },
+  {
+    label: "KEGG",
+    key: "keggID",
+    linkBuilder: (value) => `https://www.kegg.jp/dbget-bin/www_bget?cpd:${value}`,
+  },
+  {
+    label: "CHEBI",
+    key: "chebiID",
+    linkBuilder: (value) =>
+      `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${value}`,
+  },
+  {
+    label: "HMDB",
+    key: "hmdbID",
+    linkBuilder: (value) => `https://hmdb.ca/metabolites/${value}`,
+  },
+  {
+    label: "LipidMaps",
+    key: "lmID",
+    linkBuilder: (value) =>
+      `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${value}`,
+  },
+  {
+    label: "PubChem",
+    key: "pcID",
+    linkBuilder: (value) => `https://pubchem.ncbi.nlm.nih.gov/compound/${value}`,
+  },
+  {
+    label: "KNApSAcK",
+    key: "knapsackID",
+    linkBuilder: (value) =>
+      `https://www.knapsackfamily.com/knapsack_core/information.php?word=${value}`,
+  },
+  {
+    label: "NP Atlas",
+    key: "npatlasID",
+    linkBuilder: (value) => `https://www.npatlas.org/explore/compounds/${value}`,
+  },
+  {
+    label: "Agilent",
+    key: "agilentID",
+  },
+  {
+    label: "InHouse",
+    key: "inHouseID",
+  },
+  {
+    label: "Aspergillus",
+    key: "aspergillusID",
+  },
+  {
+    label: "FAHFA",
+    key: "fahfaID",
+  },
+  {
+    label: "OH Position",
+    key: "ohPositionID",
+  },
+];
+
+const IdentifiersCell = ({ row }) => {
+  const values = identifierConfig
+    .map(({ label, key, linkBuilder }) => {
+      const value = row?.[key];
+      if (!hasValue(value)) {
+        return null;
+      }
+
+      return {
+        label,
+        value,
+        href: linkBuilder ? linkBuilder(value) : null,
+      };
+    })
+    .filter(Boolean);
+
+  if (!values.length) {
+    return EMPTY_VALUE;
+  }
+
+  return (
+    <div className="identifiers-cell">
+      {values.map((item) => (
+        <span key={`${item.label}-${item.value}`} className="identifier-pill">
+          <strong>{item.label}</strong>:{" "}
+          {item.href ? (
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              {item.value}
+            </a>
+          ) : (
+            item.value
+          )}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const externalLinkMap = {
+  CAS: (value) => `https://commonchemistry.cas.org/detail?cas_rn=${value}`,
+  KEGG: (value) => `https://www.kegg.jp/dbget-bin/www_bget?cpd:${value}`,
+  CHEBI: (value) =>
+    `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${value}`,
+  HMDB: (value) => `https://hmdb.ca/metabolites/${value}`,
+  LipidMaps: (value) =>
+    `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${value}`,
+  PubChem: (value) => `https://pubchem.ncbi.nlm.nih.gov/compound/${value}`,
+  KNApSAcK: (value) =>
+    `https://www.knapsackfamily.com/knapsack_core/information.php?word=${value}`,
+  "NP Atlas": (value) =>
+    `https://www.npatlas.org/explore/compounds/${value}`,
+};
+
+const getColumns = (normalizedResults, options = {}) => {
+  const {
+    extraColumns = [],
+    forceColumns = [],
+    hiddenColumns = [],
+  } = options;
+  const forcedColumns = new Set(forceColumns);
+  const hiddenColumnKeys = new Set(hiddenColumns);
+  const hasAny = (key) =>
+    forcedColumns.has(key) ||
+    normalizedResults.some((row) => hasValue(row[key]));
+
+  const visibleExtraColumns = extraColumns.filter(
+    (column) =>
+      column?.key &&
+      !hiddenColumnKeys.has(column.key) &&
+      (column?.always || hasAny(column.key))
+  );
+
+  return [
+    { header: "ID", key: "compoundId", type: "id" },
+    { header: "Name", key: "compoundName" },
+    { header: "Formula", key: "formula", className: "formula-column" },
+    { header: "Mass", key: "mass", type: "number", digits: 4 },
+    {
+      header: "m/z Error (ppm)",
+      key: "massErrorPpm",
+      type: "number",
+      digits: 4,
+    },
+    ...(hasAny("finalScore")
+      ? [{ header: "Final Score", key: "finalScore", type: "number", digits: 4 }]
+      : []),
+    ...(hasAny("score")
+      ? [{ header: "Score", key: "score", type: "number", digits: 4 }]
+      : []),
+    ...(hasAny("rtScore")
+      ? [{ header: "RT Score", key: "rtScore", type: "number", digits: 4 }]
+      : []),
+    ...(hasAny("adductScore")
+      ? [{ header: "Adduct Score", key: "adductScore", type: "number", digits: 4 }]
+      : []),
+    ...(hasAny("ionizationScore")
+      ? [
+          {
+            header: "Ionization Score",
+            key: "ionizationScore",
+            type: "number",
+            digits: 4,
+          },
+        ]
+      : []),
+    ...(hasAny("gcmsCosineScore")
+      ? [
+          {
+            header: "Cosine Score",
+            key: "gcmsCosineScore",
+            type: "number",
+            digits: 4,
+          },
+        ]
+      : []),
+    ...(hasAny("riError")
+      ? [
+          {
+            header: "RI Error (absolute)",
+            key: "riError",
+            type: "number",
+            digits: 2,
+          },
+        ]
+      : []),
+    ...(hasAny("riErrorPct")
+      ? [
+          {
+            header: "RI Error (%)",
+            key: "riErrorPct",
+            type: "number",
+            digits: 2,
+          },
+        ]
+      : []),
+    ...(hasAny("dbCcs")
+      ? [{ header: "DB CCS", key: "dbCcs", type: "number", digits: 3 }]
+      : []),
+    ...(hasAny("ccsError")
+      ? [{ header: "CCS Error", key: "ccsError", type: "number", digits: 3 }]
+      : []),
+    ...visibleExtraColumns,
+    { header: "External IDs", key: "externalIds", type: "identifiers" },
+    { header: "Pathways", key: "pathways", type: "pathways" },
+  ].filter((column) => column?.key && !hiddenColumnKeys.has(column.key));
+};
+
+const ResultsTable = ({
+  results,
+  extraColumns = [],
+  forceColumns = [],
+  hiddenColumns = [],
+  onRowClick,
+  selectedRowId = null,
+  getRowId,
+  isRowSelectable,
+}) => {
+  const [sort, setSort] = useState(null);
+  const normalizedResults = useMemo(
+    () => (Array.isArray(results) ? results.map(normalizeCompound) : []),
+    [results]
+  );
+
+  const columns = useMemo(
+    () =>
+      getColumns(normalizedResults, {
+        extraColumns,
+        forceColumns,
+        hiddenColumns,
+      }),
+    [normalizedResults, extraColumns, forceColumns, hiddenColumns]
+  );
+
+  const sortedRows = useMemo(() => {
+    // Preserve original indices for row IDs, selection callbacks and stable ties.
+    const rows = normalizedResults.map((item, index) => ({ item, index }));
+    const column = columns.find((entry) => entry.key === sort?.key);
+    if (!column) return rows;
+
+    return rows.sort((left, right) => {
+      const a = getSortValue(left.item, column);
+      const b = getSortValue(right.item, column);
+      // Missing values remain last in both directions.
+      if (a === null && b === null) return left.index - right.index;
+      if (a === null) return 1;
+      if (b === null) return -1;
+      const comparison = column.type === "number"
+        ? a - b
+        : a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+      return (sort.direction === "ascending" ? comparison : -comparison)
+        || left.index - right.index;
+    });
+  }, [normalizedResults, columns, sort]);
+
+  const storeCompound = (compound) => {
+    const compoundId = compound?.compoundId ?? compound?.id;
+    if (!compoundId) return;
+    try {
+      localStorage.setItem(`compound:${compoundId}`, JSON.stringify(compound));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  if (!normalizedResults.length) {
     return <p>No results available</p>;
   }
 
-  const displayHeaders = [
-    "ID",
-    "Name",
-    "Formula",
-    "Mass",
-    "Error",
-    "CAS",
-    "KEGG",
-    "CHEBI",
-    "HMDB",
-    "LipidMaps",
-    "PubChem",
-    "KNApSAcK",
-    "NP Atlas",
-    "Pathways",
-  ];
-
-  const dataKeys = [
-    "compoundId",
-    "compoundName",
-    "formula",
-    "mass",
-    "massErrorPpm",
-    "casID",
-    "keggID",
-    "chebiID",
-    "hmdbID",
-    "lmID",
-    "pcID",
-    "knapsackID",
-    "npatlasID",
-    "pathway",
-  ];
-
-  console.log("ResultsTable received results:", results);
-
   return (
     <div className="results-container">
-      <table className="results-table" border="1">
-        <thead>
-          <tr>
-            {displayHeaders.map((header, index) => (
-              <th
-                key={index}
-                className={header === "Formula" ? "formula-column" : ""}
-              >
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {results.map((item, index) => (
-            <tr key={index}>
-              {displayHeaders.map((header, idx) => {
-                const dataKey = dataKeys[idx];
-                let value = item[dataKey] ?? "—";
-
-                if (
-                  (header === "Mass" || header === "Error") &&
-                  value !== "—" &&
-                  !isNaN(parseFloat(value))
-                ) {
-                  value = parseFloat(value).toFixed(4);
-                }
-
-                const isLinkable = linkableFields.includes(header);
-                const urlSafeHeader = header.toLowerCase().replace(/\s+/g, "");
-
-                const isIdColumn = header === "ID";
-
-                return (
-                  <td
-                    key={idx}
-                    className={isIdColumn ? "id-column" : ""}
-                    onMouseEnter={() => {
-                      if (isIdColumn) {
-                        setHoveredId(item.compoundId || item.id);
-                        setHoveredCompound(item);
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      if (isIdColumn) {
-                        setHoveredId(null);
-                        setHoveredCompound(null);
-                      }
-                    }}
+      <div className="results-table-scroll">
+        <table className="results-table" border="1">
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  scope="col"
+                  className={column.className || ""}
+                  aria-sort={sort?.key === column.key ? sort.direction : "none"}
+                >
+                  <button
+                    type="button"
+                    className="results-sort-button"
+                    onClick={() => setSort((current) => ({
+                      key: column.key,
+                      direction: current?.key === column.key && current.direction === "ascending"
+                        ? "descending"
+                        : "ascending",
+                    }))}
                   >
-                    {isIdColumn ? (
-                      <Link
-                        to={{
-                          pathname: `/compound/${item.compoundId}`,
-                          search: createSearchParams({
-                            compound_name: item.compoundName || item.name,
-                            formula: item.formula,
-                            mass: item.mass,
-                            chargeType: item.chargeType,
-                            chargeNumber: item.chargeNumber,
-                            numCarbons: item.numCarbons,
-                            doubleBonds: item.doubleBonds,
-                            numChains: item.numChains,
-                            inchi: item.inchi,
-                            inchiKey: item.inchiKey,
-                            smiles: item.smiles,
-                            casID: item.casID,
-                            keggID: item.keggID,
-                            chebiID: item.chebiID,
-                            hmdbID: item.hmdbID,
-                            lmID: item.lmID,
-                            pcID: item.pcID,
-                            knapsackID: item.knapsackID,
-                            mol2: item.mol2,
-                            sdf: item.sdf,
-                          }).toString(),
-                        }}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {item.compoundId}
-                      </Link>
-                    ) : isLinkable && value && value !== 0 && value !== "—" ? (
-                      <a
-                        href={
-                          header === "CAS"
-                            ? `https://commonchemistry.cas.org/detail?cas_rn=${value}`
-                            : header === "KEGG"
-                            ? `https://www.kegg.jp/dbget-bin/www_bget?cpd:${value}`
-                            : header === "CHEBI"
-                            ? `https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:${value}`
-                            : header === "HMDB"
-                            ? `https://hmdb.ca/metabolites/${value}`
-                            : header === "LipidMaps"
-                            ? `https://www.lipidmaps.org/data/LMSDRecord.php?LMID=${value}`
-                            : header === "PubChem"
-                            ? `https://pubchem.ncbi.nlm.nih.gov/compound/${value}`
-                            : header === "KNAPSACK"
-                            ? `https://www.knapsackfamily.com/knapsack_core/information.php?word=${value}`
-                            : `https://dummy-link.com/${urlSafeHeader}/${value}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {value}
-                      </a>
-                    ) : value === 0 ? (
-                      "—"
-                    ) : (
-                      value
-                    )}
-                  </td>
-                );
-              })}
+                    {column.header}{" "}
+                    <span aria-hidden="true">
+                      {sort?.key === column.key
+                        ? sort.direction === "ascending" ? "↑" : "↓"
+                        : "↕"}
+                    </span>
+                  </button>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedRows.map(({ item, index }) => {
+              const compoundId = item.compoundId ?? `${index + 1}`;
+              const rowId =
+                typeof getRowId === "function"
+                  ? getRowId(item, index)
+                  : item.compoundId ?? item.id ?? `${index + 1}`;
+              const rowSelectable =
+                typeof onRowClick === "function" &&
+                (typeof isRowSelectable === "function"
+                  ? isRowSelectable(item, index, rowId)
+                  : true);
+              const rowSelected =
+                selectedRowId !== null &&
+                selectedRowId !== undefined &&
+                rowId === selectedRowId;
+
+              return (
+                <tr
+                  key={`${compoundId}-${index}`}
+                  className={rowSelected ? "selected-result-row" : ""}
+                  onClick={rowSelectable ? () => onRowClick(item, rowId) : undefined}
+                  style={{ cursor: rowSelectable ? "pointer" : "default" }}
+                >
+                  {columns.map((column) => {
+                    const value = item[column.key];
+                    const cellClassName = column.className || "";
+
+                    if (column.type === "id") {
+                      return (
+                        <td
+                          key={column.header}
+                          className={`id-column ${cellClassName}`.trim()}
+                        >
+                          <Link
+                            to={{
+                              pathname: `/compound/${compoundId}`,
+                              search: createSearchParams({
+                                compound_name: item.compoundName || item.name,
+                                formula: item.formula,
+                                mass: item.mass,
+                                chargeType: item.chargeType,
+                                chargeNumber: item.chargeNumber,
+                                numCarbons: item.numCarbons,
+                                doubleBonds: item.doubleBonds,
+                                numChains: item.numChains,
+                                inchi: item.inchi,
+                                inchiKey: item.inchiKey,
+                                smiles: item.smiles,
+                                casID: item.casID,
+                                keggID: item.keggID,
+                                chebiID: item.chebiID,
+                                hmdbID: item.hmdbID,
+                                lmID: item.lmID,
+                                pcID: item.pcID,
+                                knapsackID: item.knapsackID,
+                                npatlasID: item.npatlasID,
+                                agilentID: item.agilentID,
+                                inHouseID: item.inHouseID,
+                                aspergillusID: item.aspergillusID,
+                                fahfaID: item.fahfaID,
+                                ohPositionID: item.ohPositionID,
+                                pathway: item.pathway,
+                              }).toString(),
+                            }}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              storeCompound(item);
+                            }}
+                          >
+                            {compoundId}
+                          </Link>
+                        </td>
+                      );
+                    }
+
+                    if (column.type === "pathways") {
+                      return (
+                        <td key={column.header} className={cellClassName}>
+                          <PathwaysCell
+                            pathways={item.pathwayEntries || item.pathways}
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (column.type === "identifiers") {
+                      return (
+                        <td key={column.header} className={cellClassName}>
+                          <IdentifiersCell row={item} />
+                        </td>
+                      );
+                    }
+
+                    if (column.external) {
+                      const cleanValue = hasValue(value) ? value : null;
+                      const buildLink = externalLinkMap[column.header];
+                      return (
+                        <td key={column.header} className={cellClassName}>
+                          {cleanValue && buildLink ? (
+                            <a
+                              href={buildLink(cleanValue)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {cleanValue}
+                            </a>
+                          ) : (
+                            EMPTY_VALUE
+                          )}
+                        </td>
+                      );
+                    }
+
+                    if (column.type === "number") {
+                      return (
+                        <td key={column.header} className={cellClassName}>
+                          {formatNumber(value, column.digits)}
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td key={column.header} className={cellClassName}>
+                        {hasValue(value) ? value : EMPTY_VALUE}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

@@ -3,29 +3,56 @@ import axios from "axios";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes.jsx";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
+import { formatApiError } from "../../utils/apiError";
+import { normalizeAnnotation } from "../../utils/resultNormalization";
+import {
+  buildGroupedResultsView,
+  buildFeatureSummaryResults,
+  countMatchedGroups,
+  flattenGroupCompounds,
+} from "../../utils/resultsSummary";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
+import {
+  parseCompositeSpectra,
+  parseFlexibleNumber,
+  parseRequiredNumberList,
+  serializeCompositeSpectraForInput,
+} from "../../utils/numberParsing";
+
+const formatFeatureNumber = (value, digits = 4) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(digits) : "N/A";
+};
 
 const LcMsSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     mz: "",
     retentionTimes: "",
     compositeSpectrum: "",
     tolerance: "",
     mzToleranceMode: "PPM",
-    chemicalAlphabet: "CHNOPS",
+    chemicalAlphabet: "",
     deuterium: false,
-    modifiersType: "None",
+    modifiersType: "",
     ionizationMode: "POSITIVE",
-    metaboliteType: "All",
+    metaboliteType: "ALL",
     adductsString: [],
-    databases: [],
+    databases: DEFAULT_DATABASES,
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const loadDemoData = () => {
     setFormState({
@@ -34,25 +61,15 @@ const LcMsSearch = () => {
         518.3226, 548.37054, 572.3718, 570.3551, 568.3401, 590.321, 482.324,
         478.29312, 500.27457, 502.29303, 526.2927, 548.27484, 512.33417,
         534.31616,
-      ].join(", "),
+      ].join("\n"),
 
       mzToleranceMode: "PPM",
-      tolerance: 50,
+      tolerance: 10,
       ionizationMode: "POSITIVE",
 
       adductsString: ["[M+H]+", "[M+2H]2+", "[M+Na]+", "[M+K]+", "[M+H-H2O]+"],
 
-      databases: [
-        "HMDB",
-        "LIPIDMAPS",
-        "ASPERGILLUS",
-        "FAHFA",
-        "KEGG",
-        "INHOUSE",
-        "CHEBI",
-        "PUBCHEM",
-        "NPATLAS",
-      ],
+      databases: DEFAULT_DATABASES,
 
       metaboliteType: "ONLYLIPIDS",
 
@@ -61,9 +78,9 @@ const LcMsSearch = () => {
         19.46886, 21.503885, 20.90083, 18.852442, 17.863642, 17.863642,
         17.41639, 16.68847, 16.68847, 17.76522, 17.698446, 17.698446, 16.254662,
         16.254662,
-      ].join(", "),
+      ].join("\n"),
 
-      compositeSpectrum: JSON.stringify(
+      compositeSpectrum: serializeCompositeSpectraForInput(
         [
           {
             400.3432: 307034.88,
@@ -210,9 +227,7 @@ const LcMsSearch = () => {
             513.3372: 1544.2075,
             514.3397: 386.18942,
           },
-        ],
-        null,
-        2
+        ]
       ),
 
       chemicalAlphabet: "CHNOPS",
@@ -223,20 +238,7 @@ const LcMsSearch = () => {
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      mz: "",
-      retentionTimes: "",
-      compositeSpectrum: "",
-      tolerance: "",
-      mzToleranceMode: "PPM",
-      chemicalAlphabet: "CHNOPS",
-      deuterium: false,
-      modifiersType: "none",
-      ionizationMode: "POSITIVE",
-      metaboliteType: "All",
-      adductsString: [],
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {
@@ -259,19 +261,10 @@ const LcMsSearch = () => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "adductsString") {
+      if (name === "databases") {
         setFormState((prev) => ({
           ...prev,
-          adductsString: checked
-            ? [...prev.adductsString, value]
-            : prev.adductsString.filter((a) => a !== value),
-        }));
-      } else if (name === "databases") {
-        setFormState((prev) => ({
-          ...prev,
-          databases: checked
-            ? [...prev.databases, value]
-            : prev.databases.filter((db) => db !== value),
+          databases: toggleDatabaseSelection(prev.databases, value, checked),
         }));
       } else if (name === "deuterium") {
         setFormState((prev) => ({
@@ -287,22 +280,41 @@ const LcMsSearch = () => {
     }
   };
 
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adductsString: adducts }));
+  };
+
+  const parseCompositeSpectrum = (value) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return [];
+
+    const { spectra, invalids } = parseCompositeSpectra(trimmed);
+    if (invalids.length) {
+      throw new Error("Composite spectra contain invalid peak entries.");
+    }
+    return spectra;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let compositeSpectrum = [];
+    try {
+      compositeSpectrum = parseCompositeSpectrum(formState.compositeSpectrum);
+    } catch (error) {
+      console.error("Invalid composite spectra:", error);
+      alert("Composite spectra must use m/z:intensity peaks separated by new lines or semicolons, with blank lines between feature spectra.");
+      return;
+    }
+
     setLoading(true);
 
     const formattedData = {
-      mz: formState.mz
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(Number),
+      mz: parseRequiredNumberList(formState.mz),
 
-      retentionTimes: formState.retentionTimes
-        .split(/[\s,;]+/)
-        .filter(Boolean)
-        .map(Number),
-      compositeSpectrum: JSON.parse(formState.compositeSpectrum),
-      tolerance: parseFloat(formState.tolerance),
+      retentionTimes: parseRequiredNumberList(formState.retentionTimes),
+      compositeSpectrum,
+      tolerance: parseFlexibleNumber(formState.tolerance),
       mzToleranceMode: formState.mzToleranceMode,
       chemicalAlphabet: formState.chemicalAlphabet,
       deuterium: formState.deuterium,
@@ -317,7 +329,7 @@ const LcMsSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}batch-advanced-search`,
+        `${import.meta.env.VITE_API_URL}lcms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -325,34 +337,59 @@ const LcMsSearch = () => {
       const rawResults = response.data;
       console.log("Raw results:", rawResults);
 
-      const features = rawResults.map((item) => {
+      const features = rawResults.map((item, featureIndex) => {
         const annotationsByAdducts =
-          item.annotationsByAdducts?.map((adductGroup) => ({
+          item.annotationsByAdducts?.map((adductGroup, adductIndex) => ({
             adduct: adductGroup.adduct,
-            annotations: adductGroup.annotations || [],
+            annotations: (adductGroup.annotations || []).map(
+              (annotation, annotationIndex) =>
+                normalizeAnnotation(
+                  annotation,
+                  `${featureIndex}-${adductIndex}-${annotationIndex}`
+                )
+            ),
           })) || [];
-
-        const hasResults = annotationsByAdducts.some(
-          (group) => group.annotations.length > 0
-        );
 
         return {
           mzValue: item.feature?.mzValue,
           retentionTime: item.feature?.retentionTime,
           annotationsByAdducts,
-          hasResults,
         };
       });
 
       setResults(features);
+      setActiveFeatureIndex(0);
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
   };
+
+  const activeFeatureAdductGroups = (
+    results[activeFeatureIndex]?.annotationsByAdducts || []
+  ).map((adductGroup) => ({
+    adduct: adductGroup.adduct,
+    compounds: adductGroup.annotations || [],
+  }));
+
+  const activeFeatureView = buildGroupedResultsView(
+    activeFeatureAdductGroups,
+    formState.adductsString,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
+  const allFeaturesSummaryResults = buildFeatureSummaryResults(results, {
+    getFeatureLabel: (_, featureIndex) => `Feature ${featureIndex + 1}`,
+    getFeatureCompounds: (feature) =>
+      flattenGroupCompounds(feature.annotationsByAdducts, "annotations"),
+  });
+  const matchedFeatureCount = countMatchedGroups(allFeaturesSummaryResults);
 
   return (
     <div className="page cemspage">
@@ -368,17 +405,10 @@ const LcMsSearch = () => {
 
       <div className="page outer-container row">
         <div className="form-container" style={{ position: "relative" }}>
-          <label className="required-label">
-            Required <span className="red-asterisk">*</span>
-          </label>
           <form onSubmit={handleSubmit}>
             <div className="grid-container-batch-adv">
               <TextBoxInput
-                label={
-                  <>
-                    Experimental Masses <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Experimental m/z Values"
                 name="mz"
                 value={formState.mz}
                 onChange={handleChange}
@@ -387,7 +417,7 @@ const LcMsSearch = () => {
 
               {/*
             <TextBoxInput
-              label="All Experimental Masses"
+              label="All Experimental m/z Values"
               name="allMz"
               value={formState.allMz}
               onChange={handleChange}
@@ -401,7 +431,6 @@ const LcMsSearch = () => {
                 value={formState.retentionTimes}
                 onChange={handleChange}
                 className="rt-text-adv"
-                placeholder="Enter retention times (comma separated)"
               />
 
               {/*
@@ -420,7 +449,7 @@ const LcMsSearch = () => {
                 value={formState.compositeSpectrum}
                 onChange={handleChange}
                 className="spec-text-adv"
-                placeholder="Enter composite spectra (comma separated)"
+                validationMode="compositeSpectrum"
               />
 
               {/*
@@ -434,11 +463,7 @@ const LcMsSearch = () => {
             */}
 
               <ToleranceRadio
-                label={
-                  <>
-                    Tolerance <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Tolerance"
                 toleranceValue={formState.tolerance}
                 mzToleranceMode={formState.mzToleranceMode}
                 onChange={handleChange}
@@ -449,24 +474,26 @@ const LcMsSearch = () => {
               />
 
               <GroupRadio
-                label={
-                  <>
-                    Chemical Alphabet <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Chemical Alphabet"
                 name="chemicalAlphabet"
                 value={formState.chemicalAlphabet}
                 options={["All", "CHNOPS", "CHNOPS + Cl"]}
                 onChange={handleChange}
                 className="chem-alph-adv"
-              />
+              >
+                <label className="box group-radio-deuterium">
+                  <input
+                    type="checkbox"
+                    name="deuterium"
+                    checked={formState.deuterium}
+                    onChange={handleChange}
+                  />
+                  Deuterium
+                </label>
+              </GroupRadio>
 
               <GroupRadio
-                label={
-                  <>
-                    Modifiers <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Modifiers"
                 name="modifiersType"
                 value={formState.modifiersType}
                 options={[
@@ -482,22 +509,14 @@ const LcMsSearch = () => {
               />
 
               <DatabasesCheckboxes
-                label={
-                  <>
-                    Databases <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Databases"
                 selectedDatabases={formState.databases}
                 onChange={handleChange}
                 className="databases-adv"
               />
 
               <GroupRadio
-                label={
-                  <>
-                    Metabolites <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Metabolites"
                 name="metaboliteType"
                 value={formState.metaboliteType}
                 options={["All", "ONLYLIPIDS"]}
@@ -505,40 +524,21 @@ const LcMsSearch = () => {
                 className="metabolites-adv"
               />
 
-              <div className="deuterium-container">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="deuterium"
-                    checked={formState.deuterium}
-                    onChange={handleChange}
-                  />
-                  Deuterium
-                </label>
-              </div>
-
-              <AdductsCheckboxes
-                label={
-                  <>
-                    Adducts <span style={{ color: "red" }}>*</span>
-                  </>
-                }
-                selectedAdducts={formState.adductsString}
-                onChange={handleChange}
-                className="adducts-adv"
-              />
-
               <GroupRadio
-                label={
-                  <>
-                    Ionization Mode <span style={{ color: "red" }}>*</span>
-                  </>
-                }
+                label="Ionization Mode"
                 name="ionizationMode"
                 value={formState.ionizationMode}
-                options={["NEUTRAL", "POSITIVE", "NEGATIVE"]}
+                options={["POSITIVE", "NEGATIVE"]}
                 onChange={handleChange}
                 className="ionization-adv"
+              />
+
+              <AdductsCheckboxes
+                label="Adducts"
+                selectedAdducts={formState.adductsString}
+                onSelectionChange={handleAdductsChange}
+                ionizationMode={formState.ionizationMode}
+                className="adducts-adv"
               />
             </div>
             <div className="form-buttons-container center-button">
@@ -561,67 +561,70 @@ const LcMsSearch = () => {
             </div>
           </div>
 
-          <div className="results-div">
-            {showResults &&
-              results.map((featureObj, featureIndex) => (
-                <div key={featureIndex} className="feature-group">
-                  <h3>
-                    Feature {featureIndex + 1}: m/z{" "}
-                    {featureObj.mzValue?.toFixed(4) ?? "N/A"} | RT:{" "}
-                    {featureObj.retentionTime?.toFixed(2) ?? "N/A"}
-                  </h3>
+          {showResults && (
+            <div className="results-div">
+              {results.length > 0 ? (
+                <>
+                  <ResultsSummary
+                    results={allFeaturesSummaryResults}
+                    matchedAdductCount={matchedFeatureCount}
+                    totalAdductCount={results.length}
+                    progressLabel="Features with matches"
+                    filename="lcms_all_features_export.csv"
+                  />
 
-                  {featureObj.hasResults &&
-                  featureObj.annotationsByAdducts.length > 0 ? (
-                    featureObj.annotationsByAdducts.map(
-                      (adductGroup, adductIndex) => {
-                        const normalizedCompounds = adductGroup.annotations.map(
-                          (annotation, i) => ({
-                            compoundId: annotation.compound?.compoundId ?? i,
-                            compoundName:
-                              annotation.compound?.compoundName ??
-                              annotation.compound?.formula ??
-                              "Unknown",
-                            mass: annotation.compound?.mass ?? null,
-                            massErrorPpm: annotation.massErrorPpm ?? null,
-                            formula: annotation.compound?.formula,
-                            chargeType: annotation.compound?.chargeType,
-                            chargeNumber: annotation.compound?.chargeNumber,
-                            numCarbons: annotation.compound?.numCarbons,
-                            doubleBonds: annotation.compound?.doubleBonds,
-                            numChains: annotation.compound?.numChains,
-                            inchi: annotation.compound?.inchi,
-                            inchiKey: annotation.compound?.inchiKey,
-                            smiles: annotation.compound?.smiles,
-                            casID: annotation.compound?.casID,
-                            keggID: annotation.compound?.keggID,
-                            chebiID: annotation.compound?.chebiID,
-                            hmdbID: annotation.compound?.hmdbID,
-                            lmID: annotation.compound?.lmID,
-                            pcID: annotation.compound?.pcID,
-                            knapsackID: annotation.compound?.knapsackID,
-                            mol2: annotation.compound?.mol2,
-                            sdf: annotation.compound?.sdf,
-                          })
-                        );
+                  <div className="feature-tabs" role="tablist">
+                    {results.map((featureObj, featureIndex) => (
+                      <button
+                        key={`lcms-feature-tab-${featureIndex}`}
+                        type="button"
+                        className={`feature-tab ${
+                          featureIndex === activeFeatureIndex ? "active" : ""
+                        }`}
+                        onClick={() => setActiveFeatureIndex(featureIndex)}
+                      >
+                        Feature {featureIndex + 1} | m/z{" "}
+                        {formatFeatureNumber(featureObj.mzValue, 4)} | RT{" "}
+                        {formatFeatureNumber(featureObj.retentionTime, 2)}
+                      </button>
+                    ))}
+                  </div>
 
-                        return (
-                          <ResultsDropdownGroup
-                            key={`${featureIndex}-${adductIndex}`}
-                            adduct={adductGroup.adduct}
-                            compounds={normalizedCompounds}
-                          />
-                        );
-                      }
-                    )
-                  ) : (
-                    <p className="no-results">
-                      No results found for this feature.
-                    </p>
-                  )}
-                </div>
-              ))}
-          </div>
+                  <div className="feature-tab-panel">
+                    <ResultsSummary
+                      results={activeFeatureView.summaryResults}
+                      matchedAdductCount={activeFeatureView.matchedGroupCount}
+                      totalAdductCount={formState.adductsString.length}
+                      filename={`lcms_feature_${activeFeatureIndex + 1}_export.csv`}
+                    />
+
+                    {!activeFeatureView.hasCompounds && (
+                      <p className="no-results">
+                        No results found for this feature.
+                      </p>
+                    )}
+
+                    {activeFeatureView.displayGroups.map((group) => (
+                      <ResultsDropdownGroup
+                        key={`${activeFeatureIndex}-${group.adduct}`}
+                        adduct={group.adduct}
+                        compounds={group.compounds}
+                        tableProps={{
+                          forceColumns: [
+                            "rtScore",
+                            "adductScore",
+                            "ionizationScore",
+                          ],
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="no-results">No features returned.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

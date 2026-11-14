@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import TextInput from "../../components/search/TextInput.jsx";
 import TextBoxInput from "../../components/search/TextBoxInput.jsx";
@@ -6,88 +6,110 @@ import ToleranceRadio from "../../components/search/ToleranceRadio.jsx";
 import GroupRadio from "../../components/search/GroupRadio.jsx";
 import SpectrumGraph from "../../components/search/SpectrumGraph.jsx";
 import AdductsCheckboxes from "../../components/search/AdductsCheckboxes.jsx";
+import MirroredSpectrum from "../../components/search/MirroredSpectrum.jsx";
+import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup.jsx";
+import ResultsSummary from "../../components/search/ResultsSummary.jsx";
+import { formatApiError } from "../../utils/apiError";
+import {
+  buildGroupedResultsView,
+} from "../../utils/resultsSummary";
+import {
+  CHEMICAL_ALPHABET_OPTIONS,
+  toDeuteriumAwareAlphabet,
+} from "../../utils/chemicalAlphabet";
+import {
+  parseFlexibleNumber,
+  parsePeakList,
+  serializePeakListForInput,
+} from "../../utils/numberParsing";
+
+const SPECTRUM_SOURCE_OPTIONS = [
+  { value: "ALL", label: "ALL" },
+  { value: "experimental", label: "Experimental" },
+  { value: "predicted", label: "Predicted" },
+];
+
+const normalizePeaks = (peaks) => {
+  if (!Array.isArray(peaks) || peaks.length === 0) {
+    return [];
+  }
+  const maxIntensity = peaks.reduce((max, peak) => {
+    const intensity = Number(peak?.intensity) || 0;
+    return Math.max(max, intensity);
+  }, 0);
+
+  if (!maxIntensity) {
+    return peaks.map((peak) => ({
+      mz: peak?.mz,
+      intensity: 0,
+    }));
+  }
+
+  return peaks.map((peak) => ({
+    mz: peak?.mz,
+    intensity: (Number(peak?.intensity) || 0) / maxIntensity,
+  }));
+};
 
 const MsMsSearch = () => {
-  const [formState, setFormState] = useState({
-    CIDEnergy: "LOW",
+  const createInitialFormState = () => ({
+    CIDEnergy: "",
     precursorIonMz: "",
     tolerancePrecursorIon: "",
     toleranceModePrecursorIon: "PPM",
-    toleranceFragments: "",
+    toleranceFragments: "30",
     toleranceModeFragments: "PPM",
     ionizationMode: "POSITIVE",
-    adducts: ["M+H"],
+    adducts: [],
+    chemicalAlphabet: "CHNOPS",
+    deuterium: false,
     fragmentsMZsIntensities: {
       precursorMz: "",
       peaks: "",
     },
-    scoreType: "COSINE",
+    scoreType: "",
+    spectrumSource: "ALL",
   });
 
-  const [results, setResults] = useState([]);
+  const [formState, setFormState] = useState(createInitialFormState);
+
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
 
   const loadDemoData = () => {
     const demo = {
-      CIDEnergy: "MED",
-      precursorIonMZ: 287.236,
+      CIDEnergy: "HIGH",
+      precursorIonMZ: 132.101905,
       tolerancePrecursorIon: 10.0,
       toleranceModePrecursorIon: "PPM",
       toleranceFragments: 30.0,
       toleranceModeFragments: "PPM",
       ionizationMode: "POSITIVE",
       adducts: ["[M+H]+"],
+      chemicalAlphabet: "CHNOPS",
+      deuterium: false,
       fragmentsMZsIntensities: {
-        precursorMz: 287.23,
+        precursorMz: 132.101905,
         peaks: [
-          { mz: 55.301, intensity: 12.753 },
-          { mz: 67.237, intensity: 14.611 },
-          { mz: 69.204, intensity: 39.189 },
-          { mz: 79.134, intensity: 14.527 },
-          { mz: 81.102, intensity: 26.351 },
-          { mz: 83.17, intensity: 13.007 },
-          { mz: 91.118, intensity: 12.331 },
-          { mz: 93.14, intensity: 30.405 },
-          { mz: 95.091, intensity: 50 },
-          { mz: 96.871, intensity: 15.034 },
-          { mz: 105.084, intensity: 27.365 },
-          { mz: 107.052, intensity: 25 },
-          { mz: 109.035, intensity: 31.757 },
-          { mz: 111.057, intensity: 18.074 },
-          { mz: 119.012, intensity: 20.777 },
-          { mz: 121.035, intensity: 100 },
-          { mz: 121.722, intensity: 11.318 },
-          { mz: 122.549, intensity: 15.456 },
-          { mz: 124.954, intensity: 15.203 },
-          { mz: 130.958, intensity: 10.98 },
-          { mz: 132.972, intensity: 31.419 },
-          { mz: 134.987, intensity: 21.199 },
-          { mz: 137.048, intensity: 26.689 },
-          { mz: 143.036, intensity: 9.544 },
-          { mz: 145.113, intensity: 14.949 },
-          { mz: 146.854, intensity: 15.034 },
-          { mz: 148.939, intensity: 11.74 },
-          { mz: 150.992, intensity: 27.027 },
-          { mz: 157.2, intensity: 13.851 },
-          { mz: 159.066, intensity: 16.639 },
-          { mz: 161.08, intensity: 16.639 },
-          { mz: 163.149, intensity: 12.078 },
-          { mz: 165.094, intensity: 8.108 },
-          { mz: 171.028, intensity: 12.331 },
-          { mz: 173.152, intensity: 10.557 },
-          { mz: 174.916, intensity: 12.584 },
-          { mz: 185.099, intensity: 12.5 },
-          { mz: 199.295, intensity: 8.024 },
-          { mz: 216.966, intensity: 12.078 },
-          { mz: 244.947, intensity: 13.936 },
+          { mz: 41.305, intensity: 100.0 },
+          { mz: 44.161, intensity: 64.873 },
+          { mz: 45.378, intensity: 17.722 },
+          { mz: 55.961, intensity: 44.937 },
+          { mz: 57.303, intensity: 42.089 },
+          { mz: 58.388, intensity: 10.206 },
+          { mz: 69.072, intensity: 33.544 },
+          { mz: 85.977, intensity: 43.354 },
+          { mz: 132.064, intensity: 9.494 },
         ],
       },
       scoreType: "COSINE",
+      spectrumSource: "experimental",
     };
 
-    const peaksString = demo.fragmentsMZsIntensities.peaks
-      .map((p) => `${p.mz}:${p.intensity}`)
-      .join(", ");
+    const peaksString = serializePeakListForInput(
+      demo.fragmentsMZsIntensities.peaks
+    );
 
     setFormState({
       CIDEnergy: demo.CIDEnergy,
@@ -98,30 +120,19 @@ const MsMsSearch = () => {
       toleranceModeFragments: demo.toleranceModeFragments,
       ionizationMode: demo.ionizationMode,
       adducts: demo.adducts,
+      chemicalAlphabet: demo.chemicalAlphabet,
+      deuterium: demo.deuterium,
       fragmentsMZsIntensities: {
         precursorMz: demo.fragmentsMZsIntensities.precursorMz,
         peaks: peaksString,
       },
       scoreType: demo.scoreType,
+      spectrumSource: demo.spectrumSource,
     });
   };
 
   const clearInput = () => {
-    setFormState({
-      CIDEnergy: "LOW",
-      precursorIonMz: "",
-      tolerancePrecursorIon: "",
-      toleranceModePrecursorIon: "PPM",
-      toleranceFragments: "",
-      toleranceModeFragments: "PPM",
-      ionizationMode: "POSITIVE",
-      adducts: ["M+H"],
-      fragmentsMZsIntensities: {
-        precursorMz: "",
-        peaks: "",
-      },
-      scoreType: "COSINE",
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {
@@ -129,7 +140,7 @@ const MsMsSearch = () => {
   }, [formState]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
     if (name === "precursorIonMz") {
       setFormState((prev) => ({
@@ -143,45 +154,59 @@ const MsMsSearch = () => {
       return;
     }
 
+    if (type === "checkbox") {
+      setFormState((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
+
     setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAdductsChange = (adducts) => {
+    setFormState((prev) => ({ ...prev, adducts }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const peaksArray = formState.fragmentsMZsIntensities.peaks
-      .split(/[\s,;]+/)
-      .map((v) => parseFloat(v))
-      .filter((v) => !isNaN(v))
-      .reduce((acc, val, i, arr) => {
-        if (i % 2 === 0 && arr[i + 1] != null) {
-          acc.push({ mz: arr[i], intensity: arr[i + 1] });
-        }
-        return acc;
-      }, []);
+    const { peaks: peaksArray, invalids } = parsePeakList(
+      formState.fragmentsMZsIntensities.peaks
+    );
+
+    if (invalids.length) {
+      alert("MS/MS peak list must use m/z:intensity peaks separated by new lines or semicolons.");
+      setLoading(false);
+      return;
+    }
 
     const formattedData = {
       CIDEnergy: formState.CIDEnergy,
-      precursorIonMZ: parseFloat(formState.precursorIonMz),
-      tolerancePrecursorIon: parseFloat(formState.tolerancePrecursorIon),
+      precursorIonMZ: parseFlexibleNumber(formState.precursorIonMz),
+      tolerancePrecursorIon: parseFlexibleNumber(formState.tolerancePrecursorIon),
       toleranceModePrecursorIon: formState.toleranceModePrecursorIon,
-      toleranceFragments: parseFloat(formState.toleranceFragments),
+      toleranceFragments: parseFlexibleNumber(formState.toleranceFragments),
       toleranceModeFragments: formState.toleranceModeFragments,
       ionizationMode: formState.ionizationMode,
       adducts: formState.adducts,
+      chemicalAlphabet: toDeuteriumAwareAlphabet(
+        formState.chemicalAlphabet,
+        formState.deuterium
+      ),
+      deuterium: formState.deuterium,
       fragmentsMZsIntensities: {
-        precursorMz: parseFloat(formState.precursorIonMz),
+        precursorMz: parseFlexibleNumber(formState.precursorIonMz),
         peaks: peaksArray,
       },
       scoreType: formState.scoreType,
+      spectrumSource: formState.spectrumSource,
     };
 
     console.log("Sending to backend:", formattedData);
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}MSMSSearch`,
+        `${import.meta.env.VITE_API_URL}msms-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -202,7 +227,10 @@ const MsMsSearch = () => {
 
           acc[adduct].compounds.push({
             ...hit.compound,
-            score: hit.msmsCosineScore,
+            msmsCosineScore: hit.msmsCosineScore,
+            deltaPpmPrecursorIon: hit.deltaPpmPrecursorIon,
+            collisionEnergy: hit.collisionEnergy,
+            spectrumSource: hit.spectrumSource,
             spectrum: hit.spectrum,
             msmsId: hit.msmsId,
           });
@@ -216,9 +244,13 @@ const MsMsSearch = () => {
         precursorMz: rawResults.precursorMz,
         adductGroups: groupedByAdduct,
       });
+      const firstAvailableMatch = groupedByAdduct
+        .flatMap((group) => group.compounds)
+        .find((compound) => Array.isArray(compound?.spectrum?.peaks));
+      setSelectedMatchId(firstAvailableMatch?.msmsId ?? null);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
@@ -236,6 +268,60 @@ const MsMsSearch = () => {
       },
     }));
   };
+
+  const allMatches = useMemo(
+    () =>
+      results?.adductGroups?.flatMap((group) =>
+        (group.compounds || []).filter((compound) =>
+          Array.isArray(compound?.spectrum?.peaks)
+        )
+      ) || [],
+    [results]
+  );
+
+  const selectedMatch = useMemo(
+    () =>
+      allMatches.find((compound) => compound.msmsId === selectedMatchId) ||
+      allMatches[0] ||
+      null,
+    [allMatches, selectedMatchId]
+  );
+
+  const selectedMatchIndex = useMemo(() => {
+    if (!selectedMatch) return 0;
+    const index = allMatches.findIndex(
+      (compound) => compound.msmsId === selectedMatch.msmsId
+    );
+    return index >= 0 ? index : 0;
+  }, [allMatches, selectedMatch]);
+
+  useEffect(() => {
+    if (!allMatches.length) {
+      return;
+    }
+
+    const exists = allMatches.some(
+      (compound) => compound.msmsId === selectedMatchId
+    );
+
+    if (!exists) {
+      setSelectedMatchId(allMatches[0]?.msmsId ?? null);
+    }
+  }, [allMatches, selectedMatchId]);
+
+  const msmsResultsView = buildGroupedResultsView(
+    results?.adductGroups,
+    formState.adducts,
+    {
+      labelKey: "adduct",
+      compoundsKey: "compounds",
+      fallbackLabel: "Adduct",
+    }
+  );
+
+  const matchedAdductsCount = msmsResultsView.matchedGroupCount;
+  const hasMsmsCompounds = msmsResultsView.hasCompounds;
+  const hasMsmsResponse = Boolean(results && Array.isArray(results.adductGroups));
 
   return (
     <div className="page">
@@ -270,7 +356,7 @@ const MsMsSearch = () => {
               value={formState.fragmentsMZsIntensities.peaks}
               onChange={handleNestedChange}
               className="box-input-msms"
-              placeholder="Enter MS/MS peaks (comma separated)"
+              validationMode="spectrum"
             />
 
             <ToleranceRadio
@@ -285,12 +371,12 @@ const MsMsSearch = () => {
             />
 
             <ToleranceRadio
-              label="M/Z Tolerance"
+              label="Fragment m/z Tolerance"
               inputName="toleranceFragments"
               modeName="toleranceModeFragments"
               toleranceValue={formState.toleranceFragments}
               mzToleranceMode={formState.toleranceModeFragments}
-              unitOptions={["PPM", "Da"]}
+              unitOptions={["PPM", "MDA"]}
               onChange={handleChange}
               className="mz-tolerance-msms"
             />
@@ -304,6 +390,33 @@ const MsMsSearch = () => {
               className="ionization-div-msms"
             />
 
+            <AdductsCheckboxes
+              selectedAdducts={formState.adducts}
+              onSelectionChange={handleAdductsChange}
+              ionizationMode={formState.ionizationMode}
+              name="adducts"
+              className="adducts-container-msms"
+            />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={CHEMICAL_ALPHABET_OPTIONS}
+              onChange={handleChange}
+              className="chem-alph-msms"
+            >
+              <label className="box group-radio-deuterium">
+                <input
+                  type="checkbox"
+                  name="deuterium"
+                  checked={formState.deuterium}
+                  onChange={handleChange}
+                />
+                Deuterium
+              </label>
+            </GroupRadio>
+
             <GroupRadio
               label="Ionization Voltage"
               name="CIDEnergy"
@@ -313,12 +426,13 @@ const MsMsSearch = () => {
               className="ionization-volt-div-msms"
             />
 
-            <AdductsCheckboxes
-              selectedAdducts={formState.adducts}
-              onChange={(newAdducts) =>
-                setFormState((prev) => ({ ...prev, adducts: newAdducts }))
-              }
-              className="adducts-container-msms"
+            <GroupRadio
+              label="Spectrum Source"
+              name="spectrumSource"
+              value={formState.spectrumSource}
+              options={SPECTRUM_SOURCE_OPTIONS}
+              onChange={handleChange}
+              className="spectrum-source-msms"
             />
           </div>
 
@@ -342,13 +456,106 @@ const MsMsSearch = () => {
           </div>
         </div>
 
-        {results?.experimentalSpectrum && (
+        {hasMsmsResponse && (
+          <div className="results-div">
+            <ResultsSummary
+              results={msmsResultsView.summaryResults}
+              matchedAdductCount={matchedAdductsCount}
+              totalAdductCount={formState.adducts.length}
+              filename="msms_export.csv"
+              hiddenExportKeys={["score"]}
+            />
+            {hasMsmsCompounds && (
+              <p className="compare-hint">Click row to compare spectra.</p>
+            )}
+            {!hasMsmsCompounds && (
+              <p className="no-results">No results found for this query.</p>
+            )}
+
+            {msmsResultsView.displayGroups.map((group) => (
+              <ResultsDropdownGroup
+                key={group.adduct}
+                adduct={group.adduct}
+                compounds={group.compounds}
+                tableProps={{
+                  extraColumns: [
+                    {
+                      header: "Spectrum Source",
+                      key: "spectrumSource",
+                      always: true,
+                    },
+                    {
+                      header: "Cosine Score",
+                      key: "msmsCosineScore",
+                      type: "number",
+                      digits: 4,
+                      always: true,
+                    },
+                    {
+                      header: "Collision Energy",
+                      key: "collisionEnergy",
+                      type: "number",
+                      digits: 2,
+                    },
+                  ],
+                  hiddenColumns: ["score"],
+                  selectedRowId: selectedMatchId,
+                  getRowId: (compound, index) =>
+                    compound?.msmsId ??
+                    `${compound?.compoundId ?? "compound"}-${index}`,
+                  isRowSelectable: (compound) =>
+                    Array.isArray(compound?.spectrum?.peaks),
+                  onRowClick: (compound) => {
+                    if (!Array.isArray(compound?.spectrum?.peaks)) return;
+                    setSelectedMatchId(compound.msmsId ?? null);
+                  },
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {selectedMatch?.spectrum?.peaks?.length > 0 &&
+        results?.experimentalSpectrum?.peaks?.length > 0 ? (
           <div className="spectrum-graph-wrapper">
-            <SpectrumGraph
-              peaks={results.experimentalSpectrum.peaks}
-              precursorMz={results.precursorMz}
+            <MirroredSpectrum
+              title={
+                selectedMatch?.compoundName
+                  ? `Experimental vs ${selectedMatch.compoundName}`
+                  : selectedMatch?.compoundId
+                  ? `Experimental vs ${selectedMatch.compoundId}`
+                  : "Experimental vs Match"
+              }
+              experimentalPeaks={results.experimentalSpectrum.peaks}
+              compoundPeaks={selectedMatch.spectrum.peaks}
+              selectorOptions={allMatches.map((compound, index) => ({
+                value: compound?.msmsId ?? index,
+                label: [
+                  compound?.compoundName ||
+                    compound?.compoundId ||
+                    `Match ${index + 1}`,
+                  compound?.spectrumSource,
+                ]
+                  .filter(Boolean)
+                  .join(" | "),
+              }))}
+              selectedOptionIndex={selectedMatchIndex}
+              onSelectOption={(index) =>
+                setSelectedMatchId(allMatches[index]?.msmsId ?? null)
+              }
+              selectorAriaLabel="Select MS/MS match"
             />
           </div>
+        ) : (
+          results?.experimentalSpectrum && (
+            <div className="spectrum-graph-wrapper">
+              <h3>Experimental Spectrum</h3>
+              <SpectrumGraph
+                peaks={normalizePeaks(results.experimentalSpectrum.peaks)}
+                precursorMz={results.precursorMz}
+              />
+            </div>
+          )
         )}
       </div>
     </div>

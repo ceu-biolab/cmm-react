@@ -1,32 +1,20 @@
 import React from "react";
+import {
+  buildCsvContent,
+  buildExcelContent,
+  buildJsonContent,
+  normalizeExportGroups,
+} from "../../utils/fileDownloadExport";
 
-const FileDownload = ({ data, headers, keys, filename = "results.csv" }) => {
-  const downloadCSV = () => {
-    const csvRows = [];
-
-    csvRows.push(headers.join(","));
-
-    for (const row of data) {
-      const values = keys.map((key) => {
-        let val = row[key] ?? "";
-        if (typeof val === "string") {
-          val = `"${val.replace(/"/g, '""')}"`;
-        }
-        return val;
-      });
-      csvRows.push(values.join(","));
-    }
-
-    const csvContent = csvRows.join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    triggerDownload(blob, filename);
-  };
-
-  const downloadJSON = () => {
-    const jsonContent = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonContent], { type: "application/json" });
-    triggerDownload(blob, filename.replace(/\.csv$/, ".json"));
-  };
+const FileDownload = ({
+  data,
+  headers,
+  keys,
+  filename = "results.csv",
+  groups,
+}) => {
+  const normalizedGroups = normalizeExportGroups(groups);
+  const exportGroups = normalizedGroups.length ? normalizedGroups : null;
 
   const triggerDownload = (blob, name) => {
     const url = URL.createObjectURL(blob);
@@ -36,6 +24,41 @@ const FileDownload = ({ data, headers, keys, filename = "results.csv" }) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadCSV = () => {
+    const csvContent = buildCsvContent({
+      data,
+      headers,
+      keys,
+      groups: exportGroups,
+    });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    triggerDownload(blob, filename);
+  };
+
+  const downloadJSON = () => {
+    const jsonContent = buildJsonContent({
+      data,
+      keys,
+      groups: exportGroups,
+    });
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    triggerDownload(blob, filename.replace(/\.csv$/, ".json"));
+  };
+
+  const downloadExcel = () => {
+    const excelContent = buildExcelContent({
+      data,
+      headers,
+      keys,
+      groups: exportGroups,
+    });
+    const blob = new Blob([excelContent], {
+      type: "application/vnd.ms-excel;charset=utf-8;",
+    });
+    triggerDownload(blob, filename.replace(/\.csv$/, ".xls"));
   };
 
   return (
@@ -47,6 +70,15 @@ const FileDownload = ({ data, headers, keys, filename = "results.csv" }) => {
         title="Download CSV"
       >
         Download Compounds CSV
+      </button>
+
+      <button
+        type="button"
+        onClick={downloadExcel}
+        className="button-download"
+        title="Download Excel"
+      >
+        Download Compounds Excel
       </button>
 
       <button

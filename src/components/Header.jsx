@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../assets/images/logo copy 2.png";
+import logo from "../assets/images/cmm-logo.png";
+import compactLogo from "../assets/images/cmm-logo-reduced.png";
 import ceu from "../assets/images/logo-ceu-blanco.png";
 
 const Header = () => {
@@ -31,7 +32,10 @@ const Header = () => {
       </section>
       <section className="header">
         <Link to="/" className="logo" onClick={goToMainWeb}>
-          <img src={logo} alt="CMM Logo" />
+          <picture>
+            <source media="(max-width: 600px)" srcSet={compactLogo} />
+            <img src={logo} alt="CEU Mass Mediator" />
+          </picture>
         </Link>
 
         <nav className="button-container">
@@ -58,6 +62,9 @@ const Header = () => {
               <ul>
                 <li>
                   <Link to="/lc-ms-search">LC-MS Search</Link>
+                </li>
+                <li>
+                  <Link to="/lc-ms-ms-search">LC-MS/MS Search</Link>
                 </li>
                 <li>
                   <Link to="/lc-im-ms-search">LC-IM-MS Search</Link>
@@ -97,24 +104,25 @@ const Header = () => {
                   <Link to="/ce-ms-eff-mob-search">CE-MS EFF MOB Search</Link>
                 </li>
                 <li>
+                  <Link to="/ce-ms-search-experimental-rmt">
+                    CE-MS Search experimental RMT
+                  </Link>
+                </li>
+                <li>
                   <Link to="/ce-ms-mt-1-marker">CE-MS MT 1 Marker</Link>
                 </li>
                 <li>
                   <Link to="/ce-ms-mt-2-markers">CE-MS MT 2 Markers</Link>
                 </li>
+                <li>
+                  <Link to="/ce-ms-rmt-1-marker">CE-MS RMT 1 Marker</Link>
+                </li>
+                <li>
+                  <Link to="/ce-ms-rmt-2-markers">CE-MS RMT 2 Markers</Link>
+                </li>
               </ul>
             </div>
           </div>
-
-          {/* 
-          <Link to="/pathway-displayer" className="button">
-            Pathway Displayer
-          </Link>
-
-          <Link to="/spectral-quality" className="button">
-            Spectral Quality
-          </Link>
-          */}
 
           <Link to="/manual" className="button">
             Manual

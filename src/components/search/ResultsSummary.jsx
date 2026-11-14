@@ -1,45 +1,128 @@
 import React from "react";
 import ProgressRing from "./ProgressRing";
 import FileDownload from "../effects/FileDownload";
+import { normalizeCompound } from "../../utils/resultNormalization";
 
-const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
-  const displayHeaders = [
-    "ID",
-    "Name",
-    "Formula",
-    "Mass",
-    "Error",
-    "CAS",
-    "KEGG",
-    "CHEBI",
-    "HMDB",
-    "LipidMaps",
-    "PubChem",
-    "KNApSAcK",
-    "NP Atlas",
-    "Pathways",
-  ];
+const hasValue = (value) =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  value !== "null" &&
+  value !== "undefined";
 
-  const dataKeys = [
-    "compoundId",
-    "compoundName",
-    "formula",
-    "mass",
-    "error",
-    "casID",
-    "keggID",
-    "chebiID",
-    "hmdbID",
-    "lmID",
-    "pcID",
-    "knapsackID",
-    "npatlasID",
-    "pathway",
-  ];
+const toFiniteNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
-  const allCompounds = Object.values(results).flat();
+const DEFAULT_EXPORT_COLUMNS = [
+  { header: "ID", key: "compoundId", always: true },
+  { header: "Name", key: "compoundName", always: true },
+  { header: "Formula", key: "formula", always: true },
+  { header: "Mass", key: "mass", always: true },
+  { header: "m/z Error (ppm)", key: "massErrorPpm" },
+  { header: "Final Score", key: "finalScore" },
+  { header: "Score", key: "score" },
+  { header: "RT Score", key: "rtScore" },
+  { header: "Adduct Score", key: "adductScore" },
+  { header: "Ionization Score", key: "ionizationScore" },
+  { header: "Cosine Score", key: "gcmsCosineScore" },
+  { header: "RI Error (absolute)", key: "riError" },
+  { header: "RI Error (%)", key: "riErrorPct" },
+  { header: "Mobility Error (%)", key: "mobilityErrorPct" },
+  { header: "RMT Error (%)", key: "rmtErrorPct" },
+  { header: "Relative MT", key: "relativeMt" },
+  { header: "Absolute MT", key: "absoluteMt" },
+  { header: "CCS Error", key: "ccsError" },
+  { header: "DB CCS", key: "dbCcs" },
+  { header: "Spectrum Source", key: "spectrumSource" },
+  { header: "MS/MS Cosine Score", key: "msmsCosineScore" },
+  { header: "Collision Energy", key: "collisionEnergy" },
+  { header: "External IDs", key: "externalIds", always: true },
+  { header: "Pathways", key: "pathway", always: true },
+];
+
+const ResultsSummary = ({
+  results = {},
+  matchedAdductCount,
+  totalAdductCount,
+  progressLabel = "Adduct matches",
+  filename = "compounds_export.csv",
+  extraExportColumns = [],
+  hiddenExportKeys = [],
+  compact = false,
+  groupedExport = false,
+}) => {
+  const groupedResults = Object.entries(results).map(([label, compounds]) => ({
+    label,
+    compounds: Array.isArray(compounds) ? compounds : [],
+  }));
+  const normalizedGroupedResults = groupedResults.map((group) => ({
+    ...group,
+    compounds: group.compounds.map(normalizeCompound),
+  }));
+
+  const allCompounds = normalizedGroupedResults.flatMap(
+    (group) => group.compounds
+  );
+
+  const matchedGroups = normalizedGroupedResults.filter(
+    (group) => group.compounds.length > 0
+  ).length;
+  const resolvedMatchedCount =
+    toFiniteNumber(matchedAdductCount) ?? matchedGroups;
+  const resolvedTotalCount =
+    toFiniteNumber(totalAdductCount) ?? groupedResults.length;
 
   const totalCompounds = allCompounds.length;
+  const hiddenExportKeySet = new Set(hiddenExportKeys);
+  const exportColumns = [
+    ...DEFAULT_EXPORT_COLUMNS.filter(
+      (column) =>
+        !hiddenExportKeySet.has(column.key) &&
+        (column?.always || allCompounds.some((compound) => hasValue(compound[column.key])))
+    ),
+    ...extraExportColumns.filter(
+      (column) =>
+        column?.key &&
+        !hiddenExportKeySet.has(column.key) &&
+        (column?.always || allCompounds.some((compound) => hasValue(compound[column.key])))
+    ),
+  ];
+  const isFeatureSummary = progressLabel === "Features with matches";
+  const useCompactLayout = compact || isFeatureSummary;
+  const exportGroups =
+    groupedExport || isFeatureSummary ? normalizedGroupedResults : null;
+
+  if (useCompactLayout) {
+    return (
+      <div className="drop-down-results-summary results-summary-compact">
+        <div className="compact-summary-stat">
+          <span className="compact-summary-value">{totalCompounds}</span>
+          <span className="compact-summary-label">
+            Compound{totalCompounds !== 1 ? "s" : ""} found
+          </span>
+        </div>
+
+        <div className="compact-summary-stat">
+          <span className="compact-summary-value">
+            {resolvedMatchedCount}/{resolvedTotalCount}
+          </span>
+          <span className="compact-summary-label">{progressLabel}</span>
+        </div>
+
+        <div className="compact-summary-downloads">
+          <FileDownload
+            data={allCompounds}
+            groups={exportGroups}
+            headers={exportColumns.map((column) => column.header)}
+            keys={exportColumns.map((column) => column.key)}
+            filename={filename}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="drop-down-results-summary">
@@ -51,16 +134,19 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
       </div>
 
       <div className="results-summary-col-2">
-        <ProgressRing matched={matchedAdductCount} total={totalAdductCount} />
-        <div className="results-count-text">Adduct matches</div>
+        <ProgressRing
+          matched={resolvedMatchedCount}
+          total={resolvedTotalCount}
+        />
+        <div className="results-count-text">{progressLabel}</div>
       </div>
 
       <div className="results-summary-col-3">
         <ul>
-          {Object.entries(results).map(([adduct, compounds]) => (
-            <li key={adduct}>
-              {adduct}: {compounds.length} compound
-              {compounds.length !== 1 ? "s" : ""}
+          {groupedResults.map((group) => (
+            <li key={group.label}>
+              {group.label}: {group.compounds.length} compound
+              {group.compounds.length !== 1 ? "s" : ""}
             </li>
           ))}
         </ul>
@@ -69,9 +155,10 @@ const ResultsSummary = ({ results, matchedAdductCount, totalAdductCount }) => {
       <div className="results-summary-col-4">
         <FileDownload
           data={allCompounds}
-          headers={displayHeaders}
-          keys={dataKeys}
-          filename={`compounds_export.csv`}
+          groups={exportGroups}
+          headers={exportColumns.map((column) => column.header)}
+          keys={exportColumns.map((column) => column.key)}
+          filename={filename}
         />
       </div>
     </div>

@@ -4,18 +4,30 @@ import TextInput from "../../components/search/TextInput";
 import GroupRadio from "../../components/search/GroupRadio";
 import DatabasesCheckboxes from "../../components/search/DatabasesCheckboxes";
 import ResultsDropdownGroup from "../../components/search/ResultsDropdownGroup";
+import ResultsSummary from "../../components/search/ResultsSummary";
+import { formatApiError } from "../../utils/apiError";
+import { CHEMICAL_ALPHABET_OPTIONS } from "../../utils/chemicalAlphabet";
+import {
+  DEFAULT_DATABASES,
+  toggleDatabaseSelection,
+} from "../../utils/databaseSelection";
+import { singleGroupResultMap } from "../../utils/resultsSummary";
 
 const BrowseSearch = () => {
-  const [formState, setFormState] = useState({
+  const createInitialFormState = () => ({
     name: "",
     formula: "",
     metaboliteType: "ALL",
-    databases: [],
+    chemicalAlphabet: "",
+    databases: DEFAULT_DATABASES,
   });
+
+  const [formState, setFormState] = useState(createInitialFormState);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const loadDemoData = () => {
     console.log("Loading demo data...");
@@ -23,18 +35,14 @@ const BrowseSearch = () => {
       name: "Choline",
       formula: "C5H14NO",
       metaboliteType: "ALL",
-      databases: ["HMDB"],
+      chemicalAlphabet: "CHNOPS",
+      databases: DEFAULT_DATABASES,
     });
   };
 
   const clearInput = () => {
     console.log("Clearing input...");
-    setFormState({
-      name: "",
-      formula: "",
-      metaboliteType: "ALL",
-      databases: [],
-    });
+    setFormState(createInitialFormState());
   };
 
   useEffect(() => {
@@ -47,9 +55,7 @@ const BrowseSearch = () => {
     if (type === "checkbox") {
       setFormState((prev) => ({
         ...prev,
-        databases: checked
-          ? [...prev.databases, value]
-          : prev.databases.filter((db) => db !== value),
+        databases: toggleDatabaseSelection(prev.databases, value, checked),
       }));
     } else {
       setFormState((prev) => ({ ...prev, [name]: value || null }));
@@ -60,10 +66,25 @@ const BrowseSearch = () => {
     e.preventDefault();
     setLoading(true);
 
+    const trimmedName = formState.name?.trim();
+    const trimmedFormula = formState.formula?.trim();
+
+    if (!trimmedName && !trimmedFormula) {
+      setErrors({
+        name: "Provide a name or a formula.",
+        formula: "Provide a name or a formula.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setErrors({});
+
     const formattedData = {
-      name: formState.name,
-      formula: formState.formula,
+      compoundName: trimmedName || null,
+      formula: trimmedFormula || null,
       metaboliteType: formState.metaboliteType,
+      chemicalAlphabet: formState.chemicalAlphabet,
       databases: formState.databases,
     };
 
@@ -71,7 +92,7 @@ const BrowseSearch = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}browseSearch`,
+        `${import.meta.env.VITE_API_URL}browse-search`,
         formattedData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -84,11 +105,14 @@ const BrowseSearch = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Error submitting search:", error.response || error);
-      alert("There was an error submitting your search");
+      alert(formatApiError(error, { action: "submit your search" }));
     } finally {
       setLoading(false);
     }
   };
+
+  const summaryResults = singleGroupResultMap("Results", results);
+  const hasBrowseResults = results.length > 0;
 
   return (
     <div className="page">
@@ -109,22 +133,32 @@ const BrowseSearch = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid-container-browse">
             <TextInput
-              label="Name"
+              label="Name (optional)"
               name="name"
               value={formState.name}
               onChange={handleChange}
               placeholder="Compound name"
               className="compound-name-div"
             />
+            {errors.name && (
+              <div style={{ color: "red", fontSize: "0.9em" }}>
+                {errors.name}
+              </div>
+            )}
 
             <TextInput
-              label="Formula"
+              label="Formula (optional)"
               name="formula"
               value={formState.formula}
               onChange={handleChange}
               placeholder="Compound formula"
               className="compound-formula-div"
             />
+            {errors.formula && (
+              <div style={{ color: "red", fontSize: "0.9em" }}>
+                {errors.formula}
+              </div>
+            )}
 
             <GroupRadio
               label="Metabolites"
@@ -133,6 +167,15 @@ const BrowseSearch = () => {
               options={["ALL", "ONLYLIPIDS"]}
               onChange={handleChange}
               className="metabolites-browse-div"
+            />
+
+            <GroupRadio
+              label="Chemical Alphabet"
+              name="chemicalAlphabet"
+              value={formState.chemicalAlphabet}
+              options={CHEMICAL_ALPHABET_OPTIONS}
+              onChange={handleChange}
+              className="chemical-alphabet-browse-div"
             />
 
             <DatabasesCheckboxes
@@ -164,7 +207,18 @@ const BrowseSearch = () => {
 
         {showResults && (
           <div className="results-div">
-            <ResultsDropdownGroup compounds={results} />
+            <ResultsSummary
+              results={summaryResults}
+              matchedAdductCount={hasBrowseResults ? 1 : 0}
+              totalAdductCount={1}
+              progressLabel="Result groups"
+              filename="browse_export.csv"
+            />
+            {hasBrowseResults ? (
+              <ResultsDropdownGroup compounds={results} />
+            ) : (
+              <p className="no-results">No results found for this query.</p>
+            )}
           </div>
         )}
       </div>

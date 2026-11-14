@@ -7,6 +7,7 @@ import MainWeb from "../pages/MainWeb";
 import SimpleSearch from "../pages/msSearch/SimpleSearch";
 import BatchSearch from "../pages/msSearch/BatchSearch";
 import LcMsSearch from "../pages/lcmsSearch/LcMsSearch";
+import LcMsMsSearch from "../pages/lcmsSearch/LcMsMsSearch";
 import ImMsSearch from "../pages/ccsSearch/ImMsSearch";
 import LcImMsSearch from "../pages/lcmsSearch/LcImMsSearch";
 import BrowseSearch from "../pages/msSearch/BrowseSearch";
@@ -14,6 +15,9 @@ import MsMsSearch from "../pages/lcmsSearch/MsMsSearch";
 import CeMsMt1Search from "../pages/cemsSearch/CeMsMt1Search";
 import CeMsMt2Search from "../pages/cemsSearch/CeMsMt2Search";
 import CeMsEffMobSearch from "../pages/cemsSearch/CeMsEffMobSearch";
+import CeMsRmtSearch from "../pages/cemsSearch/CeMsRmtSearch";
+import CeMsRmt1Search from "../pages/cemsSearch/CeMsRmt1Search";
+import CeMsRmt2Search from "../pages/cemsSearch/CeMsRmt2Search";
 import CompoundPage from "../pages/CompoundPage";
 import Manual from "../pages/Manual";
 import GcMsSearch from "../pages/gcmsSearch/GcMsSearch";
@@ -32,14 +36,21 @@ const App = () => {
             path="/lc-ms-search"
             element={<LcMsSearch />}
           />
+          <Route path="/lc-ms-ms-search" element={<LcMsMsSearch />} />
           <Route path="/im-ms-search" element={<ImMsSearch />} />
           <Route path="/lc-im-ms-search" element={<LcImMsSearch />} />
           <Route path="/browse-search" element={<BrowseSearch />} />
           <Route path="/ms-ms-search" element={<MsMsSearch />} />
           <Route path="/gc-ms-search" element={<GcMsSearch />} />
           <Route path="/ce-ms-eff-mob-search" element={<CeMsEffMobSearch />} />
+          <Route
+            path="/ce-ms-search-experimental-rmt"
+            element={<CeMsRmtSearch />}
+          />
           <Route path="/ce-ms-mt-1-marker" element={<CeMsMt1Search />} />
           <Route path="/ce-ms-mt-2-markers" element={<CeMsMt2Search />} />
+          <Route path="/ce-ms-rmt-1-marker" element={<CeMsRmt1Search />} />
+          <Route path="/ce-ms-rmt-2-markers" element={<CeMsRmt2Search />} />
           <Route path="/compound/:id" element={<CompoundPage />} />
           <Route path="/manual" element={<Manual />} />
         </Routes>
